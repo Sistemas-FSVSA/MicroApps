@@ -1,0 +1,61 @@
+<link rel="stylesheet" href="/css/tramites/planilla.css">
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{{title}}</h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row justify-content-center" id="tarjetas-container">
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-3" id="NuevaPlanilla">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h1><i class="fas fa-file-medical"></i></i></h1>
+                        <button type="button" class="btn btn-fsvsaon" onclick="redireccionNuevaPlanilla()">
+                            Nueva Planilla
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-3" id="continuarPlanilla" style="display: none;">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h1><i class="fas fa-file-signature"></i></i></h1>
+                        <button type="button" class="btn btn-fsvsaon" id="btnContinuarPlanilla">
+                            Continuar Planilla
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-3" onclick="redireccionPlanillasPendientes()"
+                id="planillasPendientes">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h1><i class="fas fa-file-prescription"></i></h1>
+                        <button type="button" class="btn btn-fsvsaoff">
+                            Planillas Pendientes
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-3" onclick="redireccionPlanillasContabilizar()" id="descargarPlanillas">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h1><i class="fas fa-file-download"></i></i></h1>
+                        <button type="button" class="btn btn-fsvsaon">
+                            Descargar Planillas
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/controllers/tramites/planilla.js"></script>

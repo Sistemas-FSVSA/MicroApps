@@ -1,0 +1,38 @@
+.select2-selection__choice {
+    background-color: #2561a1 !important;
+    /* Cambia este color a tu preferencia */
+    color: white !important;
+    /* Cambia el color del texto */
+    border: 1px solid #163c64 !important;
+    /* Cambia el color del borde */
+}
+
+/* Personalizar el hover sobre las casillas */
+.select2-selection__choice:hover {
+    background-color: rgb(55, 131, 182) !important;
+    /* Cambia el color cuando pases el mouse */
+    border-color: #23405f !important;
+}
+
+/* Personalizar el ícono de cerrar (la "x" en cada casilla) */
+.select2-selection__choice__remove {
+    color: white !important;
+}
+
+.select2-selection__choice__remove:hover {
+    color: #163c64 !important;
+    /* Cambia el color al pasar el mouse */
+}
+
+/* Estilo para la barra de progreso personalizada */
+.progress {
+    background-color: #e0e0e0;
+    /* Color de fondo de la barra */
+}
+
+.progress-bar {
+    background-color: #163c64;
+    /* Color de la barra de progreso */
+    transition: width 0.4s;
+    /* Animación suave para el cambio de ancho */
+}

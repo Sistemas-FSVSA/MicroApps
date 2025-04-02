@@ -1,0 +1,20 @@
+# Node.js dependencies
+/FrontEnd/node_modules
+/BackEnd/node_modules
+
+# Yarn/PNPM/Other packages folder
+/FrontEnd/packages/
+/BackEnd/packages/
+/BackEnd/uploads/
+
+# Ignorar archivos de entorno
+/FrontEnd/.env
+/BackEnd/.env
+.env
+
+
+# Logs
+/logs/
+
+# Miscellaneous
+/NSSM/

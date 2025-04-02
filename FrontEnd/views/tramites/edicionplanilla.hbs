@@ -1,0 +1,52 @@
+<link rel="stylesheet" href="/css/tramites/edicionplanilla.css">
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2 align-items-center d-flex justify-content-between">
+            <div class="col-sm-4 d-flex align-items-center">
+                <button class="btn btn-outline-secondary mr-2" onclick="irAtras()">
+                    <i class="fas fa-angle-double-left"></i> Regresar
+                </button>
+                <h1 class="m-0" id="title"></h1>
+            </div>
+            <div class="col-sm-6 text-right">
+                <h3 id="usuarioNombre" class="m-0"></h3>
+                <h3 id="usuarioNombrePlantilla" class="m-0"></h3>
+                <span id="fechaInicio" class="text-muted"></span>
+            </div>
+        </div>
+    </div>
+    <hr>
+</div>
+
+<div class="content">
+    <div class="container-fluid" id="contenedorTramites">
+    </div>
+    <button class="btn btn-fsvsaoff" id="agregarTramite">Agregar Trámite</button>
+</div>
+
+<a class="btn btn-fsvsaoff btn-fixed2" id="guardarPlanilla" tabindex="-1">Guardar Planilla</a>
+<a class="btn btn-fsvsaon btn-fixed" id="editarPlanilla" tabindex="-1">Editar Planilla</a>
+<a class="btn btn-fsvsaon btn-fixed" id="cerrarPlanilla">Cerrar Planilla</a>
+
+<!-- Modal para escoger tipo de trámite -->
+<div class="modal fade" id="modalTipoTramite" aria-labelledby="modalTipoTramiteLabel" aria-hidden="true" tabindex="0">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTipoTramiteLabel">Seleccione el tipo de trámite</h5>
+                <a type="button" class="close" data-dismiss="modal" aria-label="Close" tabindex="-1">
+                    <span aria-hidden="true">&times;</span>
+                </a>
+            </div>
+            <div class="modal-body">
+                <button class="btn btn-fsvsaoff w-100 mb-2" id="tipoMetropolitano">Metropolitano - (Sencillas)</button>
+                <button class="btn btn-fsvsaon w-100" id="tipoExterior">Municipales - (Exterior)</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/controllers/tramites/planilla.js"></script>
+<script src="/controllers/tramites/edicionplanilla.js"></script>
+

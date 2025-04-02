@@ -1,0 +1,218 @@
+<link rel="stylesheet" href="/css/pqrs/gestionpqrs.css">
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2 align-items-center d-flex justify-content-between">
+            <div class="col-sm-8 d-flex align-items-center">
+                <button class="btn btn-outline-secondary mr-2" onclick="irAtras()">
+                    <i class="fas fa-angle-double-left"></i> Regresar
+                </button>
+                <h1 class="m-0" id="title">Gestión PQRS</h1>
+            </div>
+            <div class="col-sm-4 text-right">
+                <h3 id="fechaQueja" class="m-0"></h3>
+                <span id="" class="text-muted">Calidad - Fecha Queja</span>
+            </div>
+        </div>
+    </div>
+    <hr>
+</div>
+
+<div class="container-fluid">
+    <div class="row flex">
+
+
+        <div class="col-md-9 d-flex flex-column border-right" id="contenedorForm">
+            <div class="scroll-container card shadow-sm">
+                <form id="formPQRS">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <label for="titular">Titular &/O Responsable:</label>
+                            <input type="text" class="form-control" id="titular" name="titular" disabled>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="cc">Cédula:</label>
+                            <input type="text" class="form-control" id="cc" name="cc" disabled>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label for="direccion">Dirección:</label>
+                            <input type="text" class="form-control" id="direccion" name="direccion" disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="telefono">Teléfono:</label>
+                            <input type="text" class="form-control" id="telefono" name="telefono" disabled>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-2">
+                            <label for="afiliado">Afiliado:</label>
+                            <select class="form-control" id="afiliado" name="afiliado" disabled>
+                                <option value="true">Sí</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="contrato">Contrato:</label>
+                            <input type="text" class="form-control" id="contrato" name="contrato" disabled>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="tipoReclamacion">Plan:</label>
+                            <input class="form-control" id="plan" name="plan" disabled>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="numeroServicio">Número de Servicio:</label>
+                            <input type="text" class="form-control" id="numeroServicio" name="numeroServicio" disabled>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-8">
+                            <label for="nombreFallecido">Nombre del Fallecido:</label>
+                            <input type="text" class="form-control" id="nombreFallecido" name="nombreFallecido"
+                                disabled>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="fechaFallecimiento">Fecha Encuesta:</label>
+                            <input type="date" class="form-control" id="fechaFallecimiento" name="fechaFallecimiento"
+                                disabled>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <label for="reclamo">Detalle Solicitud:</label>
+                            <textarea class="form-control" id="reclamo" name="reclamo" rows="5" disabled></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Nuevos Campos -->
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <label for="fechaServicio">Fecha Servicio:</label>
+                            <input type="date" class="form-control" id="fechaServicio" name="fechaServicio" required>
+                        </div>
+                        <div class="col-md-8">
+                            <label for="responsable">Responsable:</label>
+                            <input type="text" class="form-control" id="responsable" name="responsable">
+                        </div>
+
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <label for="tipoReclamacion">Tipo Reclamación:</label>
+                            <select class="form-control" id="tipopqrs" name="tipopqrs">
+
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="proceso">Proceso:</label>
+                            <select class="form-control" id="proceso" name="proceso">
+
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="fuente">Fuente:</label>
+                            <select class="form-control" id="fuente" name="fuente">
+
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <label for="detallefuente">Detalle Fuente:</label>
+                            <select class="form-control" id="detallefuente" name="detallefuente">
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <label for="descripcion">Descripción:</label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="5"
+                                required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <label for="correccionImplementada">Corrección Implementada:</label>
+                            <textarea class="form-control" id="correccionImplementada" name="correccionImplementada"
+                                rows="5" required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label for="pertinencia">Pertinencia:</label>
+                            <select class="form-control" id="pertinencia" name="pertinencia">
+                                <option value="Sí">Sí</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="eficaz">Eficaz:</label>
+                            <select class="form-control" id="eficaz" name="eficaz">
+                                <option value="Sí">Sí</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-md-12 text-center">
+                            <button type="button" class="btn btn-fsvsaon mr-2" id="btnGuardar">Guardar</button>
+                            <button type="button" class="btn btn-fsvsaoff" id="btnFinalizar">Finalizar</button>
+                        </div>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+
+        <div class="col-md-3 extra-container" id="contenedorExtra">
+            <div class="p-3 extra-container">
+                <ul class="nav nav-tabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="tabAnotaciones" href="#">Seguimiento</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="tabDocumentos" href="#">Adjuntos</a>
+                    </li>
+                </ul>
+
+                <div id="contenedorAnotaciones" class="tab-content">
+                    <textarea class="form-control mt-2" id="inputSeguimiento" rows="5"
+                        placeholder="Escribe aquí el seguimiento..."></textarea>
+                    <button class="btn btn-fsvsaoff mt-3 w-100" id="guardarAnotacion">Guardar Seguimiento</button>
+                    <div class="notes-content p-3">
+                        <!-- LAS ANOTACIONES DENTRO DE ESTE CONTENEDOR DEBEN TENER SU PROPIO SCROLL -->
+                        <!-- AQUI ANOTACIONES -->
+                    </div>
+                </div>
+
+                <div id="contenedorDocumentos" class="tab-content">
+                    <input type="file" id="inputAdjuntos" class="form-control mt-2" multiple>
+                    <button id="guardarAdjuntos" class="btn btn-fsvsaoff mt-3 w-100">Guardar Adjuntos</button>
+                    <div class="docs-content p-3">
+                        <!-- LOS ADJUNTOS DENTRO DE ESTE CONTENEDOR DEBEN TENER SU PROPIO SCROLL -->
+                        <!-- AQUI ADJUNTOS -->
+                    </div>
+                </div>
+
+                <button id="informacion" class="btn btn-fsvsaon mt-3 w-100">Informacion</button>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="/controllers/pqrs/gestionpqrs.js"></script>

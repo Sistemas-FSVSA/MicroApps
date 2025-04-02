@@ -1,0 +1,24 @@
+.btn-fixed {
+    position: fixed;
+    bottom: 58px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.btn-fixed2 {
+    position: fixed;
+    bottom: 58px;
+    right: 150px;
+    z-index: 1000;
+}
+
+.btn-fixed3 {
+    position: fixed;
+    bottom: 58px;
+    right: 300px;
+    z-index: 1000;
+}
+
+.input-error {
+    border: 2px solid red;
+}

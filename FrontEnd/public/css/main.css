@@ -1,0 +1,165 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow-x: hidden;
+  /* Elimina la barra de desplazamiento horizontal */
+}
+
+.wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-link {
+  padding: 0.5rem 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.brand-image {
+  max-height: 100px;
+  width: auto;
+}
+
+.main-sidebar {
+  background-color: #163c64 !important;
+}
+
+.nav-sidebar .nav-link {
+  color: white !important;
+}
+
+.nav-sidebar .nav-link.active,
+.nav-sidebar .nav-link:hover {
+  background-color: #2e5c8d !important;
+  color: white !important;
+}
+
+.nav-sidebar .nav-header {
+  color: white !important;
+}
+
+.content-wrapper {
+  flex: 1;
+  overflow-y: auto;
+}
+
+
+
+.swal-cancel-button {
+  background-color: #96072d !important; /* Rojo Oscuro*/
+  color: white !important;
+  border-radius: 5px !important;
+  padding: 8px 16px !important;
+  font-size: 16px !important;
+  transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out !important;
+}
+
+.swal-cancel-button:hover {
+  background-color: #c24d4d !important; /* Rojo más claro */
+  transform: scale(1.05) !important;
+}
+
+.btn-fsvsaoff {
+  background-color: #96072d; /* Rojo oscuro */
+  color: white;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.btn-fsvsaoff:hover {
+  background-color: #c24d4d !important; /* Rojo más claro */
+  transform: scale(1.05);
+}
+
+
+.swal-confirm-button {
+  background-color: #163c64 !important; /* Verde */
+  color: white !important;
+  border-radius: 5px !important;
+  padding: 8px 16px !important;
+  font-size: 16px !important;
+  transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out !important;
+}
+
+/* Efecto hover */
+.swal-confirm-button:hover {
+  background-color: #295c92 !important; /* Verde más oscuro */
+  transform: scale(1.05) !important;
+}
+
+.btn-fsvsaon {
+  background-color: #163c64;
+  color: white;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.btn-fsvsaon:hover {
+  background-color: #2e5c8d !important; /* Rojo más claro */
+  transform: scale(1.05);
+}
+
+.spinner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  /* Fondo semitransparente */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+  /* Más alto que el contenido */
+  visibility: hidden;
+  /* Oculto por defecto */
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.spinner-overlay.active {
+  visibility: visible;
+  opacity: 1;
+}
+
+.spinner {
+  border: 8px solid rgba(255, 255, 255, 0.3);
+  /* Fondo del spinner */
+  border-top: 8px solid #ffffff;
+  /* Color del borde animado */
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
+  /* Animación de rotación */
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+#submenuPQRS {
+  display: none;
+  transition: height 0.3s ease; /* Animación opcional */
+}
+
+#submenuPQRS.menu-open {
+  display: block;
+}
+
+#pqrsIcon {
+  transition: transform 0.3s ease; /* Transición suave para la rotación */
+}

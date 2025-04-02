@@ -1,0 +1,122 @@
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2 align-items-center d-flex justify-content-between">
+            <div class="col-sm-4 d-flex align-items-center">
+                <button class="btn btn-outline-secondary mr-2" onclick="irAtras()">
+                    <i class="fas fa-angle-double-left"></i> Regresar
+                </button>
+                <h1 class="m-0" id="title">Registrar PQRS</h1>
+            </div>
+            <div class="col-sm-6 text-right">
+                <span id="fechaActual" class="text-muted"></span>
+            </div>
+        </div>
+    </div>
+    <hr>
+</div>
+
+<div class="content ml-5 mr-5">
+    <div class="container-fluid">
+        <form id="formPQRS">
+            <div class="row">
+                <div class="col-md-8">
+                    <label for="titular">Titular &/O Responsable:</label>
+                    <input type="text" class="form-control" id="titular" name="titular" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="cc">Cédula:</label>
+                    <input type="text" class="form-control" id="cc" name="cc" required>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <label for="direccion">Dirección:</label>
+                    <input type="text" class="form-control" id="direccion" name="direccion" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="telefono">Teléfono:</label>
+                    <input type="text" class="form-control" id="telefono" name="telefono" required>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-2">
+                    <label for="afiliado">Afiliado:</label>
+                    <select class="form-control" id="afiliado" name="afiliado" required>
+                        <option value="true">Sí</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="contrato">Contrato:</label>
+                    <input type="text" class="form-control" id="contrato" name="contrato" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="plan">Plan:</label>
+                    <select class="form-control" id="plan" name="plan">
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="numeroServicio">Número de Servicio:</label>
+                    <input type="text" class="form-control" id="numeroServicio" name="numeroServicio">
+                </div>
+            </div>
+
+            <div class="row mt-3">
+
+                <div class="col-md-8">
+                    <label for="nombreFallecido">Nombre del Fallecido:</label>
+                    <input type="text" class="form-control" id="nombreFallecido" name="nombreFallecido" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="fechaFallecimiento">Fecha Encuesta:</label>
+                    <input type="date" class="form-control" id="fechaFallecimiento" name="fechaFallecimiento" required>
+                </div>
+
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <label for="reclamo">Detalle Solicitud:</label>
+                    <textarea class="form-control" id="reclamo" name="reclamo" rows="10" required></textarea>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-12 text-center">
+                    <button type="button" class="btn btn-fsvsaoff" id="guardarFormulario">Guardar</button>
+                    <button type="button" class="btn btn-fsvsaon" id="guardarImprimir">Guardar e
+                        Imprimir</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="modalFirma" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document"> <!-- Modal más grande -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Firma requerida</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="d-flex justify-content-center"> <!-- Centrar el canvas -->
+                    <canvas id="canvasFirma" class="border" width="500" height="200" 
+                        style="cursor: crosshair; background-color: white;">
+                    </canvas>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <button class="btn btn-secondary" id="btnLimpiarFirma">Limpiar</button>
+                <button type="button" class="btn btn-success" id="btnGuardarFirma">Aceptar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="/controllers/pqrs/formulariopqrs.js"></script>

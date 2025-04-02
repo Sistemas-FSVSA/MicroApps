@@ -1,0 +1,51 @@
+#totalAjuste {
+    max-width: 150px;
+    /* Ancho ajustado para el input */
+    text-align: right;
+    /* Texto alineado a la derecha */
+}
+
+.button-container-fixed {
+    position: fixed;
+    bottom: 70px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 1000;
+}
+
+#contenedorTramites {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.card {
+    flex: 0 0 calc(33% - 10px);
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    .card {
+        flex: 0 0 100%;
+    }
+}
+
+.subtramite-toggle {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.subtramite-toggle i {
+    transition: transform 0.3s ease;
+}
+
+.subtramite-toggle i.fa-chevron-up {
+    transform: rotate(180deg);
+}
+
+.tramite-number {
+    font-weight: bold;
+}

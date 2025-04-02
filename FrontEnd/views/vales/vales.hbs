@@ -1,0 +1,91 @@
+<link rel="stylesheet" href="/css/vales/vales.css">
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2 align-items-center d-flex justify-content-between">
+            <div class="col-sm-4 d-flex align-items-center">
+                <button class="btn btn-outline-secondary mr-2" onclick="irAtras()">
+                    <i class="fas fa-angle-double-left"></i> Regresar
+                </button>
+                <h1 class="m-0" id="title">Gestión de Vales</h1>
+            </div>
+            <div class="col-sm-6 text-right">
+                <h3 id="fechaActual" class="m-0"></h3>
+                <span class="text-muted">Administración</span>
+            </div>
+        </div>
+    </div>
+    <hr>
+</div>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <button class="btn btn-fsvsaoff" id="agregarVale">Registrar Vales</button>
+            <select class="form-control w-auto" id="categoriaSelect">
+            </select>
+        </div>
+        <div id="vales-container" class="mt-4">
+            <table id="valesTable" class="table table-striped table-bordered" style="width:100%">
+                <thead>
+                    <tr>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="modalVale" tabindex="-1" aria-labelledby="modalValeLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalValeLabel">Registrar Vales</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="formVale">
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="encargado" class="form-label">Encargado</label>
+                            <select class="form-control" id="encargado" required>
+                                <option value="">Seleccione un encargado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="placa" class="form-label">Placa</label>
+                            <select class="form-control" id="placa" required>
+                                <option value="">Seleccione una placa</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="fecha" class="form-label">Fecha</label>
+                            <input type="date" class="form-control" id="fecha" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="valor" class="form-label">Valor</label>
+                            <input type="number" class="form-control" id="valor" min="1" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="motivo" class="form-label">Motivo</label>
+                        <textarea class="form-control" id="motivo" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-fsvsaon" id="registrarVale">Registrar</button>
+                <button type="button" class="btn btn-fsvsaoff" data-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/controllers/vales/vales.js"></script>

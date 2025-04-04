@@ -24,9 +24,22 @@ const config2 = {
   }
 };
 
+// Configuración para la segunda base de datos
+const config3 = {
+  user: process.env.DB3_USER,
+  password: process.env.DB3_PASSWORD,
+  server: process.env.DB3_SERVER,
+  database: process.env.DB3_DATABASE,
+  options: {
+    encrypt: false,
+    enableArithAbort: true
+  }
+};
+
 // Crear las conexiones
 let poolPromise = null;
 let poolPromise2 = null;
+let poolPromise3 = null;
 
 const connectWithRetry = async (config, retryInterval = 5000) => {
   while (true) {
@@ -47,8 +60,12 @@ poolPromise = connectWithRetry(config1);
 // Conexión a la segunda base de datos
 poolPromise2 = connectWithRetry(config2);
 
+// Conexión a la segunda base de datos
+poolPromise3 = connectWithRetry(config3);
+
 module.exports = {
   sql,
   poolPromise,
-  poolPromise2
+  poolPromise2,
+  poolPromise3
 };

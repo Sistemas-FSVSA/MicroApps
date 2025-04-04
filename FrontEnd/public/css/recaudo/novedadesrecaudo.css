@@ -1,0 +1,75 @@
+.card-body {
+    position: relative;
+    padding: 20px;
+}
+
+.hora {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 0.85rem;
+    color: #6c757d;
+    font-weight: bold;
+}
+
+/* Ajustamos la disposición del recaudador */
+.card-subtitle {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: bold;
+    display: block; /* Asegura que el texto ocupe toda la línea */
+    margin-top: 4px; /* Da un poco de espacio debajo del título */
+}
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #333;
+    display: block; /* Asegura que no se alinee con la hora */
+}
+
+.card-text {
+    font-size: 0.95rem;
+    color: #555;
+    margin-top: 8px; /* Espaciado extra debajo del recaudador */
+}
+
+
+.card {
+    position: relative;
+    border-radius: 12px; /* Bordes más redondeados */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra más sutil */
+    background: #fff;
+    border: none;
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-3px); /* Efecto sutil al pasar el mouse */
+}
+
+
+
+
+
+.btn-leido {
+    color: white;
+    background-color: #96072D;
+    border-radius: 50%; /* Hace que el botón sea redondo */
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    border: none;
+    transition: background 0.2s ease-in-out;
+}
+
+.btn-leido:hover {
+    background-color: #750520; /* Un tono más oscuro al pasar el mouse */
+}
+

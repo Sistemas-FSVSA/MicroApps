@@ -29,7 +29,7 @@ app.use(express.json());
 const secretKey = process.env.JWT_SECRET;
 
 // Define las rutas públicas (sin protección)
-const publicRoutes = [ '/', '/config.js'];
+const publicRoutes = [ '/', '/config.js', '/generarnovedad' ];
 
 // Middleware global para proteger rutas privadas
 app.use((req, res, next) => {
@@ -66,6 +66,9 @@ app.use((req, res, next) => {
 
 // Rutas Publicas
 app.get('/', (req, res) => { res.render('index', { layout: false }); });
+
+// Rutas Publicas
+app.get('/generarnovedad', (req, res) => { res.render('recaudo/generarnovedad', { layout: false }); });
 
 //Rutas Privadas
 app.get("/inicio", (req, res) => {
@@ -185,6 +188,13 @@ app.get("/compras/encargos", (req, res) => {
         return res.render("compras/encargos", { layout: false }); // Solo la vista
     }
     res.render("compras/encargos");
+});
+
+app.get("/recaudo/novedadesrecaudo", (req, res) => {
+    if (req.xhr) {
+        return res.render("recaudo/novedadesrecaudo", { layout: false }); // Solo la vista
+    }
+    res.render("recaudo/novedadesrecaudo");
 });
 
 app.get('/config.js', (req, res) => {

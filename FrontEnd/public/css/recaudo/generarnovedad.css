@@ -1,0 +1,83 @@
+.btn-fsvsaon {
+    color: white;
+    background-color: #96072D;
+  }
+  
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #163c64;
+    margin: 0;
+    color: white;
+  }
+  
+  main {
+    flex: 1; /* Hace que el contenido principal ocupe el espacio disponible */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .card {
+    background-color: #fff;
+    border-radius: 15px;
+  }
+  
+  .form-header {
+    background-color: white;
+    color: black;
+    padding: 20px;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .form-header img {
+    max-height: 50px;
+    margin-right: 15px;
+  }
+  
+  .footer {
+    background-color: #163c64;
+    color: white;
+    padding: 15px;
+    text-align: center;
+  }
+  
+  /* Ajustar card a diferentes tamaños */
+  @media (max-width: 768px) {
+    .card {
+      width: 90%; /* Ancho responsivo en pantallas pequeñas */
+    }
+  }
+  
+  /* Contenedor del logo */
+  .logo-container {
+    position: absolute;
+    top: 20px; /* Espaciado desde la parte superior */
+    left: 20px; /* Espaciado desde la izquierda */
+    z-index: 1000; /* Asegura que el logo esté por encima de otros elementos */
+  }
+  
+  /* Estilo del logo */
+  .logo-container img {
+    max-height: 120px;
+  }
+  
+  /* Alineación en pantallas pequeñas */
+  @media (max-width: 768px) {
+    .logo-container {
+      top: 10px;
+      left: 50%; /* Centra el logo en pantallas pequeñas */
+      transform: translateX(-50%); /* Asegura que el logo esté centrado */
+    }
+  
+    .card {
+      width: 90%; /* Ancho responsivo de la tarjeta */
+    }
+  }
+  
+  

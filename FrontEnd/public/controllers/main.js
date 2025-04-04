@@ -9,6 +9,7 @@ function InicializarMain() {
     setupMenuToggle('togglePQRS', 'submenuPQRS', 'pqrsIcon');
     setupMenuToggle('toggleVales', 'submenuVales', 'valesIcon');
     setupMenuToggle('toggleCompras', 'submenuCompras', 'ComprasIcon');
+    setupMenuToggle('toggleRecaudo', 'submenuRecaudo', 'RecaudoIcon');
 
     const logoutLink = document.getElementById('logoutLink');
     if (logoutLink) {
@@ -141,6 +142,14 @@ function reinitializeScripts() {
 
     if (path.includes("/compras/encargos")) {
         loadAndRunScript("/controllers/compras/encargos.js", "InicializarEncargos");
+    }
+    
+    if (path.includes("/compras/encargos")) {
+        loadAndRunScript("/controllers/compras/encargos.js", "InicializarEncargos");
+    }
+
+    if (path.includes("/recaudo/novedadesrecaudo")) {
+        loadAndRunScript("/controllers/recaudo/novedadesrecaudo.js", "incializarNovedadesRecaudo");
     }
 
 }

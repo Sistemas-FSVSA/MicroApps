@@ -225,8 +225,17 @@ function cargarPermisosContabilizar() {
 function cargarPermisosUsuarios() {
 }
 
-async function cargarPermisosGestionPQRS(data) {
-    const { estado } = getQueryParams(); // Obtener el estado de la planilla
+async function cargarPermisosGestionPQRS() {
+
+    const { idpqrs } = getQueryParams(); // Obtener el estado de la planilla
+
+    const data = await fetch(`${url}/api/pqrs/obtenerEstadoPQRS/${idpqrs}`, {
+        method: 'GET',
+        credentials: 'include' // ✅ Esto asegura que las cookies se envíen
+    });
+
+    const { estado } = await data.json();
+
     const permisos = JSON.parse(localStorage.getItem('permisos'));
 
     const tienePermisoFechaServicio = permisos.some(permiso => permiso.elemento === "INPUT_FECHA_SERVICIO");
@@ -271,14 +280,14 @@ async function cargarPermisosGestionPQRS(data) {
 
     const tienePermisoGuardarPqrs = permisos.some(permiso => permiso.elemento === "BOTON_GUARDAR_PQRS" && estado !== 'FINALIZADO');
     const botonGuardar = document.getElementById('btnGuardar');
-    if (!tienePermisoGuardarPqrs) {
-        botonGuardar.style.display = 'none';
-    }
+    botonGuardar.style.display = tienePermisoGuardarPqrs ? 'inline-block' : 'none';
 
     const tienePermisoFinalizarPqrs = permisos.some(permiso => permiso.elemento === "BOTON_FINALIZAR_PQRS" && estado !== 'FINALIZADO');
     const botonFinalizar = document.getElementById('btnFinalizar');
-    if (!tienePermisoFinalizarPqrs) {
-        botonFinalizar.style.display = 'none';
-    }
+    botonFinalizar.style.display = tienePermisoFinalizarPqrs ? 'inline-block' : 'none';
+
+    const tienePermisoAbrirPqrs = permisos.some(permiso => permiso.elemento === "BOTON_ABRIR_PQRS" && estado == 'FINALIZADO');
+    const botonAbrir = document.getElementById('btnAbrir');
+    botonAbrir.style.display = tienePermisoAbrirPqrs ? 'inline-block' : 'none';
 }
 

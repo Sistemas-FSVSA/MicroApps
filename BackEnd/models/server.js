@@ -3,6 +3,12 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const path = require("path");
 
+const {
+  sessionMiddleware,
+  getSessionCount,
+  getSessionUsers,
+} = require("../models/sessionMiddleware");
+
 class Server {
   constructor() {
     this.app = express();
@@ -21,10 +27,13 @@ class Server {
     // Middlewares y rutas
     this.middlewares();
     this.routes();
+
+    // Ruta especial para ver usuarios conectados
+    this.app.get("/api/online", getSessionCount); // 👈 Añádela aquí si quieres
+    this.app.get("/api/activeusers", getSessionUsers); // 👈 Añádela aquí si quieres
   }
 
   middlewares() {
-    
     const allowedOrigins = process.env.ALLOWED_ORIGINS
       ? process.env.ALLOWED_ORIGINS.split(",")
       : [];
@@ -36,7 +45,7 @@ class Server {
           if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
           } else {
-            callback(new Error('Origen no permitido por CORS'));
+            callback(new Error("Origen no permitido por CORS"));
           }
         },
         methods: ["POST", "GET", "PUT", "DELETE", "PATCH"],
@@ -47,14 +56,23 @@ class Server {
     this.app.use(cookieParser());
     this.app.use(express.json());
 
+    // 👇 Aquí van los middlewares de sesión
+    this.app.use(sessionMiddleware);
+
     // Servir la carpeta "uploads" como estática
-    this.app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+    this.app.use(
+      "/uploads",
+      express.static(path.join(__dirname, "../uploads"))
+    );
   }
 
   routes() {
     this.app.use(this.indexPath, require("../routes/index"));
     this.app.use(this.planillaPath, require("../routes/planilla"));
-    this.app.use(this.gestionplanillaPath, require("../routes/gestionplanilla"));
+    this.app.use(
+      this.gestionplanillaPath,
+      require("../routes/gestionplanilla")
+    );
     this.app.use(this.gestionUsuarioPath, require("../routes/gestionusuario"));
     this.app.use(this.pqrsPath, require("../routes/pqrs"));
     this.app.use(this.valesPath, require("../routes/vales"));
@@ -65,7 +83,9 @@ class Server {
   listen() {
     this.app.listen(this.port, () => {
       console.log(`Escuchando desde http://localhost:${this.port}`),
-      console.log(`Archivos estáticos disponibles en http://localhost:${this.port}/uploads`);
+        console.log(
+          `Archivos estáticos disponibles en http://localhost:${this.port}/uploads`
+        );
     });
   }
 }

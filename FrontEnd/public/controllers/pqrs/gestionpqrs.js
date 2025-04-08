@@ -7,7 +7,6 @@ function getQueryParams() {
     const params = new URLSearchParams(window.location.search);
     return {
         idpqrs: params.get("idpqrs"),
-        estado: params.get("estado")
     };
 }
 
@@ -53,6 +52,13 @@ async function inicializarGestionPQRS() {
 
     document.getElementById("btnGuardar").addEventListener("click", function () {
         enviarDatosPQRS("EN_PROGRESO");
+    });
+    
+    document.getElementById("btnAbrir").addEventListener("click", async function () {
+        const confirmacion = await Mensaje("warning", "¿Estas seguro?", "¿Está seguro de Abrir esta PQRS?", false, true);
+        if (confirmacion) {
+            actualizarEstadoPQRS("EN_PROGRESO");
+        }
     });
 
     document.getElementById("btnFinalizar").addEventListener("click", async function () {
@@ -133,6 +139,52 @@ async function inicializarGestionPQRS() {
             .catch(error => console.error(`Error al obtener los subfuentes:`, error));
     });
 
+}
+
+async function actualizarEstadoPQRS(estado) {
+    const { idpqrs } = getQueryParams();
+    const idusuario = JSON.parse(localStorage.getItem("idusuario"));
+
+    if (!idpqrs || !idusuario || !estado) {
+        Mensaje("error", "Error", "Faltan datos para actualizar el estado.", true, false);
+        return;
+    }
+
+    const dataPQRS = {
+        idpqrs,
+        estado,
+        idusuario,
+    };
+
+    try {
+        const response = await fetch(`${url}/api/pqrs/actualizarEstadoPQRS`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "include",
+            body: JSON.stringify(dataPQRS)
+        });
+
+        if (!response.ok) {
+            throw new Error("Error al actualizar el PQRS");
+        }
+
+        // Actualizar la URL sin recargar la página
+        const newUrl = `${window.location.pathname}?idpqrs=${idpqrs}`;
+        history.replaceState(null, "", newUrl);
+
+        // Llamar nuevamente a las funciones de carga de datos
+        await fetchPQRSData();
+        await fetchPQRSExtra();
+        await cargarPermisosGestionPQRS();
+
+        Mensaje("success", "Éxito", "Gestión actualizada exitosamente.", true, false);
+
+    } catch (error) {
+        console.error("Error al actualizar PQRS:", error);
+        Mensaje("error", "Error", "No fue posible guardar la gestión.", true, false);
+    }
 }
 
 // Función para obtener datos del PQRS desde el backend
@@ -537,7 +589,7 @@ async function enviarDatosPQRS(estado) {
         }
 
         // Actualizar la URL sin recargar la página
-        const newUrl = `${window.location.pathname}?idpqrs=${idpqrs}&estado=${estado}`;
+        const newUrl = `${window.location.pathname}?idpqrs=${idpqrs}`;
         history.replaceState(null, "", newUrl);
 
         // Llamar nuevamente a las funciones de carga de datos

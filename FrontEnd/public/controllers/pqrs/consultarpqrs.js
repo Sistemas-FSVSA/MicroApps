@@ -64,8 +64,7 @@ $(document).ready(function () {
     // 🔹 Delegar evento para los botones de gestión
     $("#pqrs tbody").on("click", ".editar-inventario", async function () {
         const idpqrs = $(this).data("id"); // Obtener el ID de PQRS
-        const estado = $(this).data("estado"); // Obtener el estado desde el atributo data
-        const url = `/pqrs/gestionpqrs?idpqrs=${idpqrs}&estado=${encodeURIComponent(estado)}`;
+        const url = `/pqrs/gestionpqrs?idpqrs=${idpqrs}`;
 
         try {
             const response = await fetch(url, { method: "GET", headers: { "X-Requested-With": "XMLHttpRequest" } });

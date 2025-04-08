@@ -24,7 +24,8 @@ const registrarEncargado = async (req, res) => {
                 .input('nombres', sql.VarChar, nombres)
                 .input('apellidos', sql.VarChar, apellidos)
                 .input('categoria', sql.VarChar, categoria)
-                .query("INSERT INTO usuariosvale (identificacion, nombres, apellidos, categoria) OUTPUT INSERTED.idusuariovale VALUES (@documento, @nombres, @apellidos, @categoria)");
+                .input('estado', sql.Bit, true)
+                .query("INSERT INTO usuariosvale (identificacion, nombres, apellidos, categoria, estado) OUTPUT INSERTED.idusuariovale VALUES (@documento, @nombres, @apellidos, @categoria, @estado)");
 
             const idUsuarioVale = result.recordset[0].idusuariovale;
 

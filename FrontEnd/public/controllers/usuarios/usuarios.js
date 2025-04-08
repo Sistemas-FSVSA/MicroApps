@@ -9,10 +9,32 @@ async function inicializarUsuarios() {
 
 
 let Usuarios = []; // Variable global para almacenar los usuarios
+let usuariosActivos = [];
+
+async function obtenerUsuariosActivos() {
+    try {
+        const response = await fetch(`${url}/api/activeusers`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+        });
+
+        if (!response.ok) throw new Error("Error al obtener usuarios activos");
+
+        const data = await response.json();
+        console.log("Usuarios activos recibidos:", data);
+        usuariosActivos = data || [];
+    } catch (error) {
+        console.error("Error al obtener usuarios activos:", error);
+        usuariosActivos = [];
+    }
+}
 
 async function obtenerUsuarios() {
     showSpinner();
     try {
+        await obtenerUsuariosActivos(); // <-- Primero obtenemos los activos
+
         const response = await fetch(`${url}/api/gestionusuario/getUsuarios`, {
             method: "GET",
             headers: { "Content-Type": "application/json" },
@@ -22,8 +44,8 @@ async function obtenerUsuarios() {
         if (!response.ok) throw new Error(`Error en la API: ${response.status}`);
 
         const data = await response.json();
-        Usuarios = data.data; // Almacenar los usuarios en la variable global
-        renderizarUsuarios(); // Llamar a la función de renderizado
+        Usuarios = data.data;
+        renderizarUsuarios(); // Renderiza con los usuarios activos ya cargados
     } catch (error) {
         console.error("Error al obtener usuarios:", error);
     } finally {
@@ -33,18 +55,18 @@ async function obtenerUsuarios() {
 
 function renderizarUsuarios() {
     const tabla = $("#usuariosTable").DataTable();
-
-    // Guardar la página actual antes de actualizar
     let paginaActual = tabla.page();
 
-    // Limpiar la tabla sin destruirla
     tabla.clear();
 
-    // Agregar los nuevos datos
     Usuarios.forEach((usuario) => {
         const perfiles = usuario.perfiles?.length
             ? usuario.perfiles.map((p) => p.nombre).join(", ")
             : "No tiene perfiles";
+
+        const estadoConexion = usuariosActivos.includes(usuario.idusuario)
+            ? `<span class="badge badge-success">Online</span>`
+            : `<span class="badge badge-secondary">Offline</span>`;
 
         tabla.row.add([
             usuario.nombres,
@@ -59,11 +81,11 @@ function renderizarUsuarios() {
             </label>`,
             `<button class="btn btn-fsvsaon btn-sm editar-usuario" data-id="${usuario.idusuario}">
                 <i class="fas fa-pencil-alt"></i>
-            </button>`
+            </button>`,
+            estadoConexion // <-- Añadimos la columna Online/Offline
         ]);
     });
 
-    // Dibujar la tabla con los nuevos datos y mantener la página actual
     tabla.draw(false);
     tabla.page(paginaActual).draw(false);
 }
@@ -78,14 +100,15 @@ $(document).ready(function () {
         autoWidth: false, // ❌ Deshabilita el ajuste automático de ancho
 
         columnDefs: [
-            { width: "15%", targets: 0 }, // 📌 Nombres
-            { width: "15%", targets: 1 }, // 📌 Apellidos
-            { width: "10%", targets: 2 }, // 📌 Email
-            { width: "5%", targets: 3 }, // 📌 Identificación
-            { width: "40%", targets: 4 }, // 📌 Perfiles
-            { width: "15%", targets: 5 }, // 📌 Última Sesión
-            { width: "5%", targets: 6 }, // 📌 Estado (toggle switch)
-            { width: "5%", targets: 7 }, // 📌 Botón de editar
+            { width: "15%", targets: 0 }, // Nombres
+            { width: "15%", targets: 1 }, // Apellidos
+            { width: "10%", targets: 2 }, // Email
+            { width: "5%", targets: 3 },  // Identificación
+            { width: "30%", targets: 4 }, // Perfiles (reducimos un poco)
+            { width: "15%", targets: 5 }, // Última Sesión
+            { width: "5%", targets: 6 },  // Estado (toggle)
+            { width: "5%", targets: 7 },  // Botón editar
+            { width: "5%", targets: 8 },  // ✅ Nuevo campo: Online/Offline
         ],
     });
 
@@ -94,9 +117,6 @@ $(document).ready(function () {
         const idUsuario = $(this).data("id");
         editarUsuario(idUsuario); // Llamar a la función de edición
     });
-
-    // Cargar usuarios por primera vez
-    obtenerUsuarios();
 });
 
 async function editarUsuario(idUsuario) {
@@ -148,7 +168,7 @@ async function actualizarUsuario(idUsuario) {
     const documento = document.getElementById('documentoUsuario').value;
     const apellidos = document.getElementById('apellidoUsuario').value;
     const email = document.getElementById('emailUsuario').value;
-    
+
     const perfiles = document.getElementById('ocultoPerfilesInput').value
         .split(',')
         .map(id => parseInt(id, 10))

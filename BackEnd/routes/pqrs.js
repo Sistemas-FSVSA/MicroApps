@@ -19,6 +19,8 @@ const { guardarGestionPQRS } = require('../controllers/pqrs/guardarGestionPQRS')
 const { guardarAdjuntosPQRS } = require('../controllers/pqrs/guardarAdjuntosPQRS');
 const { generarImpresionPQRS } = require('../controllers/pqrs/generarImpresionPQRS');
 const { obtenerSubfuentes } = require('../controllers/pqrs/obtenerSubfuentes');
+const { actualizarEstadoPQRS } = require('../controllers/pqrs/actualizarEstadoPQRS');
+const { obtenerEstadoPQRS } = require('../controllers/pqrs/obtenerEstadoPQRS');
 
 router.get('/obtenerPlanes', authenticateToken, rateLimiterFast, obtenerPlanes);
 router.get('/obtenerTiposPQRS', authenticateToken, rateLimiterFast, obtenerTiposPQRS);
@@ -33,5 +35,7 @@ router.post('/guardarAdjuntosPQRS', authenticateToken, rateLimiterFast, uploadFi
 router.post('/obtenerPQRS', authenticateToken, rateLimiterFast, obtenerPQRS);
 router.post('/generarImpresionPQRS', authenticateToken, rateLimiterFast, uploadFirma, generarImpresionPQRS);
 router.get('/obtenerSubfuentes/:idfuente', authenticateToken, rateLimiterFast, obtenerSubfuentes);
+router.post('/actualizarEstadoPQRS', authenticateToken, rateLimiterFast, actualizarEstadoPQRS);
+router.get('/obtenerEstadoPQRS/:idpqrs', authenticateToken, rateLimiterFast, obtenerEstadoPQRS);
 
 module.exports = router;

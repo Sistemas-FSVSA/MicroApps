@@ -166,27 +166,23 @@ function inicializarCanvas() {
 }
 
 async function capturarInformacionModal() {
-    const camposObligatorios = [
-        'titular', 'telefono',
-        'afiliado', 'fechaFallecimiento', 'reclamo'
-    ];
-
-    
+    const camposObligatorios = ['titular', 'telefono', 'afiliado', 'fechaFallecimiento', 'reclamo'];
+    const camposOpcionales = ['cc', 'direccion', 'contrato', 'plan', 'numeroServicio', 'nombreFallecido'];
 
     let data = { idusuario: localStorage.getItem('idusuario') };
     let faltanCampos = false;
 
-    // 🔍 Validar campos vacíos y resaltar los que falten
+    // Validar y agregar campos obligatorios
     camposObligatorios.forEach(campo => {
         const input = document.getElementById(campo);
         const valor = input.value.trim();
         data[campo] = valor;
 
         if (!valor) {
-            input.classList.add('is-invalid'); // 🚨 Resaltar en rojo si está vacío
+            input.classList.add('is-invalid');
             faltanCampos = true;
         } else {
-            input.classList.remove('is-invalid'); // ✅ Quitar resaltado si se llena
+            input.classList.remove('is-invalid');
         }
     });
 
@@ -194,6 +190,12 @@ async function capturarInformacionModal() {
         Mensaje('warning', 'Información incompleta', 'Por favor, complete todos los campos obligatorios.', false, false);
         return null;
     }
+
+    // Agregar campos opcionales sin validación
+    camposOpcionales.forEach(campo => {
+        const input = document.getElementById(campo);
+        data[campo] = input?.value?.trim() || '';
+    });
 
     return data;
 }

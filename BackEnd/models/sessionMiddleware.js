@@ -17,7 +17,7 @@ const getSessionCount = (req, res) => {
 };
 
 const getSessionUsers = (req, res) => {
-  res.json({ usuariosActivos: Array.from(activeUsers) });
+  res.json(Array.from(activeUsers));
 };
 
 

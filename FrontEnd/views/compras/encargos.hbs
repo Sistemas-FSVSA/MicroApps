@@ -24,25 +24,24 @@
         </div>
 
         <div id="item-container" class="mt-4 table-responsive">
-            <table id="item" class="table table-striped table-bordered" style="width: 99%;">
+            <table id="tablaItemsSeleccionados" class="table table-striped table-bordered" style="width: 99%">
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Item</th>
-                        <th>Categoria</th>
+                        <th>Categoría</th>
                         <th>Cantidad</th>
                         <th>Solicito</th>
-                        <th>Accion</th>
+                        <th>Acción</th>
                     </tr>
                 </thead>
                 <tbody id="tbodyitem">
+                    <!-- Filas dinámicas -->
                 </tbody>
             </table>
+
         </div>
     </div>
 </div>
-
-<script src="/controllers/compras/encargos.js"></script>
 
 <div class="modal fade" id="modalAñadirItem" tabindex="-1" aria-labelledby="modalAñadirItemLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl"> <!-- Cambia a modal-lg o modal-xl -->
@@ -55,7 +54,8 @@
             </div>
             <div class="modal-body">
                 <!-- Input para ingresar el nombre del item -->
-                <input type="text" id="inputNuevoItem" class="form-control mb-3" placeholder="Ingrese el nombre del item">
+                <input type="text" id="inputNuevoItem" class="form-control mb-3"
+                    placeholder="Ingrese el nombre del item">
 
                 <div class="table-responsive">
                     <table id="itemTable" class="table table-striped table-bordered">
@@ -80,3 +80,5 @@
         </div>
     </div>
 </div>
+
+<script src="/controllers/compras/encargos.js"></script>

@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="/css/compras/nuevopedido.css">
+
 <div class="content-header">
     <div class="container-fluid">
         <div class="row mb-2 align-items-center d-flex justify-content-between">
@@ -27,6 +29,7 @@
             <table id="tablaItemsSeleccionados" class="table table-striped table-bordered" style="width: 99%">
                 <thead>
                     <tr>
+                        <th>ID</th>
                         <th>Item</th>
                         <th>Categoría</th>
                         <th>Cantidad</th>
@@ -41,6 +44,12 @@
 
         </div>
     </div>
+</div>
+
+<div class="btn-container">
+    <a class="btn btn-fsvsaoff" id="guardarEncargo" tabindex="-1">Guardar Encargo</a>
+    <a class="btn btn-fsvsaon" id="cerrarEncargo">Cerrar Encargo</a>
+    <a class="btn btn-fsvsaon" id="aprobarEncargo">Aprobar Encargo</a>
 </div>
 
 <div class="modal fade" id="modalAñadirItem" tabindex="-1" aria-labelledby="modalAñadirItemLabel" aria-hidden="true">
@@ -61,6 +70,7 @@
                     <table id="itemTable" class="table table-striped table-bordered">
                         <thead>
                             <tr>
+                                <th>ID</th>
                                 <th>Item</th>
                                 <th>Categoría</th>
                                 <th>Descripcion</th>
@@ -75,10 +85,9 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-fsvsaoff" data-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-fsvsaon" onclick="guardarItem()">Guardar</button>
             </div>
         </div>
     </div>
 </div>
 
-<script src="/controllers/compras/encargos.js"></script>
+<script src="/controllers/compras/continuarpedido.js"></script>

@@ -10,11 +10,17 @@ const { guardarCategoria } = require('../controllers/compras/guardarCategoria');
 const { guardarItem } = require('../controllers/compras/guardarItem');
 const { guardarDependencia } = require('../controllers/compras/guardarDependencia');
 const { obtenerItems } = require('../controllers/compras/obtenerItems');
+const { manejarPedido } = require('../controllers/compras/manejarPedido');
+const { obtenerPedido } = require('../controllers/compras/obtenerPedido');
+const { obtenerEstadoPedido } = require('../controllers/compras/obtenerEstadoPedido');
 
 router.post('/guardarCategoria', authenticateToken, rateLimiterFast, guardarCategoria);
 router.post('/guardarItem', authenticateToken, rateLimiterFast, guardarItem);
 router.post('/guardarDependencia', authenticateToken, rateLimiterFast, guardarDependencia);
 router.get('/obtenerItems', authenticateToken, rateLimiterFast, obtenerItems);
+router.post('/manejarPedido', authenticateToken, rateLimiterFast, manejarPedido);
+router.post('/obtenerPedido', authenticateToken, rateLimiterFast, obtenerPedido)
+router.get('/obtenerEstadoPedido/:idpedido', authenticateToken, rateLimiterFast, obtenerEstadoPedido);
 
 
 module.exports = router;

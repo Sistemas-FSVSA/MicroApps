@@ -1,0 +1,44 @@
+<link rel="stylesheet" href="/css/compras/pedidos.css">
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Pedidos</h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="content">
+    <div class="container-fluid">
+
+        <!-- Card: Manejar Pedido -->
+        <div class="row justify-content-center" id="manejarPedidos">
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-3" id="Pedido">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h1><i class="fas fa-file-medical"></i></h1>
+                        <button type="button" class="btn btn-fsvsaon" onclick="redireccionNuevoPedido()"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card: Aprobar Pedido -->
+        <div class="row justify-content-center" id="contenedorAprobarPedidos">
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-3" id="PedidoAprobar">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h1><i class="fas fa-file-prescription"></i></h1>
+                        <button type="button" class="btn btn-fsvsaon">Aprobar Pedidos (Dependencia)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<script src="/controllers/compras/pedidos.js"></script>

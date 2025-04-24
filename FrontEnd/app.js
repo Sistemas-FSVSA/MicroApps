@@ -183,11 +183,25 @@ app.get("/vales/reportevales", (req, res) => {
     res.render("vales/reportevales");
 });
 
-app.get("/compras/encargos", (req, res) => {
+app.get("/compras/pedidos", (req, res) => {
     if (req.xhr) {
-        return res.render("compras/encargos", { layout: false }); // Solo la vista
+        return res.render("compras/pedidos", { layout: false }); // Solo la vista
     }
-    res.render("compras/encargos");
+    res.render("compras/pedidos");
+});
+
+app.get("/compras/nuevopedido", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/nuevopedido", { layout: false }); // Solo la vista
+    }
+    res.render("compras/nuevopedido");
+});
+
+app.get("/compras/continuarpedido", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/continuarpedido", { layout: false }); // Solo la vista
+    }
+    res.render("compras/continuarpedido");
 });
 
 app.get("/recaudo/novedadesrecaudo", (req, res) => {

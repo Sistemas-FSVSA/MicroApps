@@ -140,12 +140,16 @@ function reinitializeScripts() {
         loadAndRunScript("/controllers/vales/reportevales.js", "InicializarReporteVales");
     }
 
-    if (path.includes("/compras/encargos")) {
-        loadAndRunScript("/controllers/compras/encargos.js", "InicializarEncargos");
+    if (path.includes("/compras/pedidos")) {
+        loadAndRunScript("/controllers/compras/pedidos.js", "InicializarPedidos");
     }
     
-    if (path.includes("/compras/encargos")) {
-        loadAndRunScript("/controllers/compras/encargos.js", "InicializarEncargos");
+    if (path.includes("/compras/nuevopedido")) {
+        loadAndRunScript("/controllers/compras/nuevopedido.js", "InicializarNuevoPedido");
+    }
+
+    if (path.includes("/compras/continuarpedido")) {
+        loadAndRunScript("/controllers/compras/continuarpedido.js", "InicializarContinuarPedido");
     }
 
     if (path.includes("/recaudo/novedadesrecaudo")) {
@@ -160,6 +164,7 @@ function irAtras() {
     } else {
         cargarVista('/inicio'); // Si no hay historial, volver a inicio
     }
+    sessionStorage.clear(); // Borra el sessionStorage al ejecutar la función
 }
 
 function limpiarEventos() {
@@ -257,6 +262,7 @@ async function logoutUser(autoLogout = false) {
         const data = await response.json();
         if (data.estado === 'ok') {
             localStorage.clear(); // Limpia el localStorage
+            sessionStorage.clear();
 
             // Determina el mensaje según si es cierre automático o manual
             if (autoLogout) {

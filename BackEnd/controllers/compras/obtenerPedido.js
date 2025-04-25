@@ -3,38 +3,57 @@ const { poolPromise, sql } = require('../../models/conexion');
 const obtenerPedido = async (req, res) => {
     try {
         const { idusuario, idpedido, estado } = req.body;
-
-        // Crear conexión a la base de datos
         const pool = await poolPromise;
 
-        if (idusuario) {
-            // Consultar el iddependencia asociado al idusuario
+        // Escenario 1: Solo idusuario
+        if (idusuario && !idpedido && !estado) {
             const dependenciaResult = await pool.request()
-            .input('idusuario', sql.Int, idusuario)
-            .query('SELECT iddependencia FROM usuariocompras WHERE idusuario = @idusuario');
+                .input('idusuario', sql.Int, idusuario)
+                .query('SELECT iddependencia FROM usuariocompras WHERE idusuario = @idusuario');
 
             if (dependenciaResult.recordset.length === 0) {
-            return res.status(404).send('No se encontró el iddependencia para el idusuario proporcionado.');
+                return res.status(404).send('No se encontró el iddependencia para el idusuario proporcionado.');
             }
 
             const iddependencia = dependenciaResult.recordset[0].iddependencia;
 
-            // Consultar si hay algún pedido con el iddependencia y estado
+            const pedidosResult = await pool.request()
+                .input('iddependencia', sql.Int, iddependencia)
+                .query('SELECT idpedido, estado FROM pedidos WHERE iddependencia = @iddependencia');
+
+            return res.json({ pedidos: pedidosResult.recordset });
+        }
+
+
+        // Escenario 2: idusuario + estado
+        if (idusuario && estado && !idpedido) {
+            const dependenciaResult = await pool.request()
+                .input('idusuario', sql.Int, idusuario)
+                .query('SELECT iddependencia FROM usuariocompras WHERE idusuario = @idusuario');
+
+            if (dependenciaResult.recordset.length === 0) {
+                return res.status(404).send('No se encontró el iddependencia para el idusuario proporcionado.');
+            }
+
+            const iddependencia = dependenciaResult.recordset[0].iddependencia;
+
             const pedidoResult = await pool.request()
-            .input('iddependencia', sql.Int, iddependencia)
-            .input('estado', sql.VarChar, estado)
-            .query(`
-                SELECT idpedido FROM pedidos 
-                WHERE iddependencia = @iddependencia AND estado = @estado
-            `);
+                .input('iddependencia', sql.Int, iddependencia)
+                .input('estado', sql.VarChar, estado)
+                .query(`
+            SELECT TOP 1 idpedido FROM pedidos 
+            WHERE iddependencia = @iddependencia AND estado = @estado
+        `);
 
             if (pedidoResult.recordset.length > 0) {
-            return res.json({ exists: true, idpedido: pedidoResult.recordset[0].idpedido }); // Retornar true y el idpedido
+                return res.json({ exists: true, idpedido: pedidoResult.recordset[0].idpedido });
             } else {
-            return res.json({ exists: false }); // No hay pedidos que cumplan las condiciones
+                return res.json({ exists: false });
             }
-        }if (idpedido) {
-            // Consultar el pedido por idpedido
+        }
+
+        // Escenario 3: Solo idpedido
+        if (idpedido && !idusuario) {
             const pedidoResult = await pool.request()
                 .input('idpedido', sql.Int, idpedido)
                 .query('SELECT * FROM pedidos WHERE idpedido = @idpedido');
@@ -45,12 +64,12 @@ const obtenerPedido = async (req, res) => {
 
             const pedido = pedidoResult.recordset[0];
 
-            // Obtener el detalle del pedido
             const detalleResult = await pool.request()
                 .input('idpedido', sql.Int, idpedido)
                 .query('SELECT * FROM detallepedido WHERE idpedido = @idpedido');
 
             const detalles = [];
+
             for (const detalle of detalleResult.recordset) {
                 const itemResult = await pool.request()
                     .input('iditem', sql.Int, detalle.iditem)
@@ -70,13 +89,12 @@ const obtenerPedido = async (req, res) => {
                     nombre: itemResult.recordset[0].nombre,
                     descripcion: itemResult.recordset[0].descripcion,
                     categoria: categoriaResult.recordset[0].nombre,
-                    nombreCompleto: detalle.nombreusuario // Si este campo no existe, ajusta según sea necesario
+                    nombreCompleto: detalle.nombreusuario || null
                 });
             }
 
             pedido.detalle = detalles;
 
-            // Obtener el nombre de la dependencia
             const dependenciaNombreResult = await pool.request()
                 .input('iddependencia', sql.Int, pedido.iddependencia)
                 .query('SELECT nombre FROM dependencias WHERE iddependencia = @iddependencia');
@@ -84,9 +102,11 @@ const obtenerPedido = async (req, res) => {
             pedido.nombreDependencia = dependenciaNombreResult.recordset[0].nombre;
 
             return res.json(pedido);
-        } else {
-            return res.status(400).send('Debe proporcionar idusuario o idpedido.');
         }
+
+        // Si no se cumple ninguno de los 3 escenarios
+        return res.status(400).send('Debe proporcionar una combinación válida de parámetros.');
+
     } catch (error) {
         console.error('Error al procesar la solicitud:', error);
         res.status(500).send('Error interno del servidor.');

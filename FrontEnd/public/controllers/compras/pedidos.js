@@ -74,6 +74,9 @@ function redireccionContinuarPedido(idpedido) {
     cargarVista(url);
 }
 
-
+function redireccionAprobarPedido() {
+    const url = `/compras/aprobarpedido/`;
+    cargarVista(url);
+}
 
 

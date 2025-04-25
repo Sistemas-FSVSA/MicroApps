@@ -274,6 +274,8 @@ function manejarPedido(estado, idpedido) {
             if (estado === 'CERRADO') {
                 Mensaje('success', 'Éxito!', 'El encargo ha sido cerrado con éxito.', true, false);
                 sessionStorage.removeItem('itemsSeleccionados'); // Borrar el sessionStorage
+            } else if (estado === 'APROBADO') {
+                Mensaje('success', 'Éxito!', 'Encargo aprobado con éxito.', true, false);
             } else {
                 Mensaje('success', 'Éxito!', 'El encargo se ha guardado correctamente.', true, false);
             }
@@ -284,6 +286,8 @@ function manejarPedido(estado, idpedido) {
                 redireccionUrl = `/compras/continuarpedido?idpedido=${data.idpedido}`;
             } else if (estado === 'CERRADO') {
                 redireccionUrl = '/compras/pedidos';
+            } else if (estado === 'APROBADO') {
+                redireccionUrl = '/compras/aprobarpedido';
             }
 
             // Redirección después de 2 segundos

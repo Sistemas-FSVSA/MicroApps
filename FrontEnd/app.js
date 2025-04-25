@@ -204,6 +204,13 @@ app.get("/compras/continuarpedido", (req, res) => {
     res.render("compras/continuarpedido");
 });
 
+app.get("/compras/aprobarpedido", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/aprobarpedido", { layout: false }); // Solo la vista
+    }
+    res.render("compras/aprobarpedido");
+});
+
 app.get("/recaudo/novedadesrecaudo", (req, res) => {
     if (req.xhr) {
         return res.render("recaudo/novedadesrecaudo", { layout: false }); // Solo la vista

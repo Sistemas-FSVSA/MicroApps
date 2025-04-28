@@ -13,6 +13,11 @@
 <div class="content">
     <div class="container-fluid">
 
+        <div id="mensajeDependencia" style="display:none; text-align:center; margin-top: 50px;">
+            <h2>No tienes dependencia asignada.</h2>
+            <p>Por favor, contacta con el encargado de compras.</p>
+        </div>
+
         <!-- Card: Manejar Pedido -->
         <div class="row justify-content-center" id="manejarPedidos">
             <div class="col-lg-3 col-md-4 col-sm-6 mb-3" id="Pedido">
@@ -28,12 +33,13 @@
         <!-- Card: Aprobar Pedido -->
         <div class="row justify-content-center" id="contenedorAprobarPedidos">
             <div class="col-lg-3 col-md-4 col-sm-6 mb-3" id="PedidoAprobar">
-            <div class="card text-center">
-                <div class="card-body">
-                <h1><i class="fas fa-file-prescription"></i></h1>
-                <button type="button" class="btn btn-fsvsaon" onclick="redireccionAprobarPedido()">Aprobar Pedidos (Dependencia)</button>
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h1><i class="fas fa-file-prescription"></i></h1>
+                        <button type="button" class="btn btn-fsvsaon" onclick="redireccionAprobarPedido()">Aprobar
+                            Pedidos (Dependencia)</button>
+                    </div>
                 </div>
-            </div>
             </div>
         </div>
 

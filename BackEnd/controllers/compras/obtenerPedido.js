@@ -9,21 +9,18 @@ const obtenerPedido = async (req, res) => {
         if (idusuario && !idpedido && !estado) {
             const dependenciaResult = await pool.request()
                 .input('idusuario', sql.Int, idusuario)
-                .query('SELECT iddependencia FROM usuariocompras WHERE idusuario = @idusuario');
+                .query('SELECT iddependencia, tipo FROM usuariocompras WHERE idusuario = @idusuario');
 
-            if (dependenciaResult.recordset.length === 0) {
-                return res.status(404).send('No se encontró el iddependencia para el idusuario proporcionado.');
+            if (dependenciaResult.recordset.length === 0 || !dependenciaResult.recordset[0].iddependencia) {
+                // No hay dependencia asociada
+                return res.status(200).json({ message: 'Sin Depedencia' });
             }
 
-            const iddependencia = dependenciaResult.recordset[0].iddependencia;
+            const { iddependencia, tipo } = dependenciaResult.recordset[0];
 
-            const pedidosResult = await pool.request()
-                .input('iddependencia', sql.Int, iddependencia)
-                .query('SELECT idpedido, estado FROM pedidos WHERE iddependencia = @iddependencia');
-
-            return res.json({ pedidos: pedidosResult.recordset });
+            // Retornar iddependencia y tipo
+            return res.json({ iddependencia, tipo });
         }
-
 
         // Escenario 2: idusuario + estado
         if (idusuario && estado && !idpedido) {

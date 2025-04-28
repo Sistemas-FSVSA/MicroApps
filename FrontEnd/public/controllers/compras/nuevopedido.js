@@ -120,6 +120,9 @@ function agregarItemASessionStorage(nuevoItem) {
 
     // Actualizar la tabla principal
     renderizarItemsEncargo();
+
+    // Mostrar mensaje de éxito
+    Mensaje('success', 'Éxito!', 'Item agregado exitosamente.', true, false);
 }
 
 function renderizarItemsEncargo() {

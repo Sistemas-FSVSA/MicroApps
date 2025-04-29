@@ -156,6 +156,10 @@ function reinitializeScripts() {
         loadAndRunScript("/controllers/compras/aprobarpedido.js", "InicializarAprobarPedido");
     }
 
+    if (path.includes("/compras/revisarpedido")) {
+        loadAndRunScript("/controllers/compras/revisarpedido.js", "InicializarRevisarPedido");
+    }
+
     if (path.includes("/recaudo/novedadesrecaudo")) {
         loadAndRunScript("/controllers/recaudo/novedadesrecaudo.js", "incializarNovedadesRecaudo");
     }

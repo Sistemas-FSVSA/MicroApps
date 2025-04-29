@@ -301,10 +301,6 @@ async function cargarPermisosNuevosPedidos() {
     const tienePermisoGuardarPedido = permisos.some(permiso => permiso.elemento === "BOTON_GUARDAR_PEDIDO");
     const botonGuardar = document.getElementById('guardarEncargo');
     botonGuardar.style.display = tienePermisoGuardarPedido ? 'inline-block' : 'none';
-
-    const tienePermisoAprobarPedido = permisos.some(permiso => permiso.elemento === "BOTON_APROBAR_PEDIDO");
-    const botonAprobar = document.getElementById('aprobarEncargo');
-    botonAprobar.style.display = tienePermisoAprobarPedido ? 'inline-block' : 'none';
     
     const tienePermisoAgregarItem = permisos.some(permiso => permiso.elemento === "BOTON_AGREGAR_ITEM_PEDIDO");
     const botonAgregar = document.getElementById('agregarItem');

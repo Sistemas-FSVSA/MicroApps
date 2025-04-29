@@ -7,20 +7,38 @@ const obtenerPedido = async (req, res) => {
 
         // Escenario 1: Solo idusuario
         if (idusuario && !idpedido && !estado) {
-            const dependenciaResult = await pool.request()
+            const dependenciasResult = await pool.request()
                 .input('idusuario', sql.Int, idusuario)
                 .query('SELECT iddependencia, tipo FROM usuariocompras WHERE idusuario = @idusuario');
 
-            if (dependenciaResult.recordset.length === 0 || !dependenciaResult.recordset[0].iddependencia) {
-                // No hay dependencia asociada
-                return res.status(200).json({ message: 'Sin Depedencia' });
+            if (dependenciasResult.recordset.length === 0) {
+                // No hay dependencias asociadas
+                return res.status(200).json({ message: 'Sin Dependencias' });
             }
 
-            const { iddependencia, tipo } = dependenciaResult.recordset[0];
+            const dependencias = [];
 
-            // Retornar iddependencia y tipo
-            return res.json({ iddependencia, tipo });
+            for (const dependencia of dependenciasResult.recordset) {
+                const pedidosResult = await pool.request()
+                    .input('iddependencia', sql.Int, dependencia.iddependencia)
+                    .query('SELECT idpedido, estado FROM pedidos WHERE iddependencia = @iddependencia');
+
+                const dependenciaNombreResult = await pool.request()
+                    .input('iddependencia', sql.Int, dependencia.iddependencia)
+                    .query('SELECT nombre FROM dependencias WHERE iddependencia = @iddependencia');
+
+                dependencias.push({
+                    iddependencia: dependencia.iddependencia,
+                    tipo: dependencia.tipo,
+                    nombreDependencia: dependenciaNombreResult.recordset[0]?.nombre || null,
+                    pedidos: pedidosResult.recordset
+                });
+            }
+
+            // Retornar todas las dependencias con sus pedidos y nombres
+            return res.json({ dependencias });
         }
+
 
         // Escenario 2: idusuario + estado
         if (idusuario && estado && !idpedido) {
@@ -99,6 +117,33 @@ const obtenerPedido = async (req, res) => {
             pedido.nombreDependencia = dependenciaNombreResult.recordset[0].nombre;
 
             return res.json(pedido);
+        }
+
+        // Escenario 4: Solo estado (obtener todos los pedidos con ese estado)
+        if (estado && !idusuario && !idpedido) {
+            const pedidosResult = await pool.request()
+            .input('estado', sql.VarChar, estado)
+            .query('SELECT * FROM pedidos WHERE estado = @estado');
+
+            const pedidos = [];
+
+            for (const pedido of pedidosResult.recordset) {
+            const dependenciaNombreResult = await pool.request()
+                .input('iddependencia', sql.Int, pedido.iddependencia)
+                .query('SELECT nombre FROM dependencias WHERE iddependencia = @iddependencia');
+
+            const totalItemsResult = await pool.request()
+                .input('idpedido', sql.Int, pedido.idpedido)
+                .query('SELECT SUM(cantidad) AS totalItems FROM detallepedido WHERE idpedido = @idpedido');
+
+            pedidos.push({
+                ...pedido,
+                nombreDependencia: dependenciaNombreResult.recordset[0]?.nombre || null,
+                totalItems: totalItemsResult.recordset[0]?.totalItems || 0
+            });
+            }
+
+            return res.json({ pedidos });
         }
 
         // Si no se cumple ninguno de los 3 escenarios

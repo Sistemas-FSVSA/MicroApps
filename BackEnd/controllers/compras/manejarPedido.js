@@ -15,10 +15,15 @@ const manejarPedido = async (req, res) => {
                 .query('DELETE FROM detallepedido WHERE idpedido = @idpedido');
 
             // Actualizar el estado del pedido
+            const updateQuery = `
+                UPDATE pedidos 
+                SET estado = @estado${estado === 'APROBADO' ? ', fechapedido = GETDATE()' : ''} 
+                WHERE idpedido = @idpedido
+            `;
             await pool.request()
                 .input('idpedido', sql.Int, idpedido)
                 .input('estado', sql.VarChar, estado || 'INICIADO') // Estado por defecto si no llega
-                .query('UPDATE pedidos SET estado = @estado WHERE idpedido = @idpedido');
+                .query(updateQuery);
         } else {
             // Si no llega un idpedido, crear un nuevo registro en la tabla pedidos
             const result = await pool.request()

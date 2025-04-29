@@ -7,13 +7,20 @@ async function InicializarPedidos() {
     const permisos = JSON.parse(localStorage.getItem('permisos'));
     const estado = 'INICIADO';
     const mensajeDependencia = document.getElementById('mensajeDependencia');
-    const cardPedido = document.getElementById('manejarPedidos');
+    const cardPedido = document.getElementById('Pedido'); // corregido
 
     // Validación independiente para la card APROBAR_PEDIDOS
     const tieneVistaAprobarPedidos = permisos.some(permiso => permiso.elemento === "APROBAR_PEDIDOS_PENDIENTES");
     const aprobarPedidosPendientes = document.getElementById('PedidoAprobar');
     if (!tieneVistaAprobarPedidos) {
         aprobarPedidosPendientes.style.display = 'none';
+    }
+
+    // Validación independiente para la card APROBAR_PEDIDOS
+    const tieneVistaRevisarPedidos = permisos.some(permiso => permiso.elemento === "REVISAR_PEDIDOS");
+    const RevisarPedidosPendientes = document.getElementById('RevisarPedido');
+    if (!tieneVistaRevisarPedidos) {
+        RevisarPedidosPendientes.style.display = 'none';
     }
 
     // Validación y lógica de la card MANEJAR_PEDIDOS
@@ -37,10 +44,14 @@ async function InicializarPedidos() {
 
             const dependenciaResult = await dependenciaResponse.json();
 
-            if (dependenciaResult.message === 'Sin Depedencia') {
-                // Mostrar el mensaje de no dependencia
+            if (dependenciaResult.message === 'Sin Dependencias') { // corregido
                 mensajeDependencia.style.display = 'block';
-                cardPedido.style.display = 'none'; // Ocultamos la card de manejar pedidos
+            
+                // Ocultar todas las cards
+                document.getElementById('Pedido').style.display = 'none';
+                document.getElementById('PedidoAprobar').style.display = 'none';
+                document.getElementById('RevisarPedido').style.display = 'none';
+            
                 return;
             }
 
@@ -98,5 +109,10 @@ function redireccionContinuarPedido(idpedido) {
 
 function redireccionAprobarPedido() {
     const url = `/compras/aprobarpedido/`;
+    cargarVista(url);
+}
+
+function redireccionRevisarPedido() {
+    const url = `/compras/revisarpedido/`;
     cargarVista(url);
 }

@@ -160,6 +160,14 @@ function reinitializeScripts() {
         loadAndRunScript("/controllers/compras/revisarpedido.js", "InicializarRevisarPedido");
     }
 
+    if (path.includes("/compras/ordenes")) {
+        loadAndRunScript("/controllers/compras/ordenes.js", "InicializarOrdenes");
+    }
+
+    if (path.includes("/compras/itemsolicitados")) {
+        loadAndRunScript("/controllers/compras/itemsolicitados.js", "InicializarItemSolicitados");
+    }
+
     if (path.includes("/recaudo/novedadesrecaudo")) {
         loadAndRunScript("/controllers/recaudo/novedadesrecaudo.js", "incializarNovedadesRecaudo");
     }
@@ -169,6 +177,8 @@ function reinitializeScripts() {
 function irAtras() {
     if (window.history.length > 1) {
         window.history.back();
+        // Re-ejecutar scripts de la vista cargada
+        reinitializeScripts();
     } else {
         cargarVista('/inicio'); // Si no hay historial, volver a inicio
     }

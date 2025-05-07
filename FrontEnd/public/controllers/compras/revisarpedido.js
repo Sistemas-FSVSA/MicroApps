@@ -25,8 +25,8 @@ async function InicializarRevisarPedido() {
             {
                 title: 'Acciones',
                 data: null,
-                render: function () {
-                    return '<button type="button" class="btn btn-fsvsaoff ver-pedido"><i class="fas fa-eye"></i></button>';
+                render: function (data) {
+                    return `<button type="button" class="btn btn-fsvsaoff ver-pedido" data-idpedido="${data.idpedido}"><i class="fas fa-eye"></i></button>`;
                 },
                 orderable: false
             }
@@ -36,6 +36,16 @@ async function InicializarRevisarPedido() {
 
     // Obtener pedidos y actualizar la tabla
     obtenerPedidos(table);
+
+    // Event listener para el botón "Ver Pedido"
+    $('#pedidoTable').off('click', '.ver-pedido').on('click', '.ver-pedido', async function () {
+        const idpedido = $(this).data('idpedido');
+
+        const url = `/compras/continuarpedido?idpedido=${idpedido}`;
+
+        window.history.pushState({ path: url }, "", url);
+        await cargarVista(url);
+    });
 }
 
 function obtenerPedidos(table) {

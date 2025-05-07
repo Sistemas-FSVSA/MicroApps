@@ -218,6 +218,20 @@ app.get("/compras/revisarpedido", (req, res) => {
     res.render("compras/revisarpedido");
 });
 
+app.get("/compras/ordenes", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/ordenes", { layout: false }); // Solo la vista
+    }
+    res.render("compras/ordenes");
+});
+
+app.get("/compras/itemsolicitados", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/itemsolicitados", { layout: false }); // Solo la vista
+    }
+    res.render("compras/itemsolicitados");
+});
+
 app.get("/recaudo/novedadesrecaudo", (req, res) => {
     if (req.xhr) {
         return res.render("recaudo/novedadesrecaudo", { layout: false }); // Solo la vista

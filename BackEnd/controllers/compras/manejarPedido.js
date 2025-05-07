@@ -11,19 +11,21 @@ const manejarPedido = async (req, res) => {
         if (idpedido) {
             // Si llega un idpedido, eliminar los ítems existentes de ese pedido
             await pool.request()
-                .input('idpedido', sql.Int, idpedido)
-                .query('DELETE FROM detallepedido WHERE idpedido = @idpedido');
+            .input('idpedido', sql.Int, idpedido)
+            .query('DELETE FROM detallepedido WHERE idpedido = @idpedido');
 
-            // Actualizar el estado del pedido
+            // Actualizar el estado del pedido y el usuario que aprobó
             const updateQuery = `
-                UPDATE pedidos 
-                SET estado = @estado${estado === 'APROBADO' ? ', fechapedido = GETDATE()' : ''} 
-                WHERE idpedido = @idpedido
+            UPDATE pedidos 
+            SET estado = @estado${estado === 'APROBADO' ? ', fechapedido = GETDATE()' : ''}, 
+                idusuarioaprobo = @idusuario 
+            WHERE idpedido = @idpedido
             `;
             await pool.request()
-                .input('idpedido', sql.Int, idpedido)
-                .input('estado', sql.VarChar, estado || 'INICIADO') // Estado por defecto si no llega
-                .query(updateQuery);
+            .input('idpedido', sql.Int, idpedido)
+            .input('estado', sql.VarChar, estado || 'INICIADO') // Estado por defecto si no llega
+            .input('idusuario', sql.Int, idusuario) // Actualizar idusuarioaprobo con el idusuario recibido
+            .query(updateQuery);
         } else {
             // Si no llega un idpedido, crear un nuevo registro en la tabla pedidos
             const result = await pool.request()

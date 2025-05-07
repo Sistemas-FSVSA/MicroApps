@@ -333,6 +333,10 @@ async function cargarPermisosContinuarPedidos() {
     const tienePermisoCerrarPedido = permisos.some(permiso => permiso.elemento === "BOTON_CERRAR_PEDIDO" && estado == 'INICIADO');
     const botonCerrar = document.getElementById('cerrarEncargo');
     botonCerrar.style.display = tienePermisoCerrarPedido ? 'inline-block' : 'none';
+
+    const tienePermisoAutorizarPedido = permisos.some(permiso => permiso.elemento === "BOTON_AUTORIZAR_PEDIDO" && estado == 'APROBADO');
+    const botonAutorizar = document.getElementById('autorizarEncargo');
+    botonAutorizar.style.display = tienePermisoAutorizarPedido ? 'inline-block' : 'none';
     
     const tienePermisoAgregarItem = permisos.some(permiso => permiso.elemento === "BOTON_AGREGAR_ITEM_PEDIDO");
     const botonAgregar = document.getElementById('agregarItem');

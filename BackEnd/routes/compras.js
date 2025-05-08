@@ -12,6 +12,7 @@ const { guardarDependencia } = require('../controllers/compras/guardarDependenci
 const { obtenerItems } = require('../controllers/compras/obtenerItems');
 const { obtenerItemsPedido } = require('../controllers/compras/obtenerItemsPedido');
 const { manejarPedido } = require('../controllers/compras/manejarPedido');
+const { manejarOrden } = require('../controllers/compras/manejarOrden');
 const { obtenerPedido } = require('../controllers/compras/obtenerPedido');
 const { obtenerEstadoPedido } = require('../controllers/compras/obtenerEstadoPedido');
 
@@ -21,6 +22,7 @@ router.post('/guardarDependencia', authenticateToken, rateLimiterFast, guardarDe
 router.get('/obtenerItems', authenticateToken, rateLimiterFast, obtenerItems);
 router.get('/obtenerItemsPedido', authenticateToken, rateLimiterFast, obtenerItemsPedido);
 router.post('/manejarPedido', authenticateToken, rateLimiterFast, manejarPedido);
+router.post('/manejarOrden', authenticateToken, rateLimiterFast, manejarOrden);
 router.post('/obtenerPedido', authenticateToken, rateLimiterFast, obtenerPedido)
 router.get('/obtenerEstadoPedido/:idpedido', authenticateToken, rateLimiterFast, obtenerEstadoPedido);
 

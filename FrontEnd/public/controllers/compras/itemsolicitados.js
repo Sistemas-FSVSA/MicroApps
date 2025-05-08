@@ -1,9 +1,133 @@
 document.addEventListener("DOMContentLoaded", () => {
     InicializarItemSolicitados();
+
 });
 
 async function InicializarItemSolicitados() {
     cargarItemSolicitados()
+
+    document.getElementById('ordenSalida').addEventListener('click', function () {
+        renderizarItemsSeleccionadosModal(); // <-- ¡Aquí!
+        let modal = new bootstrap.Modal(document.getElementById('modalOrdenSalida'));
+        modal.show();
+    });
+}
+
+function renderizarItemsSeleccionadosModal() {
+    const tbody = document.getElementById('tbodyOrdenSalida');
+    tbody.innerHTML = '';
+
+    const itemsSeleccionados = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
+
+    // ✅ Destruir DataTable si ya existe para evitar reinitialise error
+    if ($.fn.DataTable.isDataTable('#ordenSalidaTable')) {
+        $('#ordenSalidaTable').DataTable().clear().destroy();
+    }
+
+    itemsSeleccionados.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${item.iditem}</td>
+            <td>${item.itemNombre}</td>
+            <td>${item.categoriaNombre}</td>
+            <td>
+                <input type="number" class="form-control input-cantidad" 
+                    data-iditem="${item.iditem}" 
+                    value="${item.total}" 
+                    min="1" style="width: 80px;">
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    // Escuchar cambios
+    tbody.querySelectorAll('.input-cantidad').forEach(input => {
+        input.addEventListener('input', function () {
+            const iditem = parseInt(this.dataset.iditem);
+            const nuevoValor = parseInt(this.value);
+            let items = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
+
+            items = items.map(item => {
+                if (item.iditem === iditem) {
+                    return { ...item, total: nuevoValor };
+                }
+                return item;
+            });
+
+            sessionStorage.setItem('itemsSeleccionados', JSON.stringify(items));
+            console.log(`Cantidad actualizada para ID ${iditem}:`, nuevoValor);
+        });
+    });
+
+
+    $('#ordenSalidaTable').DataTable({
+        pageLength: 5,
+        lengthChange: false,
+        searching: false,
+        language: {
+            url: "https://cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
+        }
+    });
+
+}
+
+async function manejarOrden() {
+    const itemsSeleccionados = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
+    const idusuario = localStorage.getItem('idusuario'); // Capturar idusuario del localStorage
+
+    // Validación básica
+    if (!Array.isArray(itemsSeleccionados) || itemsSeleccionados.length === 0) {
+        console.warn('No hay items seleccionados para enviar.');
+        alert('No hay datos para enviar.');
+        return;
+    }
+
+    if (!idusuario) {
+        console.warn('No se encontró el idusuario en el localStorage.');
+        alert('No se encontró el idusuario. Por favor, inicie sesión nuevamente.');
+        return;
+    }
+
+    try {
+        const data = {
+            idusuario, // Incluir idusuario en la data
+            items: itemsSeleccionados
+        };
+
+        const respuesta = await fetch(`${url}/api/compras/manejarOrden`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(data)
+        });
+
+        const resultado = await respuesta.json();
+
+        if (respuesta.ok) {
+            console.log('Orden Generada exitosamente:', resultado);
+            alert('Orden Generada exitosamente.');
+
+            // Limpiar sessionStorage
+            sessionStorage.removeItem('itemsSeleccionados');
+
+            // Forzar cierre del modal
+            $('#modalOrdenSalida').removeClass('show').removeAttr('style').attr('aria-hidden', 'true');
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
+
+            // Recargar los items solicitados
+            await cargarItemSolicitados();
+        } else {
+            console.error('Error al generar la orden:', resultado);
+            alert('Error al generar la orden. Ver consola para más detalles.');
+        }
+
+    } catch (error) {
+        console.error('Error en la solicitud:', error);
+        alert('Error de conexión al generar la orden.');
+    }
 }
 
 async function cargarItemSolicitados() {
@@ -21,7 +145,6 @@ async function cargarItemSolicitados() {
         }
 
         const data = await response.json();
-        console.log(data);
         renderizarTablaItems(data.items);
     } catch (error) {
         console.error("Error:", error);
@@ -37,12 +160,19 @@ function guardarItemsSeleccionados(items) {
     sessionStorage.setItem("itemsSeleccionados", JSON.stringify(items));
 }
 
-function toggleItemSeleccionado(iditem) {
+function toggleItemSeleccionado(item) {
     let items = getItemsSeleccionados();
-    if (items.includes(iditem)) {
-        items = items.filter(id => id !== iditem);
+    const existe = items.find(i => i.iditem === item.iditem);
+
+    if (existe) {
+        items = items.filter(i => i.iditem !== item.iditem);
     } else {
-        items.push(iditem);
+        items.push({
+            iditem: item.iditem,
+            itemNombre: item.itemNombre,
+            categoriaNombre: item.categoriaNombre,
+            total: item.total
+        });
     }
     guardarItemsSeleccionados(items);
 }
@@ -51,13 +181,17 @@ function renderizarTablaItems(items) {
     const $tbody = $("#tbodyitem");
     $tbody.empty();
 
-    const seleccionados = getItemsSeleccionados();
+    const seleccionados = getItemsSeleccionados().map(i => i.iditem);
 
-    items.forEach((item, index) => {
+    if ($.fn.DataTable.isDataTable("#tablaItemsSeleccionados")) {
+        $('#tablaItemsSeleccionados').DataTable().clear().destroy();
+    }
+
+    items.forEach((item) => {
         const checked = seleccionados.includes(item.iditem) ? 'checked' : '';
         const fila = `
             <tr data-iditem="${item.iditem}" class="fila-item" style="cursor: pointer;">
-                <td>${index + 1}</td>
+                <td>${item.iditem}</td>
                 <td>${item.itemNombre}</td>
                 <td>${item.categoriaNombre}</td>
                 <td>${item.total}</td>
@@ -77,32 +211,30 @@ function renderizarTablaItems(items) {
         $tbody.append(fila);
     });
 
-    // Evento para clic en checkbox directamente
+    // Evento checkbox
     $(".checkbox-item").on("click", function (e) {
         e.stopPropagation();
         const iditem = parseInt($(this).data("iditem"));
-        toggleItemSeleccionado(iditem);
+        const item = items.find(i => i.iditem === iditem);
+        toggleItemSeleccionado(item);
     });
 
-    // Evento para clic en fila (menos en elementos interactivos)
+    // Evento clic en fila
     $(".fila-item").on("click", function (e) {
         if ($(e.target).is("input, button, i, label")) return;
 
         const iditem = parseInt($(this).data("iditem"));
         const $checkbox = $(`#check-${iditem}`);
         $checkbox.prop("checked", !$checkbox.prop("checked"));
-        toggleItemSeleccionado(iditem);
+
+        const item = items.find(i => i.iditem === iditem);
+        toggleItemSeleccionado(item);
     });
 
-    // Reinicializar DataTable si aplica
-    if ($.fn.DataTable.isDataTable("#tablaItemsSeleccionados")) {
-        $('#tablaItemsSeleccionados').DataTable().clear().destroy();
-    }
+
     $('#tablaItemsSeleccionados').DataTable({
         language: {
-            url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
+            url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
         }
     });
 }
-
-

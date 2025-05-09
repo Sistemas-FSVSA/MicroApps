@@ -232,6 +232,13 @@ app.get("/compras/itemsolicitados", (req, res) => {
     res.render("compras/itemsolicitados");
 });
 
+app.get("/compras/relacionarorden", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/relacionarorden", { layout: false }); // Solo la vista
+    }
+    res.render("compras/relacionarorden");
+});
+
 app.get("/recaudo/novedadesrecaudo", (req, res) => {
     if (req.xhr) {
         return res.render("recaudo/novedadesrecaudo", { layout: false }); // Solo la vista

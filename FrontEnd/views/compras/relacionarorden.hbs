@@ -1,0 +1,65 @@
+<link rel="stylesheet" href="/css/compras/relacionarorden.css">
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2 align-items-center d-flex justify-content-between">
+            <div class="col-sm-12 d-flex align-items-center">
+                <button class="btn btn-outline-secondary mr-2" onclick="irAtras()">
+                    <i class="fas fa-angle-double-left"></i> Regresar
+                </button>
+                <h1 class="m-0" id="title">Productos Solicitados</h1>
+            </div>
+        </div>
+    </div>
+    <hr>
+</div>
+
+<div class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Bandeja izquierda -->
+      <div class="col-md-6">
+        <div class="panel-custom">
+          <div class="panel-header bg-primary text-white">
+            Bandeja de Pedidos
+          </div>
+          <div class="panel-body">
+            <div class="form-group">
+              <select id="estadoSelector" class="form-control">
+                <option value="AUTORIZADO">Autorizado</option>
+                <option value="FINALIZADO">Finalizado</option>
+              </select>
+            </div>
+            <div id="cards-pedidos" class="cards-container mt-3">
+              <!-- Cards dinámicas aquí -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bandeja derecha -->
+      <div class="col-md-6">
+        <div class="panel-custom">
+          <div class="panel-header bg-info text-white">
+            Órdenes de Compra / Salida
+          </div>
+          <div class="panel-body">
+            <div class="form-group">
+              <select id="estadoSelector" class="form-control">
+                <option value="procesado">No Relacionada</option>
+                <option value="completado">Relacionada</option>
+              </select>
+            </div>
+            <div id="cards-ordenes" class="cards-container mt-3">
+              <!-- Cards dinámicas aquí -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script src="/controllers/compras/relacionarorden.js"></script>

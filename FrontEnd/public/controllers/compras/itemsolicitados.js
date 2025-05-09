@@ -145,7 +145,7 @@ async function cargarItemSolicitados() {
         }
 
         const data = await response.json();
-        renderizarTablaItems(data.items);
+        renderizarTablaItems(data.items, data.itemsOrden);
     } catch (error) {
         console.error("Error:", error);
     }
@@ -167,17 +167,20 @@ function toggleItemSeleccionado(item) {
     if (existe) {
         items = items.filter(i => i.iditem !== item.iditem);
     } else {
+        const cantidad = item.diferencia > 0 ? item.diferencia : 0;
+
         items.push({
             iditem: item.iditem,
             itemNombre: item.itemNombre,
             categoriaNombre: item.categoriaNombre,
-            total: item.total
+            total: cantidad
         });
     }
     guardarItemsSeleccionados(items);
 }
 
-function renderizarTablaItems(items) {
+
+function renderizarTablaItems(items, itemsOrden) {
     const $tbody = $("#tbodyitem");
     $tbody.empty();
 
@@ -189,12 +192,25 @@ function renderizarTablaItems(items) {
 
     items.forEach((item) => {
         const checked = seleccionados.includes(item.iditem) ? 'checked' : '';
+
+        // Buscar item en itemsOrden por iditem
+        const itemOrden = itemsOrden.find(io => io.iditem === item.iditem);
+        const totalOrden = itemOrden ? itemOrden.total : 0;
+        const diferencia = item.total - totalOrden;
+
+        // Agregar propiedades al objeto original
+        item.totalOrden = totalOrden;
+        item.diferencia = diferencia;
+
+
         const fila = `
             <tr data-iditem="${item.iditem}" class="fila-item" style="cursor: pointer;">
                 <td>${item.iditem}</td>
                 <td>${item.itemNombre}</td>
                 <td>${item.categoriaNombre}</td>
                 <td>${item.total}</td>
+                <td>${totalOrden}</td>
+                <td>${diferencia}</td>
                 <td>
                     <button class="btn btn-sm btn-info" onclick="verDetalle(${item.iditem}); event.stopPropagation();">
                         <i class="fas fa-eye"></i>
@@ -211,7 +227,7 @@ function renderizarTablaItems(items) {
         $tbody.append(fila);
     });
 
-    // Evento checkbox
+    // Eventos como los tenías antes
     $(".checkbox-item").on("click", function (e) {
         e.stopPropagation();
         const iditem = parseInt($(this).data("iditem"));
@@ -219,7 +235,6 @@ function renderizarTablaItems(items) {
         toggleItemSeleccionado(item);
     });
 
-    // Evento clic en fila
     $(".fila-item").on("click", function (e) {
         if ($(e.target).is("input, button, i, label")) return;
 
@@ -230,7 +245,6 @@ function renderizarTablaItems(items) {
         const item = items.find(i => i.iditem === iditem);
         toggleItemSeleccionado(item);
     });
-
 
     $('#tablaItemsSeleccionados').DataTable({
         language: {

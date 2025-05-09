@@ -37,10 +37,26 @@ const obtenerItemsPedido = async (req, res) => {
               AND dp.estado = 'PENDIENTE'
             GROUP BY dp.iditem, i.nombre, d.nombre ORDER BY dp.iditem ASC
         `);
+
+        // Consulta 3: Totales por item en órdenes generadas
+        const resultItemsOrden = await request.query(`
+            SELECT 
+                do.iditem,
+                i.nombre AS itemNombre,
+                SUM(do.cantidad) AS total
+            FROM detalleorden do
+            INNER JOIN orden o ON do.idorden = o.idorden
+            INNER JOIN items i ON do.iditem = i.iditem
+            WHERE o.estado = 'GENERADO'
+            GROUP BY do.iditem, i.nombre
+        `);
+
         res.json({
             items: resultItems.recordset,
-            dependencias: resultDetalleDependencias.recordset
+            dependencias: resultDetalleDependencias.recordset,
+            itemsOrden: resultItemsOrden.recordset
         });
+        
     } catch (error) {
         console.error('Error al obtener los datos del pedido:', error);
         res.status(500).json({ error: 'Error al obtener los datos del pedido' });

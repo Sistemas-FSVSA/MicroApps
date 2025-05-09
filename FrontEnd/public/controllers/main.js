@@ -172,8 +172,8 @@ function reinitializeScripts() {
         loadAndRunScript("/controllers/recaudo/novedadesrecaudo.js", "incializarNovedadesRecaudo");
     }
 
-    if (path.includes("/recaudo/relacionarorden")) {
-        loadAndRunScript("/controllers/recaudo/relacionarorden.js", "inicializarRelacionarOrden");
+    if (path.includes("/compras/relacionarorden")) {
+        loadAndRunScript("/controllers/compras/relacionarorden.js", "InicializarRelacionarOrden");
     }
 
 }

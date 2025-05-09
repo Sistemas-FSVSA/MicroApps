@@ -1,9 +1,281 @@
 document.addEventListener("DOMContentLoaded", () => {
     InicializarRelacionarOrden();
-
 });
 
 async function InicializarRelacionarOrden() {
-    console.log("Inicializando Relacionar Orden");
+    const estadoPedidos = document.getElementById('estadoPedidos');
+    const estadoOrdenes = document.getElementById('estadoOrdenes');
+
+    // Cargar data inicial
+    obtenerPedido(estadoPedidos.value);
+    obtenerOrden(estadoOrdenes.value);
+
+    // Listeners para recarga dinámica
+    estadoPedidos.addEventListener('change', () => {
+        obtenerPedido(estadoPedidos.value);
+    });
+
+    estadoOrdenes.addEventListener('change', () => {
+        obtenerOrden(estadoOrdenes.value);
+    });
 }
 
+async function obtenerPedido(estado) {
+    try {
+        const response = await fetch(`${url}/api/compras/obtenerPedido`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ estado }),
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+
+        const data = await response.json();
+        console.log('Pedidos:', data);
+        renderizarPedidos(data.pedidos); // ACCEDEMOS A .pedidos
+    } catch (error) {
+        console.error('Error al obtener pedido:', error.message);
+    }
+}
+
+function renderizarPedidos(pedidos) {
+    const contenedor = document.getElementById('cards-pedidos');
+    contenedor.innerHTML = '';
+    const relaciones = JSON.parse(sessionStorage.getItem('relacionpedido')) || [];
+
+    pedidos.forEach(pedido => {
+        const card = document.createElement('div');
+        card.className = 'card mb-2 p-3 shadow-sm d-flex flex-row justify-content-between align-items-start';
+        card.dataset.idpedido = pedido.idpedido;
+
+        card.addEventListener('dragover', (e) => e.preventDefault());
+
+        card.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const idorden = e.dataTransfer.getData('idorden');
+            const idpedido = pedido.idpedido;
+
+            const confirmar = confirm(`¿Deseas relacionar la Orden ${idorden} con el Pedido ${idpedido}?`);
+            if (confirmar) {
+                const relacionesActuales = JSON.parse(sessionStorage.getItem('relacionpedido')) || [];
+                const existe = relacionesActuales.some(rel => rel.idpedido == idpedido && rel.idorden == idorden);
+                if (!existe) {
+                    relacionesActuales.push({ idpedido: String(idpedido), idorden: String(idorden) });
+                    sessionStorage.setItem('relacionpedido', JSON.stringify(relacionesActuales));
+                    alert('Orden y pedido relacionados.');
+                    obtenerPedido(document.getElementById('estadoPedidos').value);
+                    obtenerOrden(document.getElementById('estadoOrdenes').value);
+                } else {
+                    alert('Esta relación ya existe.');
+                }
+            }
+        });
+
+        // Parte izquierda (info del pedido)
+        const info = document.createElement('div');
+        info.innerHTML = `
+            <div><strong>Pedido:</strong> ${pedido.idpedido}</div>
+            <div><strong>Dependencia:</strong> ${pedido.nombreDependencia}</div>
+            <div><strong>Fecha:</strong> ${new Date(pedido.fechapedido).toLocaleDateString()}</div>
+            <div><strong>Total Ítems:</strong> ${pedido.totalItems || pedido.detalle?.length || 0}</div>
+            <div><strong>Estado:</strong> ${pedido.estado}</div>
+            <button class="btn btn-sm btn-primary mt-2" onclick="mostrarDetallesPedido(${pedido.idpedido})">
+                Ver detalles
+            </button>
+        `;
+
+
+        // Parte derecha (relaciones)
+        const relacionados = relaciones
+            .filter(rel => rel.idpedido == pedido.idpedido)
+            .map(rel => `#${rel.idorden}`)
+            .join(', ');
+
+        const relacionesDiv = document.createElement('div');
+        relacionesDiv.innerHTML = `<small><strong>Órdenes:</strong> ${relacionados || 'Ninguna'}</small>`;
+        relacionesDiv.style.textAlign = 'right';
+
+        card.appendChild(info);
+        card.appendChild(relacionesDiv);
+        contenedor.appendChild(card);
+    });
+}
+
+async function obtenerOrden(estado) {
+    try {
+        const response = await fetch(`${url}/api/compras/obtenerOrden`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ estado }),
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+
+        const data = await response.json();
+        console.log('Órdenes:', data);
+        renderizarOrdenes(data);
+    } catch (error) {
+        console.error('Error al obtener orden:', error.message);
+    }
+}
+
+function renderizarOrdenes(ordenes) {
+    const contenedor = document.getElementById('cards-ordenes');
+    contenedor.innerHTML = '';
+    const relaciones = JSON.parse(sessionStorage.getItem('relacionpedido')) || [];
+
+    ordenes.forEach(orden => {
+        const card = document.createElement('div');
+        card.className = 'card mb-2 p-2 shadow-sm d-flex flex-row justify-content-between align-items-start';
+        card.draggable = true;
+        card.dataset.idorden = orden.idorden;
+
+        card.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('idorden', orden.idorden);
+        });
+
+        const info = document.createElement('div');
+        info.innerHTML = `
+            <div><strong>Orden:</strong> ${orden.idorden}</div>
+            <div><strong>Fecha:</strong> ${orden.fecha}</div>
+            <div><strong>Tipo:</strong> ${orden.tipo}</div>
+            <button class="btn btn-sm btn-info mt-2" onclick="mostrarDetallesOrden(${orden.idorden})">
+                Ver detalles
+            </button>
+        `;
+
+        const relacionados = relaciones
+            .filter(rel => rel.idorden == orden.idorden)
+            .map(rel => `#${rel.idpedido}`)
+            .join(', ');
+
+        const relacionesDiv = document.createElement('div');
+        relacionesDiv.innerHTML = `<small><strong>Pedidos:</strong> ${relacionados || 'Ninguno'}</small>`;
+        relacionesDiv.style.textAlign = 'right';
+
+        card.appendChild(info);
+        card.appendChild(relacionesDiv);
+        contenedor.appendChild(card);
+    });
+}
+
+async function mostrarDetallesOrden(idorden) {
+    try {
+        const response = await fetch(`${url}/api/compras/obtenerOrden`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ idorden }),
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+
+        const orden = await response.json();
+
+        // Crear HTML de tabla
+        const tabla = `
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>#Detalle</th>
+                        <th>ID Item</th>
+                        <th>Nombre</th>
+                        <th>Cantidad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${orden.detalles.map(det => `
+                        <tr>
+                            <td>${det.iddetalleorden}</td>
+                            <td>${det.iditem}</td>
+                            <td>${det.nombre}</td>
+                            <td>${det.cantidad}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+
+        Swal.fire({
+            title: `Detalles de Orden #${orden.idorden}`,
+            html: tabla,
+            width: '60%',
+            confirmButtonText: 'Cerrar'
+        });
+
+    } catch (error) {
+        console.error('Error al obtener detalles:', error.message);
+        Swal.fire('Error', 'No se pudieron obtener los detalles de la orden.', 'error');
+    }
+}
+
+async function mostrarDetallesPedido(idpedido) {
+    try {
+        const response = await fetch(`${url}/api/compras/obtenerPedido`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ idpedido }),
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+
+        const pedido = await response.json();
+
+        const tabla = `
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>ID Item</th>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Categoría</th>
+                        <th>Cantidad</th>
+                        <th>Solicitante</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${pedido.detalle.map(item => `
+                        <tr>
+                            <td>${item.id}</td>
+                            <td>${item.nombre}</td>
+                            <td>${item.descripcion}</td>
+                            <td>${item.categoria}</td>
+                            <td>${item.cantidad}</td>
+                            <td>${item.nombreCompleto}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+
+        Swal.fire({
+            title: `Detalles del Pedido #${pedido.idpedido}`,
+            html: tabla,
+            width: '70%',
+            confirmButtonText: 'Cerrar'
+        });
+
+    } catch (error) {
+        console.error('Error al obtener detalles del pedido:', error.message);
+        Swal.fire('Error', 'No se pudieron obtener los detalles del pedido.', 'error');
+    }
+}

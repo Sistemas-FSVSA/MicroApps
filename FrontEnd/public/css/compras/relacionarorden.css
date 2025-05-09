@@ -85,3 +85,18 @@ html, body {
   overflow-y: auto;
   flex-grow: 1;
 }
+
+.card {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 10px;
+  background-color: #fff;
+}
+
+.card.dragging {
+  border: 2px dashed #007bff;
+  background-color: #e9f3ff;
+  opacity: 0.85;
+  transform: scale(1.02);
+  transition: all 0.2s ease-in-out;
+}

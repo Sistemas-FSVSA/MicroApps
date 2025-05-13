@@ -18,6 +18,11 @@ async function InicializarRelacionarOrden() {
     estadoOrdenes.addEventListener('change', () => {
         obtenerOrden(estadoOrdenes.value);
     });
+
+    // Agregar eventos a los botones
+    document.getElementById('guardarRelacion').addEventListener('click', () => {
+        guardarRelacion();
+    });
 }
 
 async function obtenerPedido(estado) {
@@ -63,15 +68,18 @@ function renderizarPedidos(pedidos) {
             const confirmar = confirm(`¿Deseas relacionar la Orden ${idorden} con el Pedido ${idpedido}?`);
             if (confirmar) {
                 const relacionesActuales = JSON.parse(sessionStorage.getItem('relacionpedido')) || [];
-                const existe = relacionesActuales.some(rel => rel.idpedido == idpedido && rel.idorden == idorden);
-                if (!existe) {
+
+                const yaExisteEnSesion = relacionesActuales.some(rel => rel.idpedido == idpedido && rel.idorden == idorden);
+                const yaExisteEnBD = pedido.ordenesRelacionadas?.includes(Number(idorden)); // 👈 validación contra BD
+
+                if (yaExisteEnSesion || yaExisteEnBD) {
+                    alert('Esta relación ya existe.');
+                } else {
                     relacionesActuales.push({ idpedido: String(idpedido), idorden: String(idorden) });
                     sessionStorage.setItem('relacionpedido', JSON.stringify(relacionesActuales));
                     alert('Orden y pedido relacionados.');
                     obtenerPedido(document.getElementById('estadoPedidos').value);
                     obtenerOrden(document.getElementById('estadoOrdenes').value);
-                } else {
-                    alert('Esta relación ya existe.');
                 }
             }
         });
@@ -90,15 +98,18 @@ function renderizarPedidos(pedidos) {
         `;
 
 
-        // Parte derecha (relaciones)
-        const relacionados = relaciones
-            .filter(rel => rel.idpedido == pedido.idpedido)
-            .map(rel => `#${rel.idorden}`)
-            .join(', ');
+
+        const relacionados = [
+            ...(pedido.ordenesRelacionadas || []).map(id => `#${id}`),
+            ...relaciones
+                .filter(rel => rel.idpedido == pedido.idpedido)
+                .map(rel => `#${rel.idorden}`)
+        ];
 
         const relacionesDiv = document.createElement('div');
-        relacionesDiv.innerHTML = `<small><strong>Órdenes:</strong> ${relacionados || 'Ninguna'}</small>`;
+        relacionesDiv.innerHTML = `<small><strong>Órdenes:</strong> ${relacionados.join(', ') || 'Ninguna'}</small>`;
         relacionesDiv.style.textAlign = 'right';
+
 
         card.appendChild(info);
         card.appendChild(relacionesDiv);
@@ -154,13 +165,18 @@ function renderizarOrdenes(ordenes) {
             </button>
         `;
 
-        const relacionados = relaciones
+        // ✅ Combina pedidos relacionados desde BD y desde sessionStorage (sin duplicados)
+        const relacionadosBD = orden.pedidosRelacionados || [];
+        const relacionadosSesion = relaciones
             .filter(rel => rel.idorden == orden.idorden)
-            .map(rel => `#${rel.idpedido}`)
+            .map(rel => Number(rel.idpedido)); // convertir a número para comparar bien
+
+        const relacionadosTotales = [...new Set([...relacionadosBD, ...relacionadosSesion])]
+            .map(id => `#${id}`)
             .join(', ');
 
         const relacionesDiv = document.createElement('div');
-        relacionesDiv.innerHTML = `<small><strong>Pedidos:</strong> ${relacionados || 'Ninguno'}</small>`;
+        relacionesDiv.innerHTML = `<small><strong>Pedidos:</strong> ${relacionadosTotales || 'Ninguno'}</small>`;
         relacionesDiv.style.textAlign = 'right';
 
         card.appendChild(info);
@@ -168,6 +184,7 @@ function renderizarOrdenes(ordenes) {
         contenedor.appendChild(card);
     });
 }
+
 
 async function mostrarDetallesOrden(idorden) {
     try {
@@ -277,5 +294,43 @@ async function mostrarDetallesPedido(idpedido) {
     } catch (error) {
         console.error('Error al obtener detalles del pedido:', error.message);
         Swal.fire('Error', 'No se pudieron obtener los detalles del pedido.', 'error');
+    }
+}
+
+async function guardarRelacion() {
+    const relaciones = JSON.parse(sessionStorage.getItem('relacionpedido')) || [];
+
+    if (relaciones.length === 0) {
+        alert('No hay relaciones para guardar.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${url}/api/compras/guardarRelacion`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ relaciones }),
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error('Error en la petición');
+        }
+
+        const data = await response.json();
+
+        alert('Relaciones guardadas exitosamente.');
+        // Puedes limpiar el sessionStorage si lo deseas
+        // sessionStorage.removeItem('relacionpedido');
+
+        // Llamadas posteriores
+        obtenerPedido(document.getElementById('estadoPedidos').value);
+        obtenerOrden(document.getElementById('estadoOrdenes').value);
+
+    } catch (error) {
+        console.error('Error al guardar relaciones:', error);
+        alert('Ocurrió un error al guardar las relaciones.');
     }
 }

@@ -10,18 +10,31 @@ const obtenerOrden = async (req, res) => {
             const result = await pool.request()
                 .input('estado', sql.VarChar(50), estado)
                 .query(`
-                    SELECT 
-                        idorden, fecha, estado, tipo, idusuario
-                    FROM orden
-                    WHERE estado = @estado
-                `);
+            SELECT 
+                idorden, fecha, estado, tipo, idusuario
+            FROM orden
+            WHERE estado = @estado
+        `);
 
-            if (result.recordset.length === 0) {
-                return res.status(404).send('No se encontraron órdenes con ese estado.');
+
+            const ordenes = [];
+
+            for (const orden of result.recordset) {
+                const pedidosRelacionadosResult = await pool.request()
+                    .input('idorden', sql.Int, orden.idorden)
+                    .query('SELECT idpedido FROM ordenpedido WHERE idorden = @idorden');
+
+                const pedidosRelacionados = pedidosRelacionadosResult.recordset.map(r => r.idpedido);
+
+                ordenes.push({
+                    ...orden,
+                    pedidosRelacionados // 👈 nuevo campo
+                });
             }
 
-            return res.status(200).json(result.recordset);
+            return res.status(200).json(ordenes);
         }
+
 
         // Escenario 2: Traer una orden con detalles agrupados
         if (idorden) {
@@ -39,7 +52,7 @@ const obtenerOrden = async (req, res) => {
                 `);
 
             if (result.recordset.length === 0) {
-                return res.status(404).send('No se encontraron detalles para esa orden.');
+                return res.status(200).send('No se encontraron detalles para esa orden.');
             }
 
             const detalles = result.recordset.map(row => ({

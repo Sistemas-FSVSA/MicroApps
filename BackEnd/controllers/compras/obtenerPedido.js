@@ -122,29 +122,40 @@ const obtenerPedido = async (req, res) => {
         // Escenario 4: Solo estado (obtener todos los pedidos con ese estado)
         if (estado && !idusuario && !idpedido) {
             const pedidosResult = await pool.request()
-            .input('estado', sql.VarChar, estado)
-            .query('SELECT * FROM pedidos WHERE estado = @estado');
+                .input('estado', sql.VarChar, estado)
+                .query('SELECT * FROM pedidos WHERE estado = @estado');
 
             const pedidos = [];
 
             for (const pedido of pedidosResult.recordset) {
-            const dependenciaNombreResult = await pool.request()
-                .input('iddependencia', sql.Int, pedido.iddependencia)
-                .query('SELECT nombre FROM dependencias WHERE iddependencia = @iddependencia');
+                // Obtener nombre de dependencia
+                const dependenciaNombreResult = await pool.request()
+                    .input('iddependencia', sql.Int, pedido.iddependencia)
+                    .query('SELECT nombre FROM dependencias WHERE iddependencia = @iddependencia');
 
-            const totalItemsResult = await pool.request()
-                .input('idpedido', sql.Int, pedido.idpedido)
-                .query('SELECT SUM(cantidad) AS totalItems FROM detallepedido WHERE idpedido = @idpedido');
+                // Obtener total de ítems del pedido
+                const totalItemsResult = await pool.request()
+                    .input('idpedido', sql.Int, pedido.idpedido)
+                    .query('SELECT SUM(cantidad) AS totalItems FROM detallepedido WHERE idpedido = @idpedido');
 
-            pedidos.push({
-                ...pedido,
-                nombreDependencia: dependenciaNombreResult.recordset[0]?.nombre || null,
-                totalItems: totalItemsResult.recordset[0]?.totalItems || 0
-            });
+                // Obtener idorden relacionados desde ordenpedido
+                const ordenesRelacionadasResult = await pool.request()
+                    .input('idpedido', sql.Int, pedido.idpedido)
+                    .query('SELECT idorden FROM ordenpedido WHERE idpedido = @idpedido');
+
+                const ordenesRelacionadas = ordenesRelacionadasResult.recordset.map(r => r.idorden);
+
+                pedidos.push({
+                    ...pedido,
+                    nombreDependencia: dependenciaNombreResult.recordset[0]?.nombre || null,
+                    totalItems: totalItemsResult.recordset[0]?.totalItems || 0,
+                    ordenesRelacionadas: ordenesRelacionadas // << Aquí está el nuevo campo
+                });
             }
 
             return res.json({ pedidos });
         }
+
 
         // Si no se cumple ninguno de los 3 escenarios
         return res.status(400).send('Debe proporcionar una combinación válida de parámetros.');

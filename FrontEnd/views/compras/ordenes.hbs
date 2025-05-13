@@ -1,0 +1,44 @@
+<link rel="stylesheet" href="/css/compras/pedidos.css">
+
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">Ordenes</h1>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <div class="container-fluid">
+
+
+    <!-- Cards Container -->
+    <div class="row justify-content-center" id="cardsContainer">
+
+      <!-- Card: Generar Orden -->
+      <div class="col-lg-3 col-md-4 col-sm-6 mb-4" id="Orden">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <h1><i class="fas fa-file-medical"></i></h1>
+            <button type="button" class="btn btn-fsvsaon" onclick="redireccionNuevaOrden()">Nueva Orden</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Relacionar Orden -->
+      <div class="col-lg-3 col-md-4 col-sm-6 mb-4" id="Orden">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <h1><i class="fas fa-file-medical"></i></h1>
+            <button type="button" class="btn btn-fsvsaon" onclick="redireccionRelacionarOrden()">Relacionar Orden</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="/controllers/compras/ordenes.js"></script>

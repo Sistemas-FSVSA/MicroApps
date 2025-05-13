@@ -211,6 +211,34 @@ app.get("/compras/aprobarpedido", (req, res) => {
     res.render("compras/aprobarpedido");
 });
 
+app.get("/compras/revisarpedido", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/revisarpedido", { layout: false }); // Solo la vista
+    }
+    res.render("compras/revisarpedido");
+});
+
+app.get("/compras/ordenes", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/ordenes", { layout: false }); // Solo la vista
+    }
+    res.render("compras/ordenes");
+});
+
+app.get("/compras/itemsolicitados", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/itemsolicitados", { layout: false }); // Solo la vista
+    }
+    res.render("compras/itemsolicitados");
+});
+
+app.get("/compras/relacionarorden", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/relacionarorden", { layout: false }); // Solo la vista
+    }
+    res.render("compras/relacionarorden");
+});
+
 app.get("/recaudo/novedadesrecaudo", (req, res) => {
     if (req.xhr) {
         return res.render("recaudo/novedadesrecaudo", { layout: false }); // Solo la vista
@@ -218,12 +246,26 @@ app.get("/recaudo/novedadesrecaudo", (req, res) => {
     res.render("recaudo/novedadesrecaudo");
 });
 
-app.get('/config.js', (req, res) => {
-    res.setHeader('Content-Type', 'application/javascript');
-    res.send(`window.env = { API_URL: "${process.env.API_URL}" };`);
-});
-
-const PORT = process.env.PORT;
-app.listen(PORT, () => {
+app.get("/config.js", (req, res) => {
+    res.setHeader("Content-Type", "application/javascript");
+  
+    const host = req.headers.host; // Obtiene la URL de origen
+    let apiUrl;
+  
+    if (host.includes(process.env.FRONTEND_HOST)) {
+      apiUrl = process.env.API_URL_HOST;
+    } else if (host.includes(process.env.FRONTEND_IP)) {
+      apiUrl = process.env.API_URL_IP;
+    } else {
+      apiUrl = process.env.API_URL_IP; // Fallback si no hay coincidencias
+    }
+  
+    res.send(`window.env = { API_URL: "${apiUrl}" };`);
+  });
+  
+  // Iniciar el servidor
+  const PORT = process.env.PORT;
+  app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
+  });
+  

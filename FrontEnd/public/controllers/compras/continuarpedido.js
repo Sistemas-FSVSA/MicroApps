@@ -3,21 +3,28 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function InicializarContinuarPedido() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const idpedido = urlParams.get('idpedido');
+
     permisos = await cargarPermisosContinuarPedidos(); // sin let aquí, usas la variable global
     añadirItems();
     renderizarItemsEncargo();
 
     // Agregar eventos a los botones
     document.getElementById('guardarEncargo').addEventListener('click', () => {
-        manejarPedido('INICIADO', idpedido); // Estado para guardar
+        manejarPedido('INICIADO', idpedido);
     });
 
     document.getElementById('cerrarEncargo').addEventListener('click', () => {
-        manejarPedido('CERRADO', idpedido); // Estado para aprobar
+        manejarPedido('CERRADO', idpedido);
     });
 
     document.getElementById('aprobarEncargo').addEventListener('click', () => {
-        manejarPedido('APROBADO', idpedido); // Estado para aprobar
+        manejarPedido('APROBADO', idpedido, localStorage.getItem('idusuario'));
+    });
+
+    document.getElementById('autorizarEncargo').addEventListener('click', () => {
+        manejarPedido('AUTORIZADO', idpedido);
     });
 
     document.getElementById('agregarItem').addEventListener('click', function () {
@@ -25,46 +32,60 @@ async function InicializarContinuarPedido() {
         modal.show();
     });
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const idpedido = urlParams.get('idpedido');
+    // Llamar a la función que carga los datos del pedido
+    cargarDatosDelPedido(idpedido);
 
-    // Verificar si ya hay datos en el sessionStorage
-    const itemsEnSessionStorage = sessionStorage.getItem('itemsSeleccionados');
+    // 👉 Aquí llamas a la navegación
+    configurarNavegacionPedidos();
+}
 
-    if (itemsEnSessionStorage) {
-        renderizarItemsEncargo(); // Renderizar los ítems existentes
-        return; // No sobrescribir los datos existentes
+function cargarDatosDelPedido(idpedido) {
+    if (!idpedido) {
+        console.warn('No se encontró el idpedido en la URL');
+        return;
     }
 
-    if (idpedido) {
-        fetch(`${url}/api/compras/obtenerPedido`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ idpedido })
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error al obtener el pedido');
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Guardar los ítems en el sessionStorage solo si no existen previamente
-                if (data.detalle && Array.isArray(data.detalle)) {
-                    sessionStorage.setItem('itemsSeleccionados', JSON.stringify(data.detalle));
-                    renderizarItemsEncargo(); // Renderizar los ítems obtenidos
-                } else {
-                    console.warn('No se encontraron ítems en el pedido');
-                }
-            })
-            .catch(error => {
-                console.error('Error al obtener el pedido:', error);
-            });
+    console.log("Realizando consulta al servidor para obtener el pedido con id:", idpedido);
+    fetch(`${url}/api/compras/obtenerPedido`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ idpedido })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Error al obtener el pedido');
+        }
+        return response.json();
+    })
+    .then(data => {
+        renderizadoInfo(data); // SIEMPRE renderiza info general
+
+        const itemsEnSessionStorage = sessionStorage.getItem('itemsSeleccionados');
+
+        if (!itemsEnSessionStorage && data.detalle && Array.isArray(data.detalle)) {
+            sessionStorage.setItem('itemsSeleccionados', JSON.stringify(data.detalle));
+            renderizarItemsEncargo(); // Renderizar los ítems obtenidos
+        } else if (itemsEnSessionStorage) {
+            renderizarItemsEncargo(); // Renderizar ítems desde session
+        } else {
+            console.warn('No se encontraron ítems en el pedido');
+        }
+    })
+    .catch(error => {
+        console.error('Error al obtener el pedido:', error);
+    });
+}
+
+function renderizadoInfo(data) {
+    const dependenciaPedidoSpan = document.getElementById('dependenciaPedido');
+    if (dependenciaPedidoSpan) {
+        const { nombreDependencia, idpedido } = data;
+        dependenciaPedidoSpan.textContent = `${nombreDependencia}, Pedido N°: ${idpedido}`;
     } else {
-        console.warn('No se encontró el idpedido en la URL');
+        console.warn('No se encontró el elemento con id "dependenciaPedido" en el HTML.');
     }
 }
 
@@ -85,7 +106,7 @@ function renderizarItemsEncargo() {
             `<input type="number" class="form-control input-cantidad" value="${item.cantidad}" min="1" data-index="${index}">`,
             item.nombreCompleto,
             (permisos.tienePermisoEliminarItem ? // Verificar permisos
-                `<button class="btn btn-danger btn-eliminar-item" data-index="${index}">
+                `<button class="btn btn-fsvsaoff btn-eliminar-item" data-index="${index}">
                     <i class="fas fa-trash"></i>
                 </button>` : '')
         ];
@@ -207,6 +228,10 @@ function agregarItemASessionStorage(nuevoItem) {
 
     // Actualizar la tabla principal
     renderizarItemsEncargo();
+
+    
+    // Mostrar mensaje de éxito
+    Mensaje('success', 'Éxito!', 'Item agregado exitosamente.', true, false);
 }
 
 function eliminarItemDeSessionStorage(index) {
@@ -241,64 +266,123 @@ function manejarPedido(estado, idpedido) {
     const itemsSeleccionados = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
 
     if (itemsSeleccionados.length === 0) {
-        Mensaje('warning', 'Espera!', 'No hay items para guardar.', false, false);
+        Mensaje('warning', 'Espera!', 'No hay items para gestionar.', false, false);
         return;
     }
 
     // Crear el objeto JSON con la información necesaria
     const encargo = {
         idusuario: localStorage.getItem('idusuario') || null,
-        idpedido: idpedido || null, // Agregar el idpedido al body
+        idpedido: idpedido || null,
         items: itemsSeleccionados,
-        estado: estado // Agregar el estado al body
+        estado: estado
     };
 
     // Enviar el JSON al endpoint por medio de fetch
     fetch(`${url}/api/compras/manejarPedido`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(encargo)
     })
-        .then(response => {
-            // Verificar si la respuesta es exitosa
-            if (!response.ok) {
-                throw new Error('Error al guardar el encargo');
-            }
-            return response.json(); // Cambiar a .json() para obtener el idpedido del backend
-        })
-        .then(data => {
-            // Determinar el mensaje y la acción según el estado
-            if (estado === 'CERRADO') {
-                Mensaje('success', 'Éxito!', 'El encargo ha sido cerrado con éxito.', true, false);
-                sessionStorage.removeItem('itemsSeleccionados'); // Borrar el sessionStorage
-            } else if (estado === 'APROBADO') {
-                Mensaje('success', 'Éxito!', 'Encargo aprobado con éxito.', true, false);
+    .then(response => {
+        if (!response.ok) throw new Error('Error al guardar el encargo');
+        return response.json();
+    })
+    .then(async data => {
+        if (estado === 'AUTORIZADO') {
+            const pedidos = await obtenerPedidosAprobados();
+            const ids = pedidos.map(p => p.idpedido);
+            const idx = ids.indexOf(idpedido);
+    
+            if (idx < ids.length - 1) {
+                Mensaje('info', 'Info', 'Pedido autorizado. Pasando al siguiente...', true, false);
+                document.getElementById('flechaDerecha').click();
             } else {
-                Mensaje('success', 'Éxito!', 'El encargo se ha guardado correctamente.', true, false);
+                Mensaje('info', 'Info', 'Último pedido autorizado. Redirigiendo a revisión...', true, false);
+                setTimeout(() => {
+                    irAtras();
+                }, 1000);
             }
+            return;
+        }
 
-            // Determinar la URL de redirección según el estado
-            let redireccionUrl = '';
-            if (estado === 'INICIADO') {
-                redireccionUrl = `/compras/continuarpedido?idpedido=${data.idpedido}`;
-            } else if (estado === 'CERRADO') {
-                redireccionUrl = '/compras/pedidos';
-            } else if (estado === 'APROBADO') {
-                redireccionUrl = '/compras/aprobarpedido';
-            }
+        // Resto de estados
+        if (estado === 'CERRADO') {
+            Mensaje('success', 'Éxito!', 'El encargo ha sido cerrado con éxito.', true, false);
+        } else if (estado === 'APROBADO') {
+            Mensaje('success', 'Éxito!', 'Encargo aprobado con éxito.', true, false);
+        } else {
+            Mensaje('success', 'Éxito!', 'El encargo se ha guardado correctamente.', true, false);
+        }
 
-            // Redirección después de 2 segundos
-            setTimeout(() => {
-                window.history.replaceState(null, "", redireccionUrl);
-                cargarVista(redireccionUrl);
-            }, 2000);
-        })
-        .catch(error => {
-            // Manejar errores
-            console.error('Error al guardar el encargo:', error);
-            Mensaje('error', 'Error!', 'Hubo un problema al guardar el encargo.', false, false);
-        });
+        // Limpiar el sessionStorage después de una acción exitosa
+        sessionStorage.removeItem('itemsSeleccionados');
+
+        let redireccionUrl = '';
+        if (estado === 'INICIADO') {
+            redireccionUrl = `/compras/continuarpedido?idpedido=${data.idpedido}`;
+        } else if (estado === 'CERRADO') {
+            redireccionUrl = '/compras/pedidos';
+        } else if (estado === 'APROBADO') {
+            redireccionUrl = '/compras/aprobarpedido';
+        }
+
+        setTimeout(() => {
+            window.history.replaceState(null, "", redireccionUrl);
+            cargarVista(redireccionUrl);
+        }, 2000);
+    })
+    .catch(error => {
+        console.error('Error al guardar el encargo:', error);
+        Mensaje('error', 'Error!', 'Hubo un problema al guardar el encargo.', false, false);
+    });
 }
+
+
+async function obtenerPedidosAprobados() {
+    const response = await fetch(`${url}/api/compras/obtenerPedido`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ estado: 'APROBADO' })
+    });
+
+    if (!response.ok) throw new Error('Error al obtener los pedidos aprobados');
+    const data = await response.json();
+    return data.pedidos || [];
+}
+
+async function configurarNavegacionPedidos() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const idpedidoActual = parseInt(urlParams.get('idpedido'));
+
+    const pedidos = await obtenerPedidosAprobados();
+    const ids = pedidos.map(p => p.idpedido);
+    const indiceActual = ids.indexOf(idpedidoActual);
+
+    if (indiceActual === -1) return;
+
+    // 👈 Ir al pedido anterior
+    document.getElementById('flechaIzquierda').addEventListener('click', async () => {
+        if (indiceActual > 0) {
+            sessionStorage.removeItem('itemsSeleccionados');
+            const idAnterior = ids[indiceActual - 1];
+            const nuevaUrl = `/compras/continuarpedido?idpedido=${idAnterior}`;
+            window.history.replaceState({}, '', nuevaUrl); // no guardar historial
+            await cargarVista(nuevaUrl);
+        }
+    });
+
+    // 👉 Ir al siguiente pedido
+    document.getElementById('flechaDerecha').addEventListener('click', async () => {
+        if (indiceActual < ids.length - 1) {
+            sessionStorage.removeItem('itemsSeleccionados');
+            const idSiguiente = ids[indiceActual + 1];
+            const nuevaUrl = `/compras/continuarpedido?idpedido=${idSiguiente}`;
+            window.history.replaceState({}, '', nuevaUrl); // no guardar historial
+            await cargarVista(nuevaUrl);
+        }
+    });
+}
+

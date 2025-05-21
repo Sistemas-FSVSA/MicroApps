@@ -53,6 +53,9 @@ function renderizarPedidos(pedidos) {
     contenedor.innerHTML = '';
     const relaciones = JSON.parse(sessionStorage.getItem('relacionpedido')) || [];
 
+    // Ordenar pedidos de manera descendente por idpedido
+    pedidos.sort((a, b) => b.idpedido - a.idpedido);
+
     pedidos.forEach(pedido => {
         const card = document.createElement('div');
         card.className = 'card mb-2 p-3 shadow-sm d-flex flex-row justify-content-between align-items-start';
@@ -97,8 +100,6 @@ function renderizarPedidos(pedidos) {
             </button>
         `;
 
-
-
         const relacionados = [
             ...(pedido.ordenesRelacionadas || []).map(id => `#${id}`),
             ...relaciones
@@ -109,7 +110,6 @@ function renderizarPedidos(pedidos) {
         const relacionesDiv = document.createElement('div');
         relacionesDiv.innerHTML = `<small><strong>Órdenes:</strong> ${relacionados.join(', ') || 'Ninguna'}</small>`;
         relacionesDiv.style.textAlign = 'right';
-
 
         card.appendChild(info);
         card.appendChild(relacionesDiv);
@@ -144,6 +144,9 @@ function renderizarOrdenes(ordenes) {
     const contenedor = document.getElementById('cards-ordenes');
     contenedor.innerHTML = '';
     const relaciones = JSON.parse(sessionStorage.getItem('relacionpedido')) || [];
+
+    // Ordenar órdenes de manera descendente por idorden
+    ordenes.sort((a, b) => b.idorden - a.idorden);
 
     ordenes.forEach(orden => {
         const card = document.createElement('div');
@@ -184,7 +187,6 @@ function renderizarOrdenes(ordenes) {
         contenedor.appendChild(card);
     });
 }
-
 
 async function mostrarDetallesOrden(idorden) {
     try {
@@ -322,8 +324,7 @@ async function guardarRelacion() {
         const data = await response.json();
 
         alert('Relaciones guardadas exitosamente.');
-        // Puedes limpiar el sessionStorage si lo deseas
-        // sessionStorage.removeItem('relacionpedido');
+        sessionStorage.clear();
 
         // Llamadas posteriores
         obtenerPedido(document.getElementById('estadoPedidos').value);

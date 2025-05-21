@@ -43,16 +43,26 @@
     <a class="btn btn-fsvsaoff" id="orderCompra" tabindex="-1">Orden Compra</a>
 </div>
 
-<div class="modal fade" id="modalOrdenSalida" tabindex="-1" aria-labelledby="modalOrdenSalidaLabel" aria-hidden="true">
+<!-- Modal Orden -->
+<div class="modal fade" id="modalOrden" tabindex="-1" aria-labelledby="modalOrdenLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalOrdenSalidaLabel">Orden Salida</h5>
+                <h5 class="modal-title" id="modalOrden">Orden</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
+                <div class="row mb-3" id="contenedorProveedor">
+                    <div class="col-md-6">
+                        <label for="selectProveedor">Proveedor</label>
+                        <select id="selectProveedor" class="form-control" disabled>
+                            <!-- Se llenará dinámicamente -->
+                        </select>
+                    </div>
+                </div>
+
                 <div class="table-responsive">
                     <table id="ordenSalidaTable" class="table table-striped table-bordered">
                         <thead>
@@ -61,21 +71,25 @@
                                 <th>Item</th>
                                 <th>Categoría</th>
                                 <th>Cantidad</th>
+                                <th>Valor Item</th>
                             </tr>
                         </thead>
                         <tbody id="tbodyOrdenSalida">
-                            <!-- Aquí se agregarán los items dinámicamente -->
+                            <!-- Se llenará dinámicamente -->
                         </tbody>
                     </table>
                 </div>
             </div>
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-fsvsaoff" data-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-fsvsaon" onclick="manejarOrden()">Generar</button>
+                <button type="button" class="btn btn-fsvsaon" onclick="manejarOrden(tipoOrdenActual)">Generar</button>
             </div>
         </div>
     </div>
 </div>
+
+
 
 
 

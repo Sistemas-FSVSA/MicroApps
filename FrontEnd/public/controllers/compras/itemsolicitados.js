@@ -7,59 +7,94 @@ async function InicializarItemSolicitados() {
     cargarItemSolicitados()
 
     document.getElementById('ordenSalida').addEventListener('click', function () {
-        renderizarItemsSeleccionadosModal(); // <-- ¡Aquí!
-        let modal = new bootstrap.Modal(document.getElementById('modalOrdenSalida'));
+        tipoOrdenActual = 'SALIDA';
+        renderizarItemsSeleccionadosModal();
+        let modal = new bootstrap.Modal(document.getElementById('modalOrden'));
         modal.show();
     });
+
+    document.getElementById('orderCompra').addEventListener('click', async function () {
+        tipoOrdenActual = 'COMPRA';
+        await renderizarItemsSeleccionadosModal(true);
+        let modal = new bootstrap.Modal(document.getElementById('modalOrden'));
+        modal.show();
+    });
+
 }
 
-function renderizarItemsSeleccionadosModal() {
+async function renderizarItemsSeleccionadosModal(esOrdenCompra = false) {
     const tbody = document.getElementById('tbodyOrdenSalida');
     tbody.innerHTML = '';
 
+    // Habilitar o deshabilitar los campos de proveedor
+    const contenedorProveedor = document.getElementById('contenedorProveedor');
+    const selectProveedor = document.getElementById('selectProveedor');
+    contenedorProveedor.style.display = esOrdenCompra ? 'block' : 'none';
+    selectProveedor.disabled = !esOrdenCompra;  // Habilitar o deshabilitar el select
+
+    // Deshabilitar o habilitar los campos de valor según la orden de compra
+    document.querySelectorAll('.input-valor-item').forEach(input => {
+        input.disabled = !esOrdenCompra;  // Habilitar o deshabilitar el input de precio
+    });
+
+    // Cargar proveedores si es orden de compra
+    if (esOrdenCompra) {
+        await cargarProveedores();  // Esta función debe llenar el selectProveedor
+    }
+
     const itemsSeleccionados = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
 
-    // ✅ Destruir DataTable si ya existe para evitar reinitialise error
+    // Si ya existe una tabla, destruirla y crearla de nuevo
     if ($.fn.DataTable.isDataTable('#ordenSalidaTable')) {
         $('#ordenSalidaTable').DataTable().clear().destroy();
     }
 
     itemsSeleccionados.forEach(item => {
         const row = document.createElement('tr');
+
         row.innerHTML = `
             <td>${item.iditem}</td>
             <td>${item.itemNombre}</td>
             <td>${item.categoriaNombre}</td>
             <td>
-                <input type="number" class="form-control input-cantidad" 
-                    data-iditem="${item.iditem}" 
-                    value="${item.total}" 
+                <input type="number" class="form-control input-cantidad"
+                    data-iditem="${item.iditem}"
+                    value="${item.total}"
                     min="1" style="width: 80px;">
             </td>
+            <td class="td-valor-item">
+                <input type="number" class="form-control input-valor-item"
+                    data-iditem="${item.iditem}"
+                    value="${item.valor || 0}"
+                    min="0" style="width: 100px;" ${!esOrdenCompra ? 'disabled' : ''}>
+            </td>
         `;
+
         tbody.appendChild(row);
     });
 
-    // Escuchar cambios
-    tbody.querySelectorAll('.input-cantidad').forEach(input => {
+    // Escuchar cambios de cantidad y valor
+    tbody.querySelectorAll('.input-cantidad, .input-valor-item').forEach(input => {
         input.addEventListener('input', function () {
             const iditem = parseInt(this.dataset.iditem);
-            const nuevoValor = parseInt(this.value);
-            let items = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
+            const items = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
 
-            items = items.map(item => {
+            const nuevosItems = items.map(item => {
                 if (item.iditem === iditem) {
-                    return { ...item, total: nuevoValor };
+                    if (this.classList.contains('input-cantidad')) {
+                        item.total = parseInt(this.value);
+                    } else if (this.classList.contains('input-valor-item')) {
+                        item.valor = parseFloat(this.value);
+                    }
                 }
                 return item;
             });
 
-            sessionStorage.setItem('itemsSeleccionados', JSON.stringify(items));
-            console.log(`Cantidad actualizada para ID ${iditem}:`, nuevoValor);
+            sessionStorage.setItem('itemsSeleccionados', JSON.stringify(nuevosItems));
         });
     });
 
-
+    // Inicializar la tabla de DataTables
     $('#ordenSalidaTable').DataTable({
         pageLength: 5,
         lengthChange: false,
@@ -68,37 +103,36 @@ function renderizarItemsSeleccionadosModal() {
             url: "https://cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
         }
     });
-
 }
 
-async function manejarOrden() {
+async function manejarOrden(tipo = 'SALIDA') {
     const itemsSeleccionados = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
-    const idusuario = localStorage.getItem('idusuario'); // Capturar idusuario del localStorage
+    const idusuario = localStorage.getItem('idusuario');
+    const idproveedor = document.getElementById('selectProveedor')?.value;
 
-    // Validación básica
     if (!Array.isArray(itemsSeleccionados) || itemsSeleccionados.length === 0) {
-        console.warn('No hay items seleccionados para enviar.');
-        alert('No hay datos para enviar.');
-        return;
+        return alert('No hay datos para enviar.');
     }
 
     if (!idusuario) {
-        console.warn('No se encontró el idusuario en el localStorage.');
-        alert('No se encontró el idusuario. Por favor, inicie sesión nuevamente.');
-        return;
+        return alert('No se encontró el idusuario. Inicie sesión nuevamente.');
+    }
+
+    if (tipo === 'COMPRA' && !idproveedor) {
+        return alert('Seleccione un proveedor para continuar.');
     }
 
     try {
         const data = {
-            idusuario, // Incluir idusuario en la data
-            items: itemsSeleccionados
+            idusuario,
+            tipo,
+            items: itemsSeleccionados,
+            ...(tipo === 'COMPRA' && { idproveedor })
         };
 
         const respuesta = await fetch(`${url}/api/compras/manejarOrden`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify(data)
         });
@@ -106,27 +140,17 @@ async function manejarOrden() {
         const resultado = await respuesta.json();
 
         if (respuesta.ok) {
-            console.log('Orden Generada exitosamente:', resultado);
-            alert('Orden Generada exitosamente.');
-
-            // Limpiar sessionStorage
+            alert('Orden generada exitosamente.');
             sessionStorage.removeItem('itemsSeleccionados');
-
-            // Forzar cierre del modal
-            $('#modalOrdenSalida').removeClass('show').removeAttr('style').attr('aria-hidden', 'true');
+            $('#modalOrden').removeClass('show').removeAttr('style').attr('aria-hidden', 'true');
             $('.modal-backdrop').remove();
             $('body').removeClass('modal-open');
-
-            // Recargar los items solicitados
             await cargarItemSolicitados();
         } else {
-            console.error('Error al generar la orden:', resultado);
-            alert('Error al generar la orden. Ver consola para más detalles.');
+            alert('Error al generar la orden.');
         }
-
     } catch (error) {
-        console.error('Error en la solicitud:', error);
-        alert('Error de conexión al generar la orden.');
+        alert('Error de conexión.');
     }
 }
 
@@ -148,6 +172,35 @@ async function cargarItemSolicitados() {
         renderizarTablaItems(data.items, data.itemsOrden);
     } catch (error) {
         console.error("Error:", error);
+    }
+}
+
+async function cargarProveedores() {
+    try {
+        const res = await fetch(`${url}/api/compras/obtenerProveedores`, {
+            credentials: 'include'
+        });
+        const proveedores = await res.json();
+
+        const select = document.getElementById('selectProveedor');
+        select.innerHTML = '<option value="">Seleccione un proveedor</option>';
+
+        proveedores.forEach(p => {
+            const option = document.createElement('option');
+            option.value = p.idproveedor;
+            option.textContent = `${p.identificacion} - ${p.nombre}`;
+            select.appendChild(option);
+        });
+
+        // Activar Select2 después de llenar las opciones
+        $('#selectProveedor').select2({
+            placeholder: 'Seleccione un proveedor',
+            width: '100%'  // Asegura que se ajuste al contenedor
+        });
+
+    } catch (error) {
+        console.error('Error al cargar proveedores:', error);
+        alert('No se pudieron cargar los proveedores');
     }
 }
 
@@ -178,7 +231,6 @@ function toggleItemSeleccionado(item) {
     }
     guardarItemsSeleccionados(items);
 }
-
 
 function renderizarTablaItems(items, itemsOrden) {
     const $tbody = $("#tbodyitem");

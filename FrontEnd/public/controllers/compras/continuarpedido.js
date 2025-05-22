@@ -54,29 +54,29 @@ function cargarDatosDelPedido(idpedido) {
         credentials: 'include',
         body: JSON.stringify({ idpedido })
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Error al obtener el pedido');
-        }
-        return response.json();
-    })
-    .then(data => {
-        renderizadoInfo(data); // SIEMPRE renderiza info general
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error al obtener el pedido');
+            }
+            return response.json();
+        })
+        .then(data => {
+            renderizadoInfo(data); // SIEMPRE renderiza info general
 
-        const itemsEnSessionStorage = sessionStorage.getItem('itemsSeleccionados');
+            const itemsEnSessionStorage = sessionStorage.getItem('itemsSeleccionados');
 
-        if (!itemsEnSessionStorage && data.detalle && Array.isArray(data.detalle)) {
-            sessionStorage.setItem('itemsSeleccionados', JSON.stringify(data.detalle));
-            renderizarItemsEncargo(); // Renderizar los ítems obtenidos
-        } else if (itemsEnSessionStorage) {
-            renderizarItemsEncargo(); // Renderizar ítems desde session
-        } else {
-            console.warn('No se encontraron ítems en el pedido');
-        }
-    })
-    .catch(error => {
-        console.error('Error al obtener el pedido:', error);
-    });
+            if (!itemsEnSessionStorage && data.detalle && Array.isArray(data.detalle)) {
+                sessionStorage.setItem('itemsSeleccionados', JSON.stringify(data.detalle));
+                renderizarItemsEncargo(); // Renderizar los ítems obtenidos
+            } else if (itemsEnSessionStorage) {
+                renderizarItemsEncargo(); // Renderizar ítems desde session
+            } else {
+                console.warn('No se encontraron ítems en el pedido');
+            }
+        })
+        .catch(error => {
+            console.error('Error al obtener el pedido:', error);
+        });
 }
 
 function renderizadoInfo(data) {
@@ -229,7 +229,7 @@ function agregarItemASessionStorage(nuevoItem) {
     // Actualizar la tabla principal
     renderizarItemsEncargo();
 
-    
+
     // Mostrar mensaje de éxito
     Mensaje('success', 'Éxito!', 'Item agregado exitosamente.', true, false);
 }
@@ -285,62 +285,77 @@ function manejarPedido(estado, idpedido) {
         credentials: 'include',
         body: JSON.stringify(encargo)
     })
-    .then(response => {
-        if (!response.ok) throw new Error('Error al guardar el encargo');
-        return response.json();
-    })
-    .then(async data => {
-        if (estado === 'AUTORIZADO') {
-            const pedidos = await obtenerPedidosAprobados();
-            const ids = pedidos.map(p => p.idpedido);
-            const idx = ids.indexOf(idpedido);
-    
-            if (idx < ids.length - 1) {
-                Mensaje('info', 'Info', 'Pedido autorizado. Pasando al siguiente...', true, false);
-                document.getElementById('flechaDerecha').click();
-            } else {
-                Mensaje('info', 'Info', 'Último pedido autorizado. Redirigiendo a revisión...', true, false);
-                setTimeout(() => {
-                    irAtras();
-                }, 1000);
+        .then(response => {
+            if (!response.ok) throw new Error('Error al guardar el encargo');
+            return response.json();
+        })
+        .then(async data => {
+            if (estado === 'AUTORIZADO') {
+                let pedidos = await obtenerPedidos(); // Todos los pedidos en estado APROBADO
+
+                // 🔧 Ordenar los pedidos por idpedido de forma ascendente (secuencial)
+                pedidos = pedidos.sort((a, b) => a.idpedido - b.idpedido);
+
+                const idActual = idpedido;
+                const idsOrdenados = pedidos.map(p => p.idpedido);
+
+                // 🔍 Buscar siguiente idpedido aprobado que sea mayor al actual
+                const siguiente = idsOrdenados.find(id => id > idActual);
+
+                // 🔍 Si no hay uno adelante, buscar uno anterior (menor)
+                const anterior = !siguiente ? [...idsOrdenados].reverse().find(id => id < idActual) : null;
+
+                const idDestino = siguiente || anterior;
+
+                if (idDestino) {
+                    Mensaje('info', 'Info', `Pedido autorizado. Redirigiendo al pedido #${idDestino}...`, true, false);
+                    setTimeout(() => {
+                        const nuevaUrl = `/compras/continuarpedido?idpedido=${idDestino}`;
+                        sessionStorage.removeItem('itemsSeleccionados');
+                        cargarVista(nuevaUrl, false);
+                    }, 1000);
+                } else {
+                    Mensaje('info', 'Info', 'No hay más pedidos aprobados para autorizar.', true, false);
+                    setTimeout(() => {
+                        irAtras();
+                    }, 1000);
+                }
+                return;
             }
-            return;
-        }
 
-        // Resto de estados
-        if (estado === 'CERRADO') {
-            Mensaje('success', 'Éxito!', 'El encargo ha sido cerrado con éxito.', true, false);
-        } else if (estado === 'APROBADO') {
-            Mensaje('success', 'Éxito!', 'Encargo aprobado con éxito.', true, false);
-        } else {
-            Mensaje('success', 'Éxito!', 'El encargo se ha guardado correctamente.', true, false);
-        }
+            // Resto de estados
+            if (estado === 'CERRADO') {
+                Mensaje('success', 'Éxito!', 'El encargo ha sido cerrado con éxito.', true, false);
+            } else if (estado === 'APROBADO') {
+                Mensaje('success', 'Éxito!', 'Encargo aprobado con éxito.', true, false);
+            } else {
+                Mensaje('success', 'Éxito!', 'El encargo se ha guardado correctamente.', true, false);
+            }
 
-        // Limpiar el sessionStorage después de una acción exitosa
-        sessionStorage.removeItem('itemsSeleccionados');
+            // Limpiar el sessionStorage después de una acción exitosa
+            sessionStorage.removeItem('itemsSeleccionados');
 
-        let redireccionUrl = '';
-        if (estado === 'INICIADO') {
-            redireccionUrl = `/compras/continuarpedido?idpedido=${data.idpedido}`;
-        } else if (estado === 'CERRADO') {
-            redireccionUrl = '/compras/pedidos';
-        } else if (estado === 'APROBADO') {
-            redireccionUrl = '/compras/aprobarpedido';
-        }
+            let redireccionUrl = '';
+            if (estado === 'INICIADO') {
+                redireccionUrl = `/compras/continuarpedido?idpedido=${data.idpedido}`;
+            } else if (estado === 'CERRADO') {
+                redireccionUrl = '/compras/pedidos';
+            } else if (estado === 'APROBADO') {
+                redireccionUrl = '/compras/aprobarpedido';
+            }
 
-        setTimeout(() => {
-            window.history.replaceState(null, "", redireccionUrl);
-            cargarVista(redireccionUrl);
-        }, 2000);
-    })
-    .catch(error => {
-        console.error('Error al guardar el encargo:', error);
-        Mensaje('error', 'Error!', 'Hubo un problema al guardar el encargo.', false, false);
-    });
+            setTimeout(() => {
+                window.history.replaceState(null, "", redireccionUrl);
+                cargarVista(redireccionUrl, false);
+            }, 2000);
+        })
+        .catch(error => {
+            console.error('Error al guardar el encargo:', error);
+            Mensaje('error', 'Error!', 'Hubo un problema al guardar el encargo.', false, false);
+        });
 }
 
-
-async function obtenerPedidosAprobados() {
+async function obtenerPedidos() {
     const response = await fetch(`${url}/api/compras/obtenerPedido`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -357,7 +372,7 @@ async function configurarNavegacionPedidos() {
     const urlParams = new URLSearchParams(window.location.search);
     const idpedidoActual = parseInt(urlParams.get('idpedido'));
 
-    const pedidos = await obtenerPedidosAprobados();
+    const pedidos = await obtenerPedidos();
     const ids = pedidos.map(p => p.idpedido);
     const indiceActual = ids.indexOf(idpedidoActual);
 
@@ -369,8 +384,7 @@ async function configurarNavegacionPedidos() {
             sessionStorage.removeItem('itemsSeleccionados');
             const idAnterior = ids[indiceActual - 1];
             const nuevaUrl = `/compras/continuarpedido?idpedido=${idAnterior}`;
-            window.history.replaceState({}, '', nuevaUrl); // no guardar historial
-            await cargarVista(nuevaUrl);
+            await cargarVista(nuevaUrl, false);
         }
     });
 
@@ -380,8 +394,7 @@ async function configurarNavegacionPedidos() {
             sessionStorage.removeItem('itemsSeleccionados');
             const idSiguiente = ids[indiceActual + 1];
             const nuevaUrl = `/compras/continuarpedido?idpedido=${idSiguiente}`;
-            window.history.replaceState({}, '', nuevaUrl); // no guardar historial
-            await cargarVista(nuevaUrl);
+            await cargarVista(nuevaUrl, false);
         }
     });
 }

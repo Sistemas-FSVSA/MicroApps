@@ -248,7 +248,7 @@ function manejarPedido(estado) {
             // Redirección después de 2 segundos
             setTimeout(() => {
                 window.history.replaceState(null, "", redireccionUrl);
-                cargarVista(redireccionUrl);
+                cargarVista(redireccionUrl, false);
             }, 2000);
         })
         .catch(error => {

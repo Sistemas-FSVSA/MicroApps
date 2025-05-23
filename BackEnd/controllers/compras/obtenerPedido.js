@@ -5,8 +5,19 @@ const obtenerPedido = async (req, res) => {
         const { idusuario, idpedido, estado } = req.body;
         const pool = await poolPromise;
 
+
         // Escenario 1: Solo idusuario
         if (idusuario && !idpedido && !estado) {
+            // Validar si el idusuario es inválido solo en este contexto
+            if (
+                idusuario === null ||
+                idusuario === undefined ||
+                (typeof idusuario === 'string' && idusuario.trim() === '') ||
+                (typeof idusuario === 'number' && isNaN(idusuario))
+            ) {
+                return res.status(200).json({ message: 'Sin parámetro válido: idusuario' });
+            }
+
             const dependenciasResult = await pool.request()
                 .input('idusuario', sql.Int, idusuario)
                 .query('SELECT iddependencia, tipo FROM usuariocompras WHERE idusuario = @idusuario');
@@ -155,7 +166,6 @@ const obtenerPedido = async (req, res) => {
 
             return res.json({ pedidos });
         }
-
 
         // Si no se cumple ninguno de los 3 escenarios
         return res.status(400).send('Debe proporcionar una combinación válida de parámetros.');

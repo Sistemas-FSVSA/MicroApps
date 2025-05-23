@@ -2,7 +2,7 @@
 const url = window.env.API_URL;
 
 document.addEventListener('DOMContentLoaded', function () {
-    InicializarMain() 
+    InicializarMain()
 });
 
 function InicializarMain() {
@@ -140,82 +140,76 @@ function reinitializeScripts() {
         loadAndRunScript("/controllers/vales/reportevales.js", "InicializarReporteVales");
     }
 
+    if (path.includes("/recaudo/novedadesrecaudo")) {
+        loadAndRunScript("/controllers/recaudo/novedadesrecaudo.js", "incializarNovedadesRecaudo");
+    }
+
     if (path.includes("/compras/pedidos")) {
         loadAndRunScript("/controllers/compras/pedidos.js", "InicializarPedidos");
-    }
-    
-    if (path.includes("/compras/nuevopedido")) {
-        loadAndRunScript("/controllers/compras/nuevopedido.js", "InicializarNuevoPedido");
     }
 
     if (path.includes("/compras/continuarpedido")) {
         loadAndRunScript("/controllers/compras/continuarpedido.js", "InicializarContinuarPedido");
     }
 
+    if (path.includes("/compras/nuevopedido")) {
+        loadAndRunScript("/controllers/compras/nuevopedido.js", "InicializarNuevoPedido");;
+    }
+
     if (path.includes("/compras/aprobarpedido")) {
-        loadAndRunScript("/controllers/compras/aprobarpedido.js", "InicializarAprobarPedido");
+        loadAndRunScript("/controllers/compras/aprobarpedido.js", "InicializarAprobarPedido");;
     }
 
     if (path.includes("/compras/revisarpedido")) {
-        loadAndRunScript("/controllers/compras/revisarpedido.js", "InicializarRevisarPedido");
+        loadAndRunScript("/controllers/compras/revisarpedido.js", "InicializarRevisarPedido");;
     }
 
-    if (path.includes("/compras/ordenes")) {
-        loadAndRunScript("/controllers/compras/ordenes.js", "InicializarOrdenes");
-    }
 
-    if (path.includes("/compras/itemsolicitados")) {
-        loadAndRunScript("/controllers/compras/itemsolicitados.js", "InicializarItemSolicitados");
-    }
-
-    if (path.includes("/recaudo/novedadesrecaudo")) {
-        loadAndRunScript("/controllers/recaudo/novedadesrecaudo.js", "incializarNovedadesRecaudo");
-    }
-
-    if (path.includes("/compras/relacionarorden")) {
-        loadAndRunScript("/controllers/compras/relacionarorden.js", "InicializarRelacionarOrden");
-    }
 
 }
 
 function irAtras() {
     if (window.history.length > 1) {
         window.history.back();
-        // Re-ejecutar scripts de la vista cargada
-        reinitializeScripts();
     } else {
         cargarVista('/inicio'); // Si no hay historial, volver a inicio
     }
-    sessionStorage.clear(); // Borra el sessionStorage al ejecutar la función
+    sessionStorage.clear();
 }
 
 function limpiarEventos() {
     $(document).off(); // Elimina todos los eventos de jQuery
 }
 
-async function cargarVista(url) {
+async function cargarVista(url, push = true) {
     try {
-        const response = await fetch(url, { method: "GET", headers: { "X-Requested-With": "XMLHttpRequest" } });
+        const response = await fetch(url, { 
+            method: "GET", 
+            headers: { "X-Requested-With": "XMLHttpRequest" } 
+        });
 
         if (!response.ok) throw new Error("Error al cargar la vista");
 
         const html = await response.text();
         document.getElementById("contenido").innerHTML = html;
 
-        // Obtener la URL actual para evitar duplicados en el historial
         const currentUrl = window.location.pathname + window.location.search;
 
-        if (currentUrl !== url) {  // Solo agregar al historial si es una URL diferente
+        if (currentUrl !== url) {
             const prevUrl = currentUrl;
-            window.history.pushState({ path: url, prevUrl: prevUrl }, "", url);
+            if (push) {
+                window.history.pushState({ path: url, prevUrl: prevUrl }, "", url);
+            } else {
+                window.history.replaceState({ path: url, prevUrl: prevUrl }, "", url);
+            }
         }
 
-        // Re-ejecutar scripts de la vista cargada
-        reinitializeScripts();
+        reinitializeScripts(); // reejecuta los scripts después de modificar la URL
     } catch (error) {
         console.error("Error en la navegación:", error);
     }
 }
+
 //FINAL NAVEGACION DINAMICA//
 
 //FUNCIONES PARA EL MANEJO DEL CIERRE DE SESION AUTOMATICO LUEGO DE 10MIN
@@ -284,7 +278,6 @@ async function logoutUser(autoLogout = false) {
         const data = await response.json();
         if (data.estado === 'ok') {
             localStorage.clear(); // Limpia el localStorage
-            sessionStorage.clear();
 
             // Determina el mensaje según si es cierre automático o manual
             if (autoLogout) {

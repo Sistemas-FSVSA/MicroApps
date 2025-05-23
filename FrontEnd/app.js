@@ -239,6 +239,13 @@ app.get("/compras/relacionarorden", (req, res) => {
     res.render("compras/relacionarorden");
 });
 
+app.get("/compras/registrocompras", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/registrocompras", { layout: false }); // Solo la vista
+    }
+    res.render("compras/registrocompras");
+});
+
 app.get("/recaudo/novedadesrecaudo", (req, res) => {
     if (req.xhr) {
         return res.render("recaudo/novedadesrecaudo", { layout: false }); // Solo la vista

@@ -40,12 +40,18 @@ function cargarPermisosSidebar() {
     document.getElementById('novedadesRecaudo').style.display = tienePermisoNoveRecau ? '' : 'none';
 
     //PERMISOS PARA EL MENU DE COMPRAS
-    const tienePermisoGestCompras = permisos.some(permiso => permiso.vista === "GESTION_COMPRAS");
+    const tienePermisoPediCompras = permisos.some(permiso => permiso.vista === "PEDIDO_COMPRAS");
     const tienePermisoRepoCompras = permisos.some(permiso => permiso.vista === "REPORTE_COMPRAS");
+    const tienePermisoOrdeCompras = permisos.some(permiso => permiso.vista === "ORDEN_COMPRAS");
+    const tienePermisoRegiCompras = permisos.some(permiso => permiso.vista === "REGISTRO_COMPRAS");
+
     document.getElementById('menuCompras').style.display =
-        (tienePermisoGestCompras || tienePermisoRepoCompras) ? '' : 'none';
-    document.getElementById('gestionCompras').style.display = tienePermisoGestCompras ? '' : 'none';
+        (tienePermisoPediCompras || tienePermisoRepoCompras || tienePermisoOrdeCompras ||  tienePermisoRegiCompras) ? '' : 'none';
+
+    document.getElementById('pedidosCompras').style.display = tienePermisoPediCompras ? '' : 'none';
     document.getElementById('reporteCompras').style.display = tienePermisoRepoCompras ? '' : 'none';
+    document.getElementById('ordenesCompras').style.display = tienePermisoOrdeCompras ? '' : 'none';
+    document.getElementById('registroCompras').style.display = tienePermisoRegiCompras ? '' : 'none';
 
     //RENDERIZADO DEL NOMBRE DE USUARIO EN EL SIDEBAR
     const nombres = localStorage.getItem('nombres');
@@ -341,6 +347,12 @@ async function cargarPermisosContinuarPedidos() {
     const tienePermisoAgregarItem = permisos.some(permiso => permiso.elemento === "BOTON_AGREGAR_ITEM_PEDIDO");
     const botonAgregar = document.getElementById('agregarItem');
     botonAgregar.style.display = tienePermisoAgregarItem ? 'inline-block' : 'none';
+
+    const tienePermisoNavePedidos = permisos.some(permiso => permiso.elemento === "NAVEGACION_PEDIDOS");
+    const botonSiguiente = document.getElementById('flechaDerecha');
+    const botonAnterior = document.getElementById('flechaIzquierda');
+    botonSiguiente.style.display = tienePermisoNavePedidos ? 'inline-block' : 'none';
+    botonAnterior.style.display = tienePermisoNavePedidos ? 'inline-block' : 'none';
 
     return {
         tienePermisoEliminarItem: permisos.some(permiso => permiso.elemento === "BOTON_ELIMINAR_ITEM_PEDIDO"),

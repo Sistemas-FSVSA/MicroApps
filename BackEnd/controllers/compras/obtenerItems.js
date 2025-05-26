@@ -22,7 +22,8 @@ const obtenerItems = async (req, res) => {
                     i.nombre AS itemNombre, 
                     i.descripcion AS itemDescripcion, 
                     c.nombre AS categoriaNombre,
-                    i.iditem AS itemId
+                    i.iditem AS itemId,
+                    i.estado 
                 FROM items i
                 INNER JOIN itemcategoria ic ON i.iditem = ic.iditem
                 INNER JOIN categoriaitem c ON ic.idcategoria = c.idcategoriaitem

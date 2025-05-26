@@ -40,7 +40,9 @@ function añadirItems() {
             })
                 .then(response => response.json())
                 .then(data => {
-                    actualizarTabla(data);
+                    // Filtramos los ítems cuyo estado sea true
+                    const itemsActivos = data.filter(item => item.estado === true);
+                    actualizarTabla(itemsActivos);
                 })
                 .catch(error => {
                     console.error('Error en la petición:', error);
@@ -48,6 +50,7 @@ function añadirItems() {
         }
     });
 }
+
 
 function actualizarTabla(data) {
     const tbody = document.getElementById('tbodyNuevoItem');

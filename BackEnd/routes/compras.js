@@ -18,6 +18,8 @@ const { obtenerEstadoPedido } = require('../controllers/compras/obtenerEstadoPed
 const { obtenerOrden } = require('../controllers/compras/obtenerOrden');
 const { guardarRelacion } = require('../controllers/compras/guardarRelacion');
 const { obtenerProveedores } = require('../controllers/compras/obtenerProveedor');
+const { actualizarEstadoItem } = require('../controllers/compras/actualizarEstadoItem');
+const { obtenerCategoria } = require('../controllers/compras/obtenerCategoria');
 
 router.post('/guardarCategoria', authenticateToken, rateLimiterFast, guardarCategoria);
 router.post('/guardarItem', authenticateToken, rateLimiterFast, guardarItem);
@@ -31,6 +33,8 @@ router.get('/obtenerEstadoPedido/:idpedido', authenticateToken, rateLimiterFast,
 router.post('/obtenerOrden', authenticateToken, rateLimiterFast, obtenerOrden);
 router.post('/guardarRelacion', authenticateToken, rateLimiterFast, guardarRelacion);
 router.get('/obtenerProveedores', authenticateToken, rateLimiterFast, obtenerProveedores);
+router.post('/actualizarEstadoItem', authenticateToken, rateLimiterFast, actualizarEstadoItem);
+router.post('/obtenerCategoria', authenticateToken, rateLimiterFast, obtenerCategoria);
 
 
 module.exports = router;

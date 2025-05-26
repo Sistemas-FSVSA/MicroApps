@@ -87,7 +87,6 @@ async function registrarNuevoItem() {
     }
 }
 
-
 async function obtenerCategoria() {
     try {
         const response = await fetch(`${url}/api/compras/obtenerCategoria`, {
@@ -225,7 +224,7 @@ async function actualizarEstadoItemFront(iditem, estado) {
         });
 
         if (response.status === 200) {
-            alert('Actualización exitosa');
+            Mensaje("success", "Exito", "Estado actualizado correctamente.", true, false);
         } else {
             const data = await response.json();
             alert(`Error: ${data.mensaje || 'No se pudo actualizar'}`);

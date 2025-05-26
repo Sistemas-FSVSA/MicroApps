@@ -15,10 +15,6 @@
     max-width: 1200px;
 }
 
-.row {
-    gap: 1rem;
-}
-
 .switch {
     position: relative;
     display: inline-block;

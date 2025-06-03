@@ -269,10 +269,10 @@ app.get("/config.js", (req, res) => {
   
     res.send(`window.env = { API_URL: "${apiUrl}" };`);
   });
-  
-  // Iniciar el servidor
-  const PORT = process.env.PORT;
-  app.listen(PORT, () => {
+
+
+const PORT = process.env.PORT;
+app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
   });
   

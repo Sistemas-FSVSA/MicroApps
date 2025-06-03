@@ -199,8 +199,25 @@ app.get("/recaudo/novedadesrecaudo", (req, res) => {
 
 app.get('/config.js', (req, res) => {
     res.setHeader('Content-Type', 'application/javascript');
-    res.send(`window.env = { API_URL: "${process.env.API_URL}" };`);
+    res.send(`window.env = { API_URL: "${process.env.API_URL_IP}" };`);
 });
+
+app.get("/config.js", (req, res) => {
+    res.setHeader("Content-Type", "application/javascript");
+  
+    const host = req.headers.host; // Obtiene la URL de origen
+    let apiUrl;
+  
+    if (host.includes(process.env.FRONTEND_HOST)) {
+      apiUrl = process.env.API_URL_HOST;
+    } else if (host.includes(process.env.FRONTEND_IP)) {
+      apiUrl = process.env.API_URL_IP;
+    } else {
+      apiUrl = process.env.API_URL_IP; // Fallback si no hay coincidencias
+    }
+  
+    res.send(`window.env = { API_URL: "${apiUrl}" };`);
+  });
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {

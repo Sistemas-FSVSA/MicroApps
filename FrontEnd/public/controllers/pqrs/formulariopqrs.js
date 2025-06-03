@@ -5,34 +5,6 @@ document.addEventListener("DOMContentLoaded", () => {
 async function inicializarFormularioPQRS() {
     fetchOptions(`${url}/api/pqrs/obtenerPlanes`, 'plan', 'data');
 
-    // ✅ Manejo de "contrato" y "plan" según afiliación
-    const afiliadoSelect = document.getElementById("afiliado");
-    const contratoInput = document.getElementById("contrato");
-    const planSelect = document.getElementById("plan");
-    const numeroServicioInput = document.getElementById("numeroServicio");
-
-    function toggleContratoPlan() {
-        const esAfiliado = afiliadoSelect.value === "true";
-
-        contratoInput.disabled = !esAfiliado;
-        planSelect.disabled = !esAfiliado;
-
-        contratoInput.required = esAfiliado;
-        planSelect.required = esAfiliado;
-
-        if (!esAfiliado) {
-            contratoInput.value = "";
-            planSelect.value = "";
-            numeroServicioInput.value = "";
-            contratoInput.classList.remove('is-invalid'); // ❌ Quitar resaltado si no es obligatorio
-            planSelect.classList.remove('is-invalid');
-            numeroServicioInput.classList.remove('is-invalid');
-        }
-    }
-
-    afiliadoSelect.addEventListener("change", toggleContratoPlan);
-    toggleContratoPlan(); // Aplicar reglas al cargar la página
-
     document.getElementById('guardarFormulario').addEventListener('click', async function () {
         try {
             const formData = await capturarInformacionModal();
@@ -194,30 +166,23 @@ function inicializarCanvas() {
 }
 
 async function capturarInformacionModal() {
-    const camposObligatorios = [
-        'titular', 'telefono',
-        'afiliado', 'nombreFallecido', 'fechaFallecimiento', 'reclamo'
-    ];
-
-    const afiliado = document.getElementById('afiliado').value === "true"; // Convertir a booleano
-    if (afiliado) {
-        camposObligatorios.push('contrato', 'plan', 'numeroServicio'); // Agregar campos solo si es afiliado
-    }
+    const camposObligatorios = ['titular', 'telefono', 'afiliado', 'fechaFallecimiento', 'reclamo'];
+    const camposOpcionales = ['cc', 'direccion', 'contrato', 'plan', 'numeroServicio', 'nombreFallecido'];
 
     let data = { idusuario: localStorage.getItem('idusuario') };
     let faltanCampos = false;
 
-    // 🔍 Validar campos vacíos y resaltar los que falten
+    // Validar y agregar campos obligatorios
     camposObligatorios.forEach(campo => {
         const input = document.getElementById(campo);
         const valor = input.value.trim();
         data[campo] = valor;
 
         if (!valor) {
-            input.classList.add('is-invalid'); // 🚨 Resaltar en rojo si está vacío
+            input.classList.add('is-invalid');
             faltanCampos = true;
         } else {
-            input.classList.remove('is-invalid'); // ✅ Quitar resaltado si se llena
+            input.classList.remove('is-invalid');
         }
     });
 
@@ -225,6 +190,12 @@ async function capturarInformacionModal() {
         Mensaje('warning', 'Información incompleta', 'Por favor, complete todos los campos obligatorios.', false, false);
         return null;
     }
+
+    // Agregar campos opcionales sin validación
+    camposOpcionales.forEach(campo => {
+        const input = document.getElementById(campo);
+        data[campo] = input?.value?.trim() || '';
+    });
 
     return data;
 }

@@ -15,7 +15,8 @@ function cargarPermisosSidebar() {
 
     const tienePermisoNoveRecau = permisos.some(permiso => permiso.vista === "NOVEDADES_RECAUDADO");
 
-    const tienePermisoCOMPRAS = permisos.some(permiso => permiso.vista === "COMPRAS");
+    const tienePermisoGestCompras = permisos.some(permiso => permiso.vista === "GESTION_COMPRAS");
+    const tienePermisoRepoCompras = permisos.some(permiso => permiso.vista === "REPORTE_COMPRAS");
 
     document.getElementById('menuUsuarios').style.display = tienePermisoUsuarios ? '' : 'none';
     //document.getElementById('menuTarifas').style.display = tienePermisoTarifas ? '' : 'none';
@@ -34,9 +35,9 @@ function cargarPermisosSidebar() {
     document.getElementById('reporteVales').style.display = tienePermisoRepoVales ? '' : 'none';
 
     document.getElementById('menuCompras').style.display =
-        (tienePermisoCOMPRAS || tienePermisoCOMPRAS) ? '' : 'none';
-    document.getElementById('gestionCompras').style.display = tienePermisoCOMPRAS ? '' : 'none';
-    document.getElementById('reporteCompras').style.display = tienePermisoCOMPRAS ? '' : 'none';
+        (tienePermisoGestCompras || tienePermisoRepoCompras) ? '' : 'none';
+    document.getElementById('gestionCompras').style.display = tienePermisoGestCompras ? '' : 'none';
+    document.getElementById('reporteCompras').style.display = tienePermisoRepoCompras ? '' : 'none';
 
     document.getElementById('menuRecaudo').style.display = tienePermisoNoveRecau ? '' : 'none';
     document.getElementById('novedadesRecaudo').style.display = tienePermisoNoveRecau ? '' : 'none';

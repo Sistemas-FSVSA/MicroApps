@@ -164,8 +164,21 @@ function reinitializeScripts() {
         loadAndRunScript("/controllers/compras/revisarpedido.js", "InicializarRevisarPedido");;
     }
 
+    if (path.includes("/compras/ordenes")) {
+        loadAndRunScript("/controllers/compras/ordenes.js", "InicializarOrdenes");;
+    }
 
+    if (path.includes("/compras/itemsolicitados")) {
+        loadAndRunScript("/controllers/compras/itemsolicitados.js", "InicializarItemSolicitados");;
+    }
 
+    if (path.includes("/compras/relacionarorden")) {
+        loadAndRunScript("/controllers/compras/relacionarorden.js", "InicializarRelacionarOrden");;
+    }
+
+    if (path.includes("/compras/registrocompras")) {
+        loadAndRunScript("/controllers/compras/registrocompras.js", "InicializarRegistroCompras");;
+    }
 }
 
 function irAtras() {

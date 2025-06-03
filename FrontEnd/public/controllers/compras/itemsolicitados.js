@@ -154,6 +154,8 @@ async function manejarOrden(tipo = 'SALIDA') {
     }
 }
 
+let dependencias = []; // Variable global para almacenar dependencias
+
 async function cargarItemSolicitados() {
     try {
         const response = await fetch(`${url}/api/compras/obtenerItemsPedido`, {
@@ -169,6 +171,7 @@ async function cargarItemSolicitados() {
         }
 
         const data = await response.json();
+        dependencias = data.dependencias || []; // <-- Guardamos las dependencias aquí
         renderizarTablaItems(data.items, data.itemsOrden);
     } catch (error) {
         console.error("Error:", error);
@@ -302,5 +305,47 @@ function renderizarTablaItems(items, itemsOrden) {
         language: {
             url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
         }
+    });
+}
+
+function verDetalle(iditem) {
+    const detalles = dependencias.filter(dep => dep.iditem === iditem);
+
+    if (detalles.length === 0) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Sin dependencias',
+            text: 'Este item no ha sido solicitado por ninguna dependencia.'
+        });
+        return;
+    }
+
+    const htmlDetalle = detalles.map(dep => `
+        <tr>
+            <td>${dep.dependenciaNombre}</td>
+            <td>${dep.cantidad}</td>
+        </tr>
+    `).join('');
+
+    Swal.fire({
+        title: 'Dependencias que solicitaron el item',
+        html: `
+            <div style="text-align:left">
+                <strong>Item:</strong> ${detalles[0].itemNombre}
+                <br><br>
+                <table class="table table-sm table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Dependencia</th>
+                            <th>Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${htmlDetalle}
+                    </tbody>
+                </table>
+            </div>
+        `,
+        width: 600
     });
 }

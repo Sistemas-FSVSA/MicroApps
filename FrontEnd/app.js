@@ -183,11 +183,67 @@ app.get("/vales/reportevales", (req, res) => {
     res.render("vales/reportevales");
 });
 
-app.get("/compras/encargos", (req, res) => {
+app.get("/compras/pedidos", (req, res) => {
     if (req.xhr) {
-        return res.render("compras/encargos", { layout: false }); // Solo la vista
+        return res.render("compras/pedidos", { layout: false }); // Solo la vista
     }
-    res.render("compras/encargos");
+    res.render("compras/pedidos");
+});
+
+app.get("/compras/nuevopedido", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/nuevopedido", { layout: false }); // Solo la vista
+    }
+    res.render("compras/nuevopedido");
+});
+
+app.get("/compras/continuarpedido", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/continuarpedido", { layout: false }); // Solo la vista
+    }
+    res.render("compras/continuarpedido");
+});
+
+app.get("/compras/aprobarpedido", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/aprobarpedido", { layout: false }); // Solo la vista
+    }
+    res.render("compras/aprobarpedido");
+});
+
+app.get("/compras/revisarpedido", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/revisarpedido", { layout: false }); // Solo la vista
+    }
+    res.render("compras/revisarpedido");
+});
+
+app.get("/compras/ordenes", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/ordenes", { layout: false }); // Solo la vista
+    }
+    res.render("compras/ordenes");
+});
+
+app.get("/compras/itemsolicitados", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/itemsolicitados", { layout: false }); // Solo la vista
+    }
+    res.render("compras/itemsolicitados");
+});
+
+app.get("/compras/relacionarorden", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/relacionarorden", { layout: false }); // Solo la vista
+    }
+    res.render("compras/relacionarorden");
+});
+
+app.get("/compras/registrocompras", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/registrocompras", { layout: false }); // Solo la vista
+    }
+    res.render("compras/registrocompras");
 });
 
 app.get("/recaudo/novedadesrecaudo", (req, res) => {
@@ -195,11 +251,6 @@ app.get("/recaudo/novedadesrecaudo", (req, res) => {
         return res.render("recaudo/novedadesrecaudo", { layout: false }); // Solo la vista
     }
     res.render("recaudo/novedadesrecaudo");
-});
-
-app.get('/config.js', (req, res) => {
-    res.setHeader('Content-Type', 'application/javascript');
-    res.send(`window.env = { API_URL: "${process.env.API_URL_IP}" };`);
 });
 
 app.get("/config.js", (req, res) => {
@@ -219,7 +270,9 @@ app.get("/config.js", (req, res) => {
     res.send(`window.env = { API_URL: "${apiUrl}" };`);
   });
 
+
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
+  });
+  

@@ -59,7 +59,7 @@ const guardarItem = async (req, res) => {
 
             // Confirmar la transacción después de todas las inserciones
             await transaction.commit();
-            res.json({ message: 'Items registrados exitosamente' });
+            res.status(200).json({ message: 'Items registrados exitosamente' });
 
         } catch (error) {
             // Si hay error, deshacer cambios

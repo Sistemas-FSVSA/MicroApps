@@ -1,0 +1,15 @@
+/* Contenedor flexible para los botones */
+.btn-container {
+    display: flex;
+    justify-content: flex-end; /* Alinea los botones a la derecha */
+    gap: 20px; /* Espaciado entre los botones */
+    position: fixed;
+    bottom: 58px;
+    right: 20px;
+    z-index: 1000;
+}
+
+/* Estilo individual para los botones */
+.btn-container .btn {
+    flex-shrink: 0; /* Evita que los botones se reduzcan */
+}

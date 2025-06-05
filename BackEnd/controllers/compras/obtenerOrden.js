@@ -42,10 +42,11 @@ const obtenerOrden = async (req, res) => {
                     SELECT 
                         o.idorden, o.fecha, o.estado, o.idusuario, o.tipo,
                         do.iddetalleorden, do.iditem, do.cantidad,
-                        i.nombre
+                        i.nombre, do.valor, o.factura, o.aprobado, p.nombre as proveedor
                     FROM orden o
                     INNER JOIN detalleorden do ON o.idorden = do.idorden
                     INNER JOIN items i ON do.iditem = i.iditem
+                    LEFT JOIN proveedorescompras AS p ON o.idproveedor = p.idproveedor
                     WHERE o.idorden = @idorden
                 `);
 
@@ -57,7 +58,8 @@ const obtenerOrden = async (req, res) => {
                 iddetalleorden: row.iddetalleorden,
                 iditem: row.iditem,
                 cantidad: row.cantidad,
-                nombre: row.nombre
+                nombre: row.nombre,
+                valor: row.valor
             }));
 
             const orden = {
@@ -66,6 +68,9 @@ const obtenerOrden = async (req, res) => {
                 estado: result.recordset[0].estado,
                 idusuario: result.recordset[0].idusuario,
                 tipo: result.recordset[0].tipo,
+                factura: result.recordset[0].factura,
+                aprobado: result.recordset[0].aprobado,
+                proveedor: result.recordset[0].proveedor,
                 detalles: detalles
             };
 

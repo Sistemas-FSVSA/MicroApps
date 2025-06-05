@@ -26,6 +26,7 @@ const { actualizarUsuario } = require('../controllers/compras/actualizarUsuario'
 const { guardarProveedor } = require('../controllers/compras/guardarProveedor');
 const { generarOrdenCompra } = require('../controllers/compras/generarOrdenCompra');
 const { generarOrdenSalida } = require('../controllers/compras/generarOrdenSalida');
+const { actualizarFacturaPedido } = require('../controllers/compras/actualizarFacturaPedido');
 
 router.post('/guardarCategoria', authenticateToken, rateLimiterFast, guardarCategoria);
 router.post('/guardarItem', authenticateToken, rateLimiterFast, guardarItem);
@@ -48,5 +49,6 @@ router.post('/actualizarUsuario', authenticateToken, rateLimiterFast, actualizar
 router.post('/guardarProveedor', authenticateToken, rateLimiterFast, guardarProveedor);
 router.post('/generarOrdenCompra', authenticateToken, rateLimiterFast, generarOrdenCompra);
 router.post('/generarOrdenSalida', authenticateToken, rateLimiterFast, generarOrdenSalida);
+router.post('/actualizarFacturaPedido', authenticateToken, rateLimiterFast, actualizarFacturaPedido);
 
 module.exports = router;

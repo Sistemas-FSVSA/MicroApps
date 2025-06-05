@@ -8,12 +8,12 @@ const path = require("path");
 const tmp = require("tmp");
 
 const libreOfficePath = `"C:\\Program Files\\LibreOffice\\program\\soffice.exe"`;
-const templatePath = path.join(__dirname, "../../documents/ordencompra.docx");
+const templatePath = path.join(__dirname, "../../documents/ordensalida.docx");
 const execAsync = promisify(exec);
 
-const generarOrdenCompra = async (req, res) => {
-    const { idorden, usuario } = req.body;
-    if (!idorden) return res.status(400).json({ error: "idorden es requerido" });
+const generarOrdenSalida = async (req, res) => {
+    const { idpedido, usuario } = req.body;
+    if (!idpedido) return res.status(400).json({ error: "idpedido es requerido" });
 
     try {
         const pool = await poolPromise;
@@ -21,36 +21,43 @@ const generarOrdenCompra = async (req, res) => {
         // 1. Obtener información de la orden y proveedor
         const result = await pool.request().query(`
             SELECT 
-                o.idorden, o.fecha, o.estado, o.tipo, o.idusuario,
-                p.nombre AS proveedor
-            FROM orden o
-            LEFT JOIN proveedorescompras p ON o.idproveedor = p.idproveedor
-            WHERE o.idorden = ${idorden}
+                p.idpedido,
+                p.fechapedido,
+                p.estado,
+                p.idusuarioaprobo,
+                d.nombre AS nombreDependencia
+            FROM pedidos p
+            LEFT JOIN dependencias d ON p.iddependencia = d.iddependencia
+            WHERE p.idpedido = ${idpedido}
         `);
 
         if (result.recordset.length === 0) {
             return res.status(404).json({ error: "Orden no encontrada" });
         }
 
-        const orden = result.recordset[0];
+        const pedido = result.recordset[0];
 
         // 2. Obtener detalles de la orden
         const detallesResult = await pool.request().query(`
-            SELECT d.iddetalleorden, d.cantidad, d.valor, i.nombre, i.descripcion
-            FROM detalleorden d
-            INNER JOIN items i ON d.iditem = i.iditem
-            WHERE d.idorden = ${idorden}
+            SELECT 
+                dp.iddetallepedido,
+                dp.cantidad,
+                dp.fechasolicitud,
+                dp.estado,
+                i.nombre AS nombreItem,
+                i.descripcion
+            FROM detallepedido dp
+            INNER JOIN items i ON dp.iditem = i.iditem
+            WHERE dp.idpedido = ${idpedido}
         `);
 
         const detalles = detallesResult.recordset.map(item => ({
-            item: item.nombre || item.descripcion || "Item sin nombre",
+            item: item.nombreItem || "Item sin nombre",
             cantidad: item.cantidad.toString(),
-            vu: `$${item.valor.toFixed(2)}`,
-            vt: `$${(item.cantidad * item.valor).toFixed(2)}`
         }));
 
         // 3. Formatear fecha
-        const fecha = new Date(orden.fecha);
+        const fecha = new Date(pedido.fechapedido);
         const dia = fecha.getDate().toString().padStart(2, "0");
         const mes = (fecha.getMonth() + 1).toString().padStart(2, "0");
         const year = fecha.getFullYear();
@@ -64,9 +71,9 @@ const generarOrdenCompra = async (req, res) => {
         });
 
         doc.render({
-            PROVEEDOR: orden.proveedor || "No especificado",
-            USUARIO: req.body.usuario || "Desconocido",
-            idorden: orden.idorden.toString(),
+            dependencia: pedido.nombreDependencia || "No especificado",
+            usuario: req.body.usuario || "Desconocido",
+            idpedido: pedido.idpedido.toString(),
             dia,
             mes,
             year,
@@ -86,7 +93,7 @@ const generarOrdenCompra = async (req, res) => {
         const pdfBuffer = fs.readFileSync(tempPdfFile);
 
         // 6. Enviar al frontend
-        res.setHeader("Content-Disposition", `attachment; filename="orden_${idorden}.pdf"`);
+        res.setHeader("Content-Disposition", `attachment; filename="orden_${idpedido}.pdf"`);
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader("Content-Length", pdfBuffer.length);
         res.send(pdfBuffer);
@@ -97,4 +104,4 @@ const generarOrdenCompra = async (req, res) => {
     }
 };
 
-module.exports = { generarOrdenCompra };
+module.exports = { generarOrdenSalida };

@@ -257,7 +257,7 @@ function actualizarCantidadEnSessionStorage(index, nuevaCantidad) {
         // Guardar en sessionStorage
         sessionStorage.setItem('itemsSeleccionados', JSON.stringify(items));
     } else {
-        alert("La cantidad debe ser mayor a 0.");
+        Mensaje('warning', '¡Cuidado!', 'La cantidad debe ser mayor a 0.', true, false);
     }
 }
 

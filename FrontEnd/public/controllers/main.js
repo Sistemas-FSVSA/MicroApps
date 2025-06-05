@@ -179,6 +179,14 @@ function reinitializeScripts() {
     if (path.includes("/compras/registrocompras")) {
         loadAndRunScript("/controllers/compras/registrocompras.js", "InicializarRegistroCompras");;
     }
+
+    if (path.includes("/compras/imprimirorden")) {
+        loadAndRunScript("/controllers/compras/imprimirorden.js", "InicializarImprimirOrden");;
+    }
+
+    if (path.includes("/compras/consultarpedidos")) {
+        loadAndRunScript("/controllers/compras/consultarpedidos.js", "InicializarConsultarPedidos");;
+    }
 }
 
 function irAtras() {

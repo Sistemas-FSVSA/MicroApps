@@ -29,3 +29,8 @@ function redireccionRelacionarOrden() {
     const url = `/compras/relacionarorden`;
     cargarVista(url);
 }
+
+function redireccionImprimirOrden() {
+    const url = `/compras/imprimirorden`;
+    cargarVista(url);
+}

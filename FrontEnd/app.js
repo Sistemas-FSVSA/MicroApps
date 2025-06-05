@@ -246,6 +246,20 @@ app.get("/compras/registrocompras", (req, res) => {
     res.render("compras/registrocompras");
 });
 
+app.get("/compras/imprimirorden", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/imprimirorden", { layout: false }); // Solo la vista
+    }
+    res.render("compras/imprimirorden");
+});
+
+app.get("/compras/consultarpedidos", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/consultarpedidos", { layout: false }); // Solo la vista
+    }
+    res.render("compras/consultarpedidos");
+});
+
 app.get("/recaudo/novedadesrecaudo", (req, res) => {
     if (req.xhr) {
         return res.render("recaudo/novedadesrecaudo", { layout: false }); // Solo la vista

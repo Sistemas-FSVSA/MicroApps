@@ -23,6 +23,13 @@ async function InicializarPedidos() {
         RevisarPedidosPendientes.style.display = 'none';
     }
 
+    // Validación independiente para la card CONSULTAR_PEDIDOS
+    const tieneVistaConsultarPedidos = permisos.some(permiso => permiso.elemento === "CONSULTAR_PEDIDOS");
+    const consultarPedidos = document.getElementById('consultarPedidos');
+    if (!tieneVistaConsultarPedidos) {
+        consultarPedidos.style.display = 'none';
+    }
+
     // Validación y lógica de la card MANEJAR_PEDIDOS
     const tieneVistaPedidos = permisos.some(permiso => permiso.elemento === "MANEJAR_PEDIDOS");
 
@@ -114,5 +121,10 @@ function redireccionAprobarPedido() {
 
 function redireccionRevisarPedido() {
     const url = `/compras/revisarpedido/`;
+    cargarVista(url);
+}
+
+function redireccionConsultarPedidos() {
+    const url = `/compras/consultarpedidos/`;
     cargarVista(url);
 }

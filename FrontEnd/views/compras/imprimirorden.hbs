@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="/css/compras/imprimirorden.css">
+
 <div class="content-header">
     <div class="container-fluid">
         <div class="row mb-2 align-items-center d-flex justify-content-between">
@@ -13,25 +15,36 @@
 </div>
 <div class="content">
     <div class="container-fluid">
-        <div id="item-container" class="mt-4 table-responsive">
-            <table id="tableOrden" class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>Orden</th>
-                        <th>Tipo</th>
-                        <th>Generada</th>
-                        <th>Proveedor</th>
-                        <th>Estado</th>
-                        <th>Accion</th>
-                    </tr>
-                </thead>
-                <tbody id="tbodyOrden">
-                    <!-- Filas dinámicas -->
-                </tbody>
-            </table>
+        <div class="row">
+            <!-- Lista de órdenes -->
+            <div class="col-md-4 col-lg-3">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0">Órdenes generadas</h6>
+                    </div>
+                    <div class="list-group inbox-scroll" id="listaOrdenes">
+                        <!-- Órdenes cargadas dinámicamente -->
+                    </div>
+                </div>
+            </div>
 
+            <!-- Detalle de la orden -->
+            <div class="col-md-8 col-lg-9">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">Detalle de la Orden</h6>
+                    </div>
+                    <div class="card-body ticket-scroll">
+                        <small id="ordenTitle" class="text-muted">Bienvenido</small>
+                        <p id="ordenContent" class="mt-2">
+                            Selecciona una orden para ver los detalles.
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
 </div>
 
 <script src="/controllers/compras/imprimirorden.js"></script>

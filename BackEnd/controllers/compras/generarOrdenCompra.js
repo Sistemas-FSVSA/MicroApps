@@ -21,7 +21,7 @@ const generarOrdenCompra = async (req, res) => {
         // 1. Obtener información de la orden y proveedor
         const result = await pool.request().query(`
             SELECT 
-                o.idorden, o.fecha, o.estado, o.tipo, o.idusuario,
+                o.idorden, o.fecha, o.estado, o.tipo, o.idusuario, o.factura, o.aprobado,
                 p.nombre AS proveedor
             FROM orden o
             LEFT JOIN proveedorescompras p ON o.idproveedor = p.idproveedor
@@ -42,12 +42,19 @@ const generarOrdenCompra = async (req, res) => {
             WHERE d.idorden = ${idorden}
         `);
 
-        const detalles = detallesResult.recordset.map(item => ({
-            item: item.nombre || item.descripcion || "Item sin nombre",
-            cantidad: item.cantidad.toString(),
-            vu: `$${item.valor.toFixed(2)}`,
-            vt: `$${(item.cantidad * item.valor).toFixed(2)}`
-        }));
+        let totalGeneral = 0;
+
+        const detalles = detallesResult.recordset.map(item => {
+            const subtotal = item.cantidad * item.valor;
+            totalGeneral += subtotal;
+
+            return {
+                item: item.nombre || item.descripcion || "Item sin nombre",
+                cantidad: item.cantidad.toString(),
+                vu: `$${item.valor.toFixed(2)}`,
+                vt: `$${subtotal.toFixed(2)}`
+            };
+        });
 
         // 3. Formatear fecha
         const fecha = new Date(orden.fecha);
@@ -64,9 +71,12 @@ const generarOrdenCompra = async (req, res) => {
         });
 
         doc.render({
-            PROVEEDOR: orden.proveedor || "No especificado",
-            USUARIO: req.body.usuario || "Desconocido",
+            proveedor: orden.proveedor || "No especificado",
+            usuario: req.body.usuario || "Desconocido",
             idorden: orden.idorden.toString(),
+            vtg: `$${totalGeneral.toFixed(2)}`,
+            factura: orden.factura || "No especificada",
+            aprobado: orden.aprobado || "No especificada",
             dia,
             mes,
             year,

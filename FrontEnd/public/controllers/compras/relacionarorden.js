@@ -333,7 +333,7 @@ async function guardarRelacion() {
 
         const data = await response.json();
 
-        Mensaje('Success', '¡Exito!', 'Relacionar guardada exitosamente.', true, false);
+        Mensaje('success', '¡Exito!', 'Relacionar guardada exitosamente.', true, false);
         sessionStorage.clear();
 
         // Llamadas posteriores
@@ -342,6 +342,6 @@ async function guardarRelacion() {
 
     } catch (error) {
         console.error('Error al guardar relaciones:', error);
-        Mensaje('Error', '¡Error!', 'Ocurrio un problema la guardar la relacion', false, false);
+        Mensaje('error', '¡Error!', 'Ocurrio un problema la guardar la relacion', false, false);
     }
 }

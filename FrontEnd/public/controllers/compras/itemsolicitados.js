@@ -137,17 +137,17 @@ async function manejarOrden(tipo = 'SALIDA') {
         const resultado = await respuesta.json();
 
         if (respuesta.ok) {
-            Mensaje('Success', '¡Exito!', 'Orden generada exitosamente.', true, false);
+            Mensaje('success', '¡Exito!', 'Orden generada exitosamente.', true, false);
             sessionStorage.removeItem('itemsSeleccionados');
             $('#modalOrden').removeClass('show').removeAttr('style').attr('aria-hidden', 'true');
             $('.modal-backdrop').remove();
             $('body').removeClass('modal-open');
             await cargarItemSolicitados();
         } else {
-            Mensaje('Error', '¡Error!', 'No fue posible generar la orden.', false, false);
+            Mensaje('error', '¡Error!', 'No fue posible generar la orden.', false, false);
         }
     } catch (error) {
-        Mensaje('Error', '¡Error!', 'No se pudo obtener la informacion.', false, false);
+        Mensaje('error', '¡Error!', 'No se pudo obtener la informacion.', false, false);
     }
 }
 
@@ -200,7 +200,7 @@ async function cargarProveedores() {
 
     } catch (error) {
         console.error('Error al cargar proveedores:', error);
-        Mensaje('Error', '¡Error!', 'No se pudieron cargar los proveedores', false, false);
+        Mensaje('error', '¡Error!', 'No se pudieron cargar los proveedores', false, false);
     }
 }
 

@@ -18,62 +18,219 @@ async function cargarOrdenes() {
         if (!respuesta.ok) throw new Error("Error al obtener datos");
 
         const data = await respuesta.json();
-        renderizarTabla(data);
+        renderizarOrdenesBandeja(data);
     } catch (error) {
         document.getElementById("tbodyOrden").innerHTML = `<tr><td colspan="5">Error al cargar datos</td></tr>`;
     }
 }
 
-function renderizarTabla(ordenes) {
-    const tablaId = "#tableOrden";
-    const tbody = document.getElementById("tbodyOrden");
-    tbody.innerHTML = "";
+function renderizarOrdenesBandeja(ordenes) {
+    const contenedor = document.getElementById("listaOrdenes");
+    contenedor.innerHTML = "";
 
     if (!ordenes || ordenes.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center">No hay órdenes para mostrar</td></tr>`;
-    } else {
-        ordenes.forEach((orden) => {
-            const tr = document.createElement("tr");
+        contenedor.innerHTML = `<p class="text-center text-muted m-3">Sin órdenes disponibles</p>`;
+        return;
+    }
 
-            const botonDescarga = orden.tipo === "COMPRA" ? `
-                <button class="btn btn-fsvsaoff" onclick="generarOrdenCompra(${orden.idorden})">
-                    <i class="fas fa-download"></i>
-                </button>
-            ` : '';
+    ordenes.forEach((orden) => {
+        const ordenItem = document.createElement("a");
+        ordenItem.href = "#";
+        ordenItem.className = "list-group-item list-group-item-action";
+        ordenItem.dataset.id = orden.idorden;
+        ordenItem.innerHTML = `
+    <div class="ticket-content d-flex justify-content-between">
+        <div class="ticket-main">
+            <strong class="font-weight-bold">Orden #${orden.idorden}</strong>
+            <p class="mb-0 text-ellipsis">${orden.proveedor || 'Sin proveedor'}</p>
+            <small class="text-muted">${formatFechaHora(orden.fecha)}</small>
+        </div>
+        <div class="ticket-side">
+            <span class="badge badge-secondary">${orden.estado}</span>
+        </div>
+    </div>
+`;
 
-            tr.innerHTML = `
-                <td>${orden.idorden}</td>
-                <td>${orden.tipo}</td>
-                <td>${formatFechaHora(orden.fecha)}</td>
-                <td>${orden.proveedor || ''}</td>
-                <td>${orden.estado}</td>
-                <td>
-                    <button class="btn btn-fsvsaon" onclick="verOrden(${orden.idorden})">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    ${botonDescarga}
-                </td>
-            `;
-            tbody.appendChild(tr);
+        ordenItem.addEventListener("click", (e) => {
+            e.preventDefault();
+            obtenerOrdenPorId(orden.idorden);
+        });
+
+
+        contenedor.appendChild(ordenItem);
+    });
+}
+
+async function obtenerOrdenPorId(idorden) {
+    try {
+        const respuesta = await fetch(`${url}/api/compras/obtenerOrden`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ idorden }) // 👈 mandamos el id
+        });
+
+        if (!respuesta.ok) throw new Error("Error al obtener la orden");
+
+        const ordenDetallada = await respuesta.json();
+        mostrarDetalleOrden(ordenDetallada); // 👈 usamos la respuesta detallada
+    } catch (error) {
+        console.error("Error al obtener detalles de la orden:", error);
+        Swal.fire({
+            title: "Error",
+            text: "No se pudo cargar la orden seleccionada.",
+            icon: "error",
+            confirmButtonText: "Aceptar"
         });
     }
+}
 
-    // Destruir DataTable anterior si existe
-    if ($.fn.DataTable.isDataTable(tablaId)) {
-        $(tablaId).DataTable().destroy();
+let ordenGlobal = null;
+
+function mostrarDetalleOrden(orden) {
+    ordenGlobal = orden;  // Guardamos referencia global
+    const titulo = document.getElementById("ordenTitle");
+    const contenido = document.getElementById("ordenContent");
+
+    titulo.innerHTML = `<h4 class="font-weight-bold">Orden #${orden.idorden} - ${orden.tipo}</h4>`;
+
+    const detallesHTML = orden.detalles && orden.detalles.length > 0
+        ? (() => {
+            let totalGeneral = 0;
+            const filas = orden.detalles.map(detalle => {
+                const total = detalle.cantidad * detalle.valor;
+                totalGeneral += total;
+                return `
+                    <div class="form-row mb-2">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" value="${detalle.nombre}" readonly>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="text" class="form-control" value="${detalle.cantidad}" readonly>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="text" class="form-control" value="${detalle.valor}" readonly>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="text" class="form-control" value="${total.toFixed(2)}" readonly>
+                        </div>
+                    </div>`;
+            }).join('');
+
+            return `
+                <div class="form-group">
+                    <label>Items</label>
+                    ${filas}
+                    <div class="form-row justify-content-end mt-3">
+                        <div class="col-md-2">
+                            <label><strong>Total general</strong></label>
+                            <input type="text" class="form-control text-right font-weight-bold" value="${totalGeneral.toFixed(2)}" readonly>
+                        </div>
+                    </div>
+                </div>`;
+        })()
+        : `<p class="text-muted">Sin detalles disponibles</p>`;
+
+    contenido.innerHTML = `
+        <form>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label>Fecha</label>
+                    <input type="text" class="form-control" value="${formatFechaHora(orden.fecha)}" readonly>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Estado</label>
+                    <input type="text" class="form-control" value="${orden.estado}" readonly>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Factura</label>
+                    <div class="d-flex align-items-center" id="facturaDisplay">
+                        <input type="text" class="form-control" id="facturaInput" value="${orden.factura || ''}" readonly>
+                        <button type="button" class="btn btn-link btn-sm ml-2 p-0" onclick="editarFactura()">
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-12">
+                    <label>Proveedor</label>
+                    <input type="text" class="form-control" value="${orden.proveedor || 'Sin proveedor'}" readonly>
+                </div>
+            </div>
+            ${detallesHTML}
+            <div class="form-group mt-3">
+                <button type="button" class="btn btn-primary" onclick="verOrden(${orden.idorden})">
+                    <i class="fas fa-eye"></i> Ver
+                </button>
+                ${orden.tipo === "COMPRA" ? `
+                <button type="button" class="btn btn-success" onclick="generarOrdenCompra(${orden.idorden})">
+                    <i class="fas fa-download"></i> Descargar
+                </button>` : ''}
+            </div>
+        </form>
+    `;
+}
+
+function editarFactura() {
+    const input = document.getElementById("facturaInput");
+    const display = document.getElementById("facturaDisplay");
+
+    const currentValue = input.value;
+
+    display.innerHTML = `
+        <input type="text" class="form-control" id="facturaInputEdit" value="${currentValue}">
+        <button type="button" class="btn btn-link btn-sm ml-2 p-0 text-success" onclick="confirmarEdicionFactura(${ordenGlobal.idorden})">
+            <i class="fas fa-check"></i>
+        </button>
+        <button type="button" class="btn btn-link btn-sm ml-2 p-0 text-danger" onclick="cancelarEdicionFactura('${currentValue}')">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+}
+
+function cancelarEdicionFactura(valorOriginal) {
+    const display = document.getElementById("facturaDisplay");
+
+    display.innerHTML = `
+        <input type="text" class="form-control" id="facturaInput" value="${valorOriginal}" readonly>
+        <button type="button" class="btn btn-link btn-sm ml-2 p-0" onclick="editarFactura()">
+            <i class="fas fa-pencil-alt"></i>
+        </button>
+    `;
+}
+
+function confirmarEdicionFactura(idorden) {
+    const nuevoValor = document.getElementById("facturaInputEdit").value.trim();
+    if (!nuevoValor) {
+        alert("La factura no puede estar vacía.");
+        return;
     }
 
-    // Re-inicializa DataTable con orden descendente por idorden
-    tablaDataTable = $(tablaId).DataTable({
-        language: {
-            url: "https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
+    guardarFactura(idorden, nuevoValor);
+}
+
+function guardarFactura(idorden, factura) {
+    fetch(`${url}/api/compras/actualizarFacturaPedido`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
         },
-        responsive: true,
-        autoWidth: false,
-        pageLength: 10,
-        ordering: true,
-        order: [[0, 'desc']]
-    });
+        body: JSON.stringify({ idorden, factura }),
+        credentials: "include"
+    })
+        .then(res => {
+            if (!res.ok) throw new Error("Error al guardar");
+            return res.json();
+        })
+        .then(data => {
+             Mensaje('success', '¡Exito!', 'Factura guardada exitosamente.', true, false);
+            mostrarDetalleOrden({ ...ordenGlobal, factura }); // Re-render actualizado
+        })
+        .catch(err => {
+            console.error(err);
+             Mensaje('error', '¡Error!', 'No fue posible guardar la factura.', false, false);
+        });
 }
 
 async function generarOrdenCompra(idorden) {

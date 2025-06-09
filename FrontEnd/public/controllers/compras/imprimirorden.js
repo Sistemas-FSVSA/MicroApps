@@ -109,10 +109,10 @@ function mostrarDetalleOrden(orden) {
                             <input type="text" class="form-control" value="${detalle.cantidad}" readonly>
                         </div>
                         <div class="col-md-2">
-                            <input type="text" class="form-control" value="${detalle.valor}" readonly>
+                           <input type="text" class="form-control valor-unitario-input" value="${detalle.valor}" data-iditem="${detalle.iditem}" readonly>
                         </div>
                         <div class="col-md-2">
-                            <input type="text" class="form-control" value="${total.toFixed(2)}" readonly>
+                            <input type="text" class="form-control" value="$ ${total.toFixed(2)}" readonly>
                         </div>
                     </div>`;
             }).join('');
@@ -124,7 +124,7 @@ function mostrarDetalleOrden(orden) {
                     <div class="form-row justify-content-end mt-3">
                         <div class="col-md-2">
                             <label><strong>Total general</strong></label>
-                            <input type="text" class="form-control text-right font-weight-bold" value="${totalGeneral.toFixed(2)}" readonly>
+                            <input type="text" class="form-control text-right font-weight-bold" value="$ ${totalGeneral.toFixed(2)}" readonly>
                         </div>
                     </div>
                 </div>`;
@@ -160,9 +160,6 @@ function mostrarDetalleOrden(orden) {
             </div>
             ${detallesHTML}
             <div class="form-group mt-3">
-                <button type="button" class="btn btn-primary" onclick="verOrden(${orden.idorden})">
-                    <i class="fas fa-eye"></i> Ver
-                </button>
                 ${orden.tipo === "COMPRA" ? `
                 <button type="button" class="btn btn-success" onclick="generarOrdenCompra(${orden.idorden})">
                     <i class="fas fa-download"></i> Descargar
@@ -175,8 +172,13 @@ function mostrarDetalleOrden(orden) {
 function editarFactura() {
     const input = document.getElementById("facturaInput");
     const display = document.getElementById("facturaDisplay");
-
     const currentValue = input.value;
+
+    // Guardar valores originales como atributo data-valor-original
+    document.querySelectorAll('.valor-unitario-input').forEach(input => {
+        input.dataset.valorOriginal = input.value; // guardar original
+        input.removeAttribute('readonly');
+    });
 
     display.innerHTML = `
         <input type="text" class="form-control" id="facturaInputEdit" value="${currentValue}">
@@ -192,6 +194,14 @@ function editarFactura() {
 function cancelarEdicionFactura(valorOriginal) {
     const display = document.getElementById("facturaDisplay");
 
+    // Restaurar y deshabilitar los inputs
+    document.querySelectorAll('.valor-unitario-input').forEach(input => {
+        if (input.dataset.valorOriginal !== undefined) {
+            input.value = input.dataset.valorOriginal; // restaurar valor
+        }
+        input.setAttribute('readonly', true);
+    });
+
     display.innerHTML = `
         <input type="text" class="form-control" id="facturaInput" value="${valorOriginal}" readonly>
         <button type="button" class="btn btn-link btn-sm ml-2 p-0" onclick="editarFactura()">
@@ -201,22 +211,37 @@ function cancelarEdicionFactura(valorOriginal) {
 }
 
 function confirmarEdicionFactura(idorden) {
-    const nuevoValor = document.getElementById("facturaInputEdit").value.trim();
-    if (!nuevoValor) {
-        alert("La factura no puede estar vacía.");
+    const nuevoValorFactura = document.getElementById("facturaInputEdit").value.trim();
+    if (!nuevoValorFactura) {
+        Mensaje('error', '¡Error!', 'La factura no puede estar vacia.', false, false);
         return;
     }
 
-    guardarFactura(idorden, nuevoValor);
+    // Capturar nuevos valores de items
+    const itemsActualizados = Array.from(document.querySelectorAll('.valor-unitario-input')).map(input => {
+        return {
+            iditem: parseInt(input.dataset.iditem),
+            valor: parseFloat(input.value) || 0
+        };
+    });
+
+    const payload = {
+        idorden: idorden,
+        factura: nuevoValorFactura,
+        items: itemsActualizados
+    };
+
+    // Aquí llamas a tu función para guardar, ej. por fetch o como prefieras
+    guardarFactura(payload);
 }
 
-function guardarFactura(idorden, factura) {
+function guardarFactura(payload) {
     fetch(`${url}/api/compras/actualizarFacturaPedido`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ idorden, factura }),
+        body: JSON.stringify(payload),
         credentials: "include"
     })
         .then(res => {
@@ -224,14 +249,28 @@ function guardarFactura(idorden, factura) {
             return res.json();
         })
         .then(data => {
-             Mensaje('success', '¡Exito!', 'Factura guardada exitosamente.', true, false);
-            mostrarDetalleOrden({ ...ordenGlobal, factura }); // Re-render actualizado
+            Mensaje('success', '¡Éxito!', 'Informacion actualizada exitosamente.', true, false);
+            // Clonar detalles y actualizar sus valores
+            const detallesActualizados = ordenGlobal.detalles.map(detalle => {
+                const itemModificado = payload.items.find(i => i.iditem === detalle.iditem);
+                return itemModificado
+                    ? { ...detalle, valor: itemModificado.valor }
+                    : detalle;
+            });
+
+            mostrarDetalleOrden({
+                ...ordenGlobal,
+                factura: payload.factura,
+                detalles: detallesActualizados
+            });
+
         })
         .catch(err => {
             console.error(err);
-             Mensaje('error', '¡Error!', 'No fue posible guardar la factura.', false, false);
+            Mensaje('error', '¡Error!', 'No fue posible guardar la informacion.', false, false);
         });
 }
+
 
 async function generarOrdenCompra(idorden) {
     if (!idorden) {

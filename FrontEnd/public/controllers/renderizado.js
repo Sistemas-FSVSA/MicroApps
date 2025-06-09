@@ -343,6 +343,12 @@ async function cargarPermisosContinuarPedidos() {
     const tienePermisoAutorizarPedido = permisos.some(permiso => permiso.elemento === "BOTON_AUTORIZAR_PEDIDO" && estado == 'APROBADO');
     const botonAutorizar = document.getElementById('autorizarEncargo');
     botonAutorizar.style.display = tienePermisoAutorizarPedido ? 'inline-block' : 'none';
+
+    const tienePermisoAprobadoPor= permisos.some(permiso => permiso.elemento === "SELECT_APROBADO_POR" && estado == 'APROBADO');
+    const aprobadoPor = document.getElementById('aprobadoPor');
+    const LabelAprobadoPor = document.getElementById('LabelAprobadoPor');
+    aprobadoPor.style.display = tienePermisoAprobadoPor ? 'inline-block' : 'none';
+    LabelAprobadoPor.style.display = tienePermisoAprobadoPor ? 'inline-block' : 'none';
     
     const tienePermisoAgregarItem = permisos.some(permiso => permiso.elemento === "BOTON_AGREGAR_ITEM_PEDIDO");
     const botonAgregar = document.getElementById('agregarItem');

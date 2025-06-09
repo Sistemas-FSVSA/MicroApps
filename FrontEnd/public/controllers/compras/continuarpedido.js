@@ -32,20 +32,44 @@ async function InicializarContinuarPedido() {
         modal.show();
     });
 
-    // Llamar a la función que carga los datos del pedido
     cargarDatosDelPedido(idpedido);
 
-    // 👉 Aquí llamas a la navegación
     configurarNavegacionPedidos();
+
+    cargarAprobado();
+}
+
+
+function cargarAprobado() {
+    fetch(`${url}/api/compras/obtenerAprobado`, {
+        credentials: 'include'
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const select = document.getElementById('aprobadoPor');
+            select.innerHTML = '<option value="">Seleccione</option>'; // Limpia opciones previas
+
+            data.data.forEach(usuario => {
+                // Solo usuarios con estado 1 (puede ser string o número según tu BD)
+                if (usuario.estado === 1 || usuario.estado === '1') {
+                    const option = document.createElement('option');
+                    option.value = usuario.idaprueba;
+                    option.textContent = usuario.nombres;
+                    select.appendChild(option);
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error al cargar usuarios:', error);
+        });
 }
 
 function cargarDatosDelPedido(idpedido) {
-    if (!idpedido) {
-        console.warn('No se encontró el idpedido en la URL');
-        return;
-    }
-
-    console.log("Realizando consulta al servidor para obtener el pedido con id:", idpedido);
     fetch(`${url}/api/compras/obtenerPedido`, {
         method: 'POST',
         headers: {
@@ -264,16 +288,26 @@ function actualizarCantidadEnSessionStorage(index, nuevaCantidad) {
 function manejarPedido(estado, idpedido) {
     // Obtener los ítems del sessionStorage
     const itemsSeleccionados = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
+    // Obtener el idaprueba seleccionado del <select>
+    const idaprueba = document.getElementById('aprobadoPor')?.value || null;
 
     if (itemsSeleccionados.length === 0) {
         Mensaje('warning', 'Espera!', 'No hay items para gestionar.', false, false);
         return;
     }
 
+    if (estado === 'AUTORIZADO' && !idaprueba) {
+        Mensaje('warning', 'Espera!', 'Debes seleccionar quién aprueba el pedido.', false, false);
+        return;
+    }
+
+
+
     // Crear el objeto JSON con la información necesaria
     const encargo = {
         idusuario: localStorage.getItem('idusuario') || null,
         idpedido: idpedido || null,
+        idaprueba: idaprueba, // 🔹 Se añade el id del aprobador seleccionado
         items: itemsSeleccionados,
         estado: estado
     };

@@ -42,11 +42,15 @@ const obtenerOrden = async (req, res) => {
                     SELECT 
                         o.idorden, o.fecha, o.estado, o.idusuario, o.tipo,
                         do.iddetalleorden, do.iditem, do.cantidad,
-                        i.nombre, do.valor, o.factura, o.aprobado, p.nombre as proveedor
+                        i.nombre, do.valor, o.factura, p.nombre AS proveedor,
+                        ua.nombres AS aprobado
                     FROM orden o
                     INNER JOIN detalleorden do ON o.idorden = do.idorden
                     INNER JOIN items i ON do.iditem = i.iditem
-                    LEFT JOIN proveedorescompras AS p ON o.idproveedor = p.idproveedor
+                    LEFT JOIN proveedorescompras p ON o.idproveedor = p.idproveedor
+                    LEFT JOIN ordenpedido op ON o.idorden = op.idorden
+                    LEFT JOIN pedidos pe ON op.idpedido = pe.idpedido
+                    LEFT JOIN usuariosaprueban ua ON pe.idaprueba = ua.idaprueba
                     WHERE o.idorden = @idorden
                 `);
 

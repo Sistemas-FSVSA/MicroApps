@@ -21,11 +21,16 @@ const generarOrdenCompra = async (req, res) => {
         // 1. Obtener información de la orden y proveedor
         const result = await pool.request().query(`
             SELECT 
-                o.idorden, o.fecha, o.estado, o.tipo, o.idusuario, o.factura, o.aprobado,
-                p.nombre AS proveedor
+                o.idorden, o.fecha, o.estado, o.tipo, o.idusuario, o.factura,
+                p.nombre AS proveedor,
+                ua.nombres AS aprobado
             FROM orden o
             LEFT JOIN proveedorescompras p ON o.idproveedor = p.idproveedor
+            LEFT JOIN ordenpedido op ON o.idorden = op.idorden
+            LEFT JOIN pedidos pe ON op.idpedido = pe.idpedido
+            LEFT JOIN usuariosaprueban ua ON pe.idaprueba = ua.idaprueba
             WHERE o.idorden = ${idorden}
+
         `);
 
         if (result.recordset.length === 0) {

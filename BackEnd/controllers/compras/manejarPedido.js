@@ -2,32 +2,43 @@ const { poolPromise, sql } = require('../../models/conexion');
 
 const manejarPedido = async (req, res) => {
     try {
-        const { idusuario, items, estado } = req.body;
+        const { idusuario, items, estado, idaprueba } = req.body; // 👈 incluir idaprueba
         let idpedido = req.body.idpedido;
 
-        // Crear conexión a la base de datos
         const pool = await poolPromise;
 
         if (idpedido) {
-            // Si llega un idpedido, eliminar los ítems existentes de ese pedido
+            // Eliminar ítems existentes del pedido
             await pool.request()
-            .input('idpedido', sql.Int, idpedido)
-            .query('DELETE FROM detallepedido WHERE idpedido = @idpedido');
+                .input('idpedido', sql.Int, idpedido)
+                .query('DELETE FROM detallepedido WHERE idpedido = @idpedido');
 
-            // Actualizar el estado del pedido y el usuario que aprobó
+            // Actualizar el estado del pedido
             const updateQuery = `
-            UPDATE pedidos 
-            SET estado = @estado${estado === 'APROBADO' ? ', fechapedido = GETDATE()' : ''}, 
-                idusuarioaprobo = @idusuario 
-            WHERE idpedido = @idpedido
+                UPDATE pedidos 
+                SET estado = @estado${estado === 'APROBADO' ? ', fechapedido = GETDATE()' : ''}, 
+                    idusuarioaprobo = @idusuario 
+                WHERE idpedido = @idpedido
             `;
             await pool.request()
-            .input('idpedido', sql.Int, idpedido)
-            .input('estado', sql.VarChar, estado || 'INICIADO') // Estado por defecto si no llega
-            .input('idusuario', sql.Int, idusuario) // Actualizar idusuarioaprobo con el idusuario recibido
-            .query(updateQuery);
+                .input('idpedido', sql.Int, idpedido)
+                .input('estado', sql.VarChar, estado || 'INICIADO')
+                .input('idusuario', sql.Int, idusuario)
+                .query(updateQuery);
+
+            // 🔧 Actualizar el idaprueba en la tabla orden
+            if (idaprueba) {
+                await pool.request()
+                    .input('idpedido', sql.Int, idpedido)
+                    .input('idaprueba', sql.Int, idaprueba)
+                    .query(`
+                        UPDATE pedidos
+                        SET idaprueba = @idaprueba
+                        WHERE idpedido = @idpedido
+                    `);
+            }
         } else {
-            // Si no llega un idpedido, crear un nuevo registro en la tabla pedidos
+            // Crear nuevo pedido
             const result = await pool.request()
                 .input('idusuario', sql.Int, idusuario)
                 .query('SELECT iddependencia FROM usuariocompras WHERE idusuario = @idusuario');
@@ -40,13 +51,15 @@ const manejarPedido = async (req, res) => {
 
             const pedidoResult = await pool.request()
                 .input('iddependencia', sql.Int, iddependencia)
-                .input('estado', sql.VarChar, estado || 'INICIADO') // Estado por defecto si no llega
+                .input('estado', sql.VarChar, estado || 'INICIADO')
                 .query('INSERT INTO pedidos (iddependencia, estado) OUTPUT INSERTED.idpedido VALUES (@iddependencia, @estado)');
 
             idpedido = pedidoResult.recordset[0].idpedido;
+
+            // 🔧 En este punto no hay orden aún, por lo que no se actualiza idaprueba
         }
 
-        // Insertar los nuevos ítems en la tabla detallepedido
+        // Insertar ítems
         for (const item of items) {
             const { id, cantidad, nombreCompleto } = item;
 
@@ -65,7 +78,6 @@ const manejarPedido = async (req, res) => {
                 `);
         }
 
-        // Retornar el idpedido generado o actualizado al frontend
         res.json({ message: 'Pedido y detalles procesados correctamente.', idpedido });
     } catch (error) {
         console.error('Error al procesar la solicitud:', error);

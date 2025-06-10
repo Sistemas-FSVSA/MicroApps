@@ -180,8 +180,8 @@ function reinitializeScripts() {
         loadAndRunScript("/controllers/compras/registrocompras.js", "InicializarRegistroCompras");;
     }
 
-    if (path.includes("/compras/imprimirorden")) {
-        loadAndRunScript("/controllers/compras/imprimirorden.js", "InicializarImprimirOrden");;
+    if (path.includes("/compras/consultarorden")) {
+        loadAndRunScript("/controllers/compras/consultarorden.js", "InicializarConsultarOrden");;
     }
 
     if (path.includes("/compras/consultarpedidos")) {

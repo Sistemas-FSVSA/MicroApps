@@ -4,7 +4,7 @@ const manejarPedido = async (req, res) => {
     try {
         const { idusuario, items, estado, idaprueba } = req.body; // 👈 incluir idaprueba
         let idpedido = req.body.idpedido;
-
+        console.log(idaprueba)
         const pool = await poolPromise;
 
         if (idpedido) {
@@ -52,7 +52,8 @@ const manejarPedido = async (req, res) => {
             const pedidoResult = await pool.request()
                 .input('iddependencia', sql.Int, iddependencia)
                 .input('estado', sql.VarChar, estado || 'INICIADO')
-                .query('INSERT INTO pedidos (iddependencia, estado) OUTPUT INSERTED.idpedido VALUES (@iddependencia, @estado)');
+                .input('idaprueba', sql.Int, idaprueba || null)
+                .query('INSERT INTO pedidos (iddependencia, estado, idaprueba) OUTPUT INSERTED.idpedido VALUES (@iddependencia, @estado, @idaprueba)');
 
             idpedido = pedidoResult.recordset[0].idpedido;
 

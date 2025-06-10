@@ -246,11 +246,11 @@ app.get("/compras/registrocompras", (req, res) => {
     res.render("compras/registrocompras");
 });
 
-app.get("/compras/imprimirorden", (req, res) => {
+app.get("/compras/consultarorden", (req, res) => {
     if (req.xhr) {
-        return res.render("compras/imprimirorden", { layout: false }); // Solo la vista
+        return res.render("compras/consultarorden", { layout: false }); // Solo la vista
     }
-    res.render("compras/imprimirorden");
+    res.render("compras/consultarorden");
 });
 
 app.get("/compras/consultarpedidos", (req, res) => {

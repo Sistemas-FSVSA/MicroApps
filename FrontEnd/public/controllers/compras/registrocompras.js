@@ -27,6 +27,7 @@ function InicializarRegistroCompras() {
         modal.show();
         renderizarUsuarios();
     });
+
     $('#modalEditarUsuario').on('hidden.bs.modal', function () {
         sessionStorage.removeItem('usuariosEncontrados');
         $('#tbodyEditarUsuario').empty();
@@ -442,7 +443,11 @@ async function abrirModalSeleccionarDependencias() {
 
     const dependenciasAsignadas = usuario.dependencias ? Object.keys(usuario.dependencias) : [];
 
-    for (const [id, nombre] of Object.entries(dependenciasDisponibles)) {
+    // Ordenar las dependencias alfabéticamente por nombre
+    const dependenciasOrdenadas = Object.entries(dependenciasDisponibles)
+        .sort(([, nombreA], [, nombreB]) => nombreA.localeCompare(nombreB));
+
+    for (const [id, nombre] of dependenciasOrdenadas) {
         const checkbox = document.createElement('div');
         checkbox.className = 'form-check';
 

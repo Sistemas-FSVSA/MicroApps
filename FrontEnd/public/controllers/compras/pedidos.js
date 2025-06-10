@@ -53,12 +53,12 @@ async function InicializarPedidos() {
 
             if (dependenciaResult.message === 'Sin Dependencias') { // corregido
                 mensajeDependencia.style.display = 'block';
-            
+
                 // Ocultar todas las cards
                 document.getElementById('Pedido').style.display = 'none';
                 document.getElementById('PedidoAprobar').style.display = 'none';
                 document.getElementById('RevisarPedido').style.display = 'none';
-            
+
                 return;
             }
 
@@ -105,6 +105,8 @@ async function InicializarPedidos() {
 }
 
 function redireccionNuevoPedido() {
+    sessionStorage.setItem("modoPedido", "conreferencia");
+
     const url = `/compras/nuevopedido`;
     cargarVista(url);
 }

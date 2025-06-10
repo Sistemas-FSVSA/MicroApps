@@ -21,9 +21,28 @@
 <div class="content">
     <div class="container-fluid">
         <!-- Botón Agregar Item -->
-        <div class="d-flex justify-content-start mb-3">
-            <button class="btn btn-fsvsaoff" id="agregarItem"><i class="fas fa-plus"></i> Agregar Item
-            </button>
+        <!-- Fila con botón y select alineados -->
+        <div class="row mb-3">
+            <div class="col-md-6 d-flex align-items-center">
+                <!-- Botón Agregar Item -->
+                <button class="btn btn-fsvsaoff" id="agregarItem">
+                    <i class="fas fa-plus"></i> Agregar Item
+                </button>
+            </div>
+            <div class="col-md-6 d-flex justify-content-end align-items-center gap-2">
+                <!-- Select Aprobado por -->
+                <select id="aprobadoPor" class="form-control w-auto">
+                    <option disabled selected value="">Aprobado por...</option>
+                    <!-- opciones dinámicas -->
+                </select>
+
+                <!-- Select Proveedor -->
+                <select id="proveedor" class="form-control w-auto ml-2">
+                    <option disabled selected value="">Proveedor...</option>
+                    <!-- opciones dinámicas -->
+                </select>
+            </div>
+
         </div>
 
         <div id="item-container" class="mt-4 table-responsive">
@@ -50,6 +69,7 @@
 <div class="btn-container">
     <a class="btn btn-fsvsaoff" id="guardarEncargo" tabindex="-1">Guardar Encargo</a>
     <a class="btn btn-fsvsaon" id="cerrarEncargo" tabindex="-1">Cerrar Encargo</a>
+    <a class="btn btn-fsvsaon" id="ordenCompra" tabindex="-1">Generar Orden Compra</a>
 </div>
 
 <div class="modal fade" id="modalAñadirItem" tabindex="-1" aria-labelledby="modalAñadirItemLabel" aria-hidden="true">

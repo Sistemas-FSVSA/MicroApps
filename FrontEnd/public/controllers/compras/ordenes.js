@@ -34,3 +34,13 @@ function redireccionImprimirOrden() {
     const url = `/compras/imprimirorden`;
     cargarVista(url);
 }
+
+function redireccionNuevaOrdenSinPedido() {
+    sessionStorage.setItem("modoPedido", "sinreferencia");
+
+    const param = btoa("sinreferencia");
+    const url = `/compras/nuevopedido?param=${param}`;
+    cargarVista(url);
+}
+
+

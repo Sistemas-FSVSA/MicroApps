@@ -52,16 +52,18 @@ function cargarAprobado() {
         })
         .then(data => {
             const select = document.getElementById('aprobadoPor');
-            select.innerHTML = '<option value="">Seleccione</option>'; // Limpia opciones previas
+            select.innerHTML = '<option value="">Aprobado Por</option>';
 
-            data.data.forEach(usuario => {
-                // Solo usuarios con estado 1 (puede ser string o número según tu BD)
-                if (usuario.estado === 1 || usuario.estado === '1') {
-                    const option = document.createElement('option');
-                    option.value = usuario.idaprueba;
-                    option.textContent = usuario.nombres;
-                    select.appendChild(option);
-                }
+            // Filtrar y ordenar
+            const aprobadosActivos = data.data
+                .filter(usuario => usuario.estado === 1 || usuario.estado === '1')
+                .sort((a, b) => a.nombres.localeCompare(b.nombres));
+
+            aprobadosActivos.forEach(usuario => {
+                const option = document.createElement('option');
+                option.value = usuario.idaprueba;
+                option.textContent = usuario.nombres;
+                select.appendChild(option);
             });
         })
         .catch(error => {

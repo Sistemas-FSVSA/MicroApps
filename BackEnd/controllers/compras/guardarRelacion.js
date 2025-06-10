@@ -1,7 +1,7 @@
 const { poolPromise, sql } = require('../../models/conexion');
 
 const guardarRelacion = async (req, res) => {
-    const { relaciones } = req.body;
+    const { relaciones, estadopedido = 'FINALIZADO', estadoorden = 'RELACIONADO' } = req.body;
 
     if (!Array.isArray(relaciones) || relaciones.length === 0) {
         return res.status(400).json({ mensaje: 'No se enviaron relaciones válidas.' });
@@ -16,7 +16,7 @@ const guardarRelacion = async (req, res) => {
         // Insertar relaciones
         for (const relacion of relaciones) {
             const { idpedido, idorden } = relacion;
-            const request = new sql.Request(transaction); // 🔁 Nuevo por iteración
+            const request = new sql.Request(transaction);
 
             await request
                 .input('idpedido', sql.Int, parseInt(idpedido))
@@ -31,28 +31,31 @@ const guardarRelacion = async (req, res) => {
                 `);
         }
 
-        // IDs únicos
         const pedidosUnicos = [...new Set(relaciones.map(r => parseInt(r.idpedido)))];
         const ordenesUnicas = [...new Set(relaciones.map(r => parseInt(r.idorden)))];
 
-        // Actualizar pedidos
+        // Actualizar pedidos con estado recibido o por defecto
         if (pedidosUnicos.length > 0) {
             const request = new sql.Request(transaction);
-            await request.query(`
-                UPDATE pedidos 
-                SET estado = 'FINALIZADO'
-                WHERE idpedido IN (${pedidosUnicos.join(',')})
-            `);
+            await request
+                .input('estado', sql.VarChar, estadopedido)
+                .query(`
+                    UPDATE pedidos 
+                    SET estado = @estado
+                    WHERE idpedido IN (${pedidosUnicos.join(',')})
+                `);
         }
 
-        // Actualizar ordenes
+        // Actualizar órdenes con estado recibido o por defecto
         if (ordenesUnicas.length > 0) {
             const request = new sql.Request(transaction);
-            await request.query(`
-                UPDATE orden 
-                SET estado = 'RELACIONADO'
-                WHERE idorden IN (${ordenesUnicas.join(',')})
-            `);
+            await request
+                .input('estado', sql.VarChar, estadoorden)
+                .query(`
+                    UPDATE orden 
+                    SET estado = @estado
+                    WHERE idorden IN (${ordenesUnicas.join(',')})
+                `);
         }
 
         await transaction.commit();

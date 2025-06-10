@@ -30,8 +30,8 @@ function redireccionRelacionarOrden() {
     cargarVista(url);
 }
 
-function redireccionImprimirOrden() {
-    const url = `/compras/imprimirorden`;
+function redireccionConsultarOrden() {
+    const url = `/compras/consultarorden`;
     cargarVista(url);
 }
 

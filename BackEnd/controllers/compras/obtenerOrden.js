@@ -43,7 +43,7 @@ const obtenerOrden = async (req, res) => {
                         o.idorden, o.fecha, o.estado, o.idusuario, o.tipo,
                         do.iddetalleorden, do.iditem, do.cantidad,
                         i.nombre, do.valor, o.factura, p.nombre AS proveedor,
-                        ua.nombres AS aprobado
+                        ua.nombres AS aprobado, o.fechaentrega
                     FROM orden o
                     INNER JOIN detalleorden do ON o.idorden = do.idorden
                     INNER JOIN items i ON do.iditem = i.iditem
@@ -75,6 +75,7 @@ const obtenerOrden = async (req, res) => {
                 factura: result.recordset[0].factura,
                 aprobado: result.recordset[0].aprobado,
                 proveedor: result.recordset[0].proveedor,
+                fechaentrega: result.recordset[0].fechaentrega,
                 detalles: detalles
             };
 

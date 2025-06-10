@@ -1,9 +1,9 @@
 document.addEventListener("DOMContentLoaded", () => {
-    InicializarImprimirOrden();
+    InicializarConsultarOrden();
 
 });
 
-async function InicializarImprimirOrden() {
+async function InicializarConsultarOrden() {
     cargarOrdenes();
 }
 
@@ -32,6 +32,8 @@ function renderizarOrdenesBandeja(ordenes) {
         contenedor.innerHTML = `<p class="text-center text-muted m-3">Sin órdenes disponibles</p>`;
         return;
     }
+
+    ordenes.sort((a, b) => b.idorden - a.idorden);
 
     ordenes.forEach((orden) => {
         const ordenItem = document.createElement("a");
@@ -153,9 +155,14 @@ function mostrarDetalleOrden(orden) {
                 </div>
             </div>
             <div class="form-row">
-                <div class="form-group col-md-12">
+                <div class="form-group col-md-8">
                     <label>Proveedor</label>
                     <input type="text" class="form-control" value="${orden.proveedor || 'Sin proveedor'}" readonly>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Fecha Entrega</label>
+                   <input type="date" class="form-control" id="fechaEntregaInput" value="${orden.fechaentrega ? orden.fechaentrega.split('T')[0] : ''}" readonly>
+
                 </div>
             </div>
             ${detallesHTML}
@@ -180,6 +187,12 @@ function editarFactura() {
         input.removeAttribute('readonly');
     });
 
+    // Habilitar el input de fecha de entrega
+    const fechaEntregaInput = document.getElementById("fechaEntregaInput");
+    fechaEntregaInput.removeAttribute("readonly");
+    fechaEntregaInput.dataset.valorOriginal = fechaEntregaInput.value;
+
+
     display.innerHTML = `
         <input type="text" class="form-control" id="facturaInputEdit" value="${currentValue}">
         <button type="button" class="btn btn-link btn-sm ml-2 p-0 text-success" onclick="confirmarEdicionFactura(${ordenGlobal.idorden})">
@@ -202,6 +215,14 @@ function cancelarEdicionFactura(valorOriginal) {
         input.setAttribute('readonly', true);
     });
 
+    // Restaurar el input de fecha de entrega
+    const fechaEntregaInput = document.getElementById("fechaEntregaInput");
+    if (fechaEntregaInput.dataset.valorOriginal !== undefined) {
+        fechaEntregaInput.value = fechaEntregaInput.dataset.valorOriginal;
+    }
+    fechaEntregaInput.setAttribute("readonly", true);
+
+
     display.innerHTML = `
         <input type="text" class="form-control" id="facturaInput" value="${valorOriginal}" readonly>
         <button type="button" class="btn btn-link btn-sm ml-2 p-0" onclick="editarFactura()">
@@ -212,6 +233,8 @@ function cancelarEdicionFactura(valorOriginal) {
 
 function confirmarEdicionFactura(idorden) {
     const nuevoValorFactura = document.getElementById("facturaInputEdit").value.trim();
+    const fechaEntregaInput = document.getElementById("fechaEntregaInput");
+    const fechaEntrega = fechaEntregaInput.value || null;
     if (!nuevoValorFactura) {
         Mensaje('error', '¡Error!', 'La factura no puede estar vacia.', false, false);
         return;
@@ -228,7 +251,8 @@ function confirmarEdicionFactura(idorden) {
     const payload = {
         idorden: idorden,
         factura: nuevoValorFactura,
-        items: itemsActualizados
+        items: itemsActualizados,
+        fechaEntrega: fechaEntrega,
     };
 
     // Aquí llamas a tu función para guardar, ej. por fetch o como prefieras
@@ -261,6 +285,7 @@ function guardarFactura(payload) {
             mostrarDetalleOrden({
                 ...ordenGlobal,
                 factura: payload.factura,
+                fechaentrega: payload.fechaEntrega,
                 detalles: detallesActualizados
             });
 
@@ -270,7 +295,6 @@ function guardarFactura(payload) {
             Mensaje('error', '¡Error!', 'No fue posible guardar la informacion.', false, false);
         });
 }
-
 
 async function generarOrdenCompra(idorden) {
     if (!idorden) {

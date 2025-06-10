@@ -23,7 +23,7 @@ const generarOrdenCompra = async (req, res) => {
             SELECT 
                 o.idorden, o.fecha, o.estado, o.tipo, o.idusuario, o.factura,
                 p.nombre AS proveedor,
-                ua.nombres AS aprobado
+                ua.nombres AS aprobado, o.fechaentrega
             FROM orden o
             LEFT JOIN proveedorescompras p ON o.idproveedor = p.idproveedor
             LEFT JOIN ordenpedido op ON o.idorden = op.idorden
@@ -67,6 +67,17 @@ const generarOrdenCompra = async (req, res) => {
         const mes = (fecha.getMonth() + 1).toString().padStart(2, "0");
         const year = fecha.getFullYear();
 
+        // 3.1 Formatear fechaentrega (si existe)
+        let fechaEntregaFormateada = "No especificada";
+        if (orden.fechaentrega) {
+            const fechaEntrega = new Date(orden.fechaentrega);
+            const diaEntrega = (fechaEntrega.getDate() + 1).toString().padStart(2, "0");
+            const mesEntrega = (fechaEntrega.getMonth() + 1).toString().padStart(2, "0");
+            const yearEntrega = fechaEntrega.getFullYear();
+            fechaEntregaFormateada = `${diaEntrega}/${mesEntrega}/${yearEntrega}`;
+        }
+
+
         // 4. Generar documento Word
         const content = fs.readFileSync(templatePath, "binary");
         const zip = new PizZip(content);
@@ -82,6 +93,7 @@ const generarOrdenCompra = async (req, res) => {
             vtg: `$${totalGeneral.toFixed(2)}`,
             factura: orden.factura || "No especificada",
             aprobado: orden.aprobado || "No especificada",
+            fechaentrega: fechaEntregaFormateada,
             dia,
             mes,
             year,

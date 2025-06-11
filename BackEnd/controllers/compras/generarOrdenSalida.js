@@ -25,9 +25,13 @@ const generarOrdenSalida = async (req, res) => {
                 p.fechapedido,
                 p.estado,
                 p.idusuarioaprobo,
-                d.nombre AS nombreDependencia
+                d.nombre AS nombreDependencia,
+                p.fechaentrega,
+                u.nombres,
+                u.apellidos
             FROM pedidos p
             LEFT JOIN dependencias d ON p.iddependencia = d.iddependencia
+            LEFT JOIN usuarios u ON p.idusuariorecibio = u.idusuario
             WHERE p.idpedido = ${idpedido}
         `);
 
@@ -62,6 +66,16 @@ const generarOrdenSalida = async (req, res) => {
         const mes = (fecha.getMonth() + 1).toString().padStart(2, "0");
         const year = fecha.getFullYear();
 
+        // 3.1 Formatear fechaentrega (si existe)
+        let fechaEntregaFormateada = "No especificada";
+        if (pedido.fechaentrega) {
+            const fechaEntrega = new Date(pedido.fechaentrega);
+            const diaEntrega = fechaEntrega.getDate() .toString().padStart(2, "0");
+            const mesEntrega = (fechaEntrega.getMonth() + 1).toString().padStart(2, "0");
+            const yearEntrega = fechaEntrega.getFullYear();
+            fechaEntregaFormateada = `${diaEntrega}/${mesEntrega}/${yearEntrega}`;
+        }
+
         // 4. Generar documento Word
         const content = fs.readFileSync(templatePath, "binary");
         const zip = new PizZip(content);
@@ -74,6 +88,8 @@ const generarOrdenSalida = async (req, res) => {
             dependencia: pedido.nombreDependencia || "No especificado",
             usuario: req.body.usuario || "Desconocido",
             idpedido: pedido.idpedido.toString(),
+            fecharecibido: fechaEntregaFormateada,
+            recibido: pedido.nombres && pedido.apellidos ? `${pedido.nombres} ${pedido.apellidos}` : "No especificado",
             dia,
             mes,
             year,

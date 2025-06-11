@@ -33,7 +33,9 @@ async function InicializarAprobarPedido() {
         // Iterar sobre las dependencias y sus pedidos
         data.dependencias.forEach(dependencia => {
             dependencia.pedidos
-                .filter(pedido => pedido.estado === "CERRADO") // Filtrar solo los pedidos con estado "CERRADO"
+                .filter(pedido => 
+                    pedido.estado === "CERRADO" || pedido.estado === "RECEPCION"
+                ) // Filtrar solo los pedidos con estado "CERRADO" o "RECEPCION"
                 .forEach(pedido => {
                     const card = document.createElement("div");
                     card.className = "col-lg-3 col-md-4 col-sm-6 mb-3";

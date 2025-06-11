@@ -373,13 +373,19 @@ async function cargarPermisosContinuarPedidos() {
     botonSiguiente.style.display = tienePermisoNavePedidos ? 'inline-block' : 'none';
     botonAnterior.style.display = tienePermisoNavePedidos ? 'inline-block' : 'none';
 
-    const tienePermisoAgregarItem = permisos.some(permiso => permiso.elemento === "BOTON_AGREGAR_ITEM_PEDIDO");
+    const tienePermisoConfirmarPedido = permisos.some(permiso => permiso.elemento === "BOTON_CONFIRMAR_PEDIDO" && estado == 'RECEPCION');
+    const botonConfirmar = document.getElementById('confirmarEntrega');
+    botonConfirmar.style.display = tienePermisoConfirmarPedido ? 'inline-block' : 'none';
+
+    const estadosValidos = ['INICIADO', 'APROBADO', 'CERRADO'];
+    
+    const tienePermisoAgregarItem = permisos.some(permiso => permiso.elemento === "BOTON_AGREGAR_ITEM_PEDIDO" && estadosValidos.includes(estado));
     const botonAgregar = document.getElementById('agregarItem');
     botonAgregar.style.display = tienePermisoAgregarItem ? 'inline-block' : 'none';
-
-
+    
     return {
-        tienePermisoEliminarItem: permisos.some(permiso => permiso.elemento === "BOTON_ELIMINAR_ITEM_PEDIDO"),
+        tienePermisoEliminarItem: permisos.some(permiso => permiso.elemento === "BOTON_ELIMINAR_ITEM_PEDIDO" && estadosValidos.includes(estado)),
+        tienePermisoEditarCantidad: estadosValidos.includes(estado),
     };
 
 }

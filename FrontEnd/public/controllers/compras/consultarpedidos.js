@@ -1,7 +1,5 @@
-
 document.addEventListener("DOMContentLoaded", () => {
     InicializarConsultarPedidos();
-
 });
 
 async function InicializarConsultarPedidos() {
@@ -10,64 +8,207 @@ async function InicializarConsultarPedidos() {
 
 async function cargarPedidos() {
     try {
+        const [finalizadosRes, recepcionRes] = await Promise.all([
+            fetch(`${url}/api/compras/obtenerPedido`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ estado: "FINALIZADO" }),
+            }),
+            fetch(`${url}/api/compras/obtenerPedido`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ estado: "RECEPCION" }),
+            }),
+        ]);
+
+        if (!finalizadosRes.ok || !recepcionRes.ok) {
+            throw new Error("Error al obtener pedidos");
+        }
+
+        const finalizadosData = await finalizadosRes.json();
+        const recepcionData = await recepcionRes.json();
+
+        // Combinar ambos arrays de pedidos
+        const pedidos = [...finalizadosData.pedidos, ...recepcionData.pedidos];
+
+        renderizarPedidosBandeja(pedidos);
+    } catch (error) {
+        console.error("Error al cargar pedidos:", error);
+        document.getElementById("listaPedidos").innerHTML = `<tr><td colspan="5">Error al cargar datos</td></tr>`;
+    }
+}
+
+
+function renderizarPedidosBandeja(pedidos) {
+    const contenedor = document.getElementById("listaPedidos");
+    contenedor.innerHTML = "";
+
+    if (!pedidos || pedidos.length === 0) {
+        contenedor.innerHTML = `<p class="text-center text-muted m-3">Sin pedidos disponibles</p>`;
+        return;
+    }
+
+    pedidos.sort((a, b) => b.idpedido - a.idpedido);
+
+    pedidos.forEach((pedido) => {
+        const pedidoItem = document.createElement("a");
+        pedidoItem.href = "#";
+        pedidoItem.className = "list-group-item list-group-item-action";
+        pedidoItem.dataset.id = pedido.idpedido;
+        pedidoItem.innerHTML = `
+    <div class="ticket-content d-flex justify-content-between">
+        <div class="ticket-main">
+            <strong class="font-weight-bold">Pedido #${pedido.idpedido}</strong>
+            <p class="mb-0 text-ellipsis">Aprobo: ${pedido.nombres || 'Sin registro'}</p>
+            <small class="text-muted">${formatFechaHora(pedido.fechapedido)}</small>
+        </div>
+        <div class="ticket-side">
+            <span class="badge badge-secondary">${pedido.nombreDependencia}</span>
+        </div>
+    </div>
+`;
+
+        pedidoItem.addEventListener("click", (e) => {
+            e.preventDefault();
+            obtenerPedidoPorId(pedido.idpedido);
+        });
+
+
+        contenedor.appendChild(pedidoItem);
+    });
+}
+
+async function obtenerPedidoPorId(idpedido) {
+    try {
         const respuesta = await fetch(`${url}/api/compras/obtenerPedido`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
-            body: JSON.stringify({ estado: "FINALIZADO" })
+            body: JSON.stringify({ idpedido })
         });
 
-        if (!respuesta.ok) throw new Error("Error al obtener datos");
+        if (!respuesta.ok) throw new Error("Error al obtener el pedido");
 
-        const data = await respuesta.json();
-        renderizarTabla(data.pedidos);;
+        const pedidoDetallada = await respuesta.json();
+        mostrarDetalleOrden(pedidoDetallada); // 🔧 nombre correcto
     } catch (error) {
-        document.getElementById("tbodyPedido").innerHTML = `<tr><td colspan="5">Error al cargar datos</td></tr>`;
+        console.error("Error al obtener detalles del pedido:", error);
+        Swal.fire({
+            title: "Error",
+            text: "No se pudo cargar el pedido seleccionado.",
+            icon: "error",
+            confirmButtonText: "Aceptar"
+        });
     }
 }
 
-function renderizarTabla(pedidos) {
-    const tablaId = "#tablePedidos";
-    const tbody = document.getElementById("tbodyPedido");
-    tbody.innerHTML = "";
+function mostrarDetalleOrden(pedido) {
+    const titulo = document.getElementById("pedidoTitle");
+    const contenido = document.getElementById("pedidoContent");
 
-    if (!pedidos || pedidos.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center">No hay Pedidos para mostrar</td></tr>`;
-    } else {
-        pedidos.forEach((pedidos) => {
-            const tr = document.createElement("tr");
+    titulo.innerHTML = `<h4 class="font-weight-bold">Pedido #${pedido.idpedido} - ${pedido.nombreDependencia}</h4>`;
 
+    const detallesHTML = pedido.detalle && pedido.detalle.length > 0
+        ? (() => {
+            let totalGeneral = 0;
+            const filas = pedido.detalle.map(detalle => {
+                const total = detalle.cantidad * (detalle.valor || 0); // por si no viene valor
+                totalGeneral += total;
+                return `
+                    <div class="form-row mb-2">
+                        <div class="col-md-10">
+                            <input type="text" class="form-control" value="${detalle.nombre}" readonly>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="text" class="form-control" value="${detalle.cantidad}" readonly>
+                        </div>
+                    </div>`;
+            }).join('');
 
-            tr.innerHTML = `
-                <td>${pedidos.idpedido}</td>
-                <td>${pedidos.nombreDependencia}</td>
-                <td>${formatFechaHora(pedidos.fechapedido)}</td>
-                <td>
-                    <button class="btn btn-fsvsaon" onclick="generarOrdenSalida(${pedidos.idpedido})">
-                        <i class="fas fa-download"></i>
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
+            return `
+                <div class="form-group">
+                    <label>Items</label>
+                    ${filas}
+                </div>`;
+        })()
+        : `<p class="text-muted">Sin detalles disponibles</p>`;
+
+    contenido.innerHTML = `
+        <form>
+            <div class="form-row">
+                <div class="form-group col-md-8">
+                    <label>Fecha Solicitud</label>
+                    <input type="text" class="form-control" value="${pedido.fechapedido ? formatFechaHora(pedido.fechapedido) : 'Sin fecha'}" readonly>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Estado</label>
+                    <input type="text" class="form-control" value="${pedido.estado}" readonly>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-8">
+                    <label>Aprobado Por:</label>
+                    <input type="text" class="form-control" value="${pedido.nombres || 'Sin registro'}" readonly>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Fecha Entrega</label>
+                    <input type="date" class="form-control" id="fechaEntregaInput" value="${pedido.fechaentrega ? pedido.fechaentrega.split('T')[0] : ''}" readonly>
+                </div>
+            </div>
+            ${detallesHTML}
+            <div class="form-group mt-3 d-flex justify-content-end">
+                ${pedido.estado === "FINALIZADO"
+                    ? `<button type="button" class="btn btn-fsvsaon mr-2" onclick="enviarRecepcion(${pedido.idpedido})">
+                                <i class="fas fa-paper-plane"></i> Enviar Recepción
+                        </button>`
+                    : ""
+                }
+                <button type="button" class="btn btn-fsvsaoff ml-2" onclick="generarOrdenSalida(${pedido.idpedido})">
+                    <i class="fas fa-download"></i> Descargar
+                </button>
+            </div>
+        </form>
+    `;
+}
+
+async function enviarRecepcion(idpedido) {
+    try {
+        const respuesta = await fetch(`${url}/api/compras/actualizarEstadoPedido`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "include",
+            body: JSON.stringify({
+                idpedido,
+                estado: "RECEPCION"
+            })
+        });
+
+        if (!respuesta.ok) throw new Error("Error al actualizar el estado del pedido");
+
+        const resultado = await respuesta.json();
+
+        Swal.fire({
+            icon: "success",
+            title: "Pedido enviado",
+            text: "Pedido enviado a confirmación de manera exitosa",
+            confirmButtonText: "Aceptar"
+        });
+
+        obtenerPedidoPorId(idpedido)
+        
+    } catch (error) {
+        console.error("Error al enviar el pedido a recepción:", error);
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "No se pudo enviar el pedido a recepción.",
+            confirmButtonText: "Aceptar"
         });
     }
-
-    // Destruir DataTable anterior si existe
-    if ($.fn.DataTable.isDataTable(tablaId)) {
-        $(tablaId).DataTable().destroy();
-    }
-
-    // Re-inicializa DataTable con orden descendente por idorden
-    tablaDataTable = $(tablaId).DataTable({
-        language: {
-            url: "https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
-        },
-        responsive: true,
-        autoWidth: false,
-        pageLength: 10,
-        ordering: true,
-        order: [[0, 'desc']]
-    });
 }
 
 async function generarOrdenSalida(idpedido) {

@@ -27,6 +27,10 @@ async function InicializarContinuarPedido() {
         manejarPedido('AUTORIZADO', idpedido);
     });
 
+    document.getElementById('confirmarEntrega').addEventListener('click', () => {
+        confirmarEntrega('ENTREGADO', idpedido);
+    });
+
     document.getElementById('agregarItem').addEventListener('click', function () {
         let modal = new bootstrap.Modal(document.getElementById('modalAñadirItem'));
         modal.show();
@@ -129,7 +133,7 @@ function renderizarItemsEncargo() {
             item.id,
             item.nombre,
             item.categoria,
-            `<input type="number" class="form-control input-cantidad" value="${item.cantidad}" min="1" data-index="${index}">`,
+            `<input type="number" class="form-control input-cantidad" value="${item.cantidad}" min="1" data-index="${index}" ${permisos.tienePermisoEditarCantidad ? '' : 'disabled'}>`,
             item.nombreCompleto,
             (permisos.tienePermisoEliminarItem ? // Verificar permisos
                 `<button class="btn btn-fsvsaoff btn-eliminar-item" data-index="${index}">
@@ -435,3 +439,40 @@ async function configurarNavegacionPedidos() {
     });
 }
 
+async function confirmarEntrega(estado, idpedido) {
+    try {
+        const idusuario = localStorage.getItem('idusuario');
+        const respuesta = await fetch(`${url}/api/compras/actualizarEstadoPedido`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "include",
+            body: JSON.stringify({
+                idpedido,
+                estado: estado,
+                idusuario: idusuario
+            })
+        });
+
+        if (!respuesta.ok) throw new Error("Error al actualizar el estado del pedido");
+
+        Swal.fire({
+            icon: "success",
+            title: "Pedido enviado",
+            text: "Confirmacion de entrega exitosa",
+            confirmButtonText: "Aceptar"
+        });
+
+        irAtras();
+        
+    } catch (error) {
+        console.error("Error al enviar el pedido a recepción:", error);
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "No se pudo enviar el pedido a recepción.",
+            confirmButtonText: "Aceptar"
+        });
+    }
+}

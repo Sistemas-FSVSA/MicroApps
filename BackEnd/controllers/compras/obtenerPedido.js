@@ -82,7 +82,7 @@ const obtenerPedido = async (req, res) => {
         if (idpedido && !idusuario) {
             const pedidoResult = await pool.request()
                 .input('idpedido', sql.Int, idpedido)
-                .query('SELECT * FROM pedidos WHERE idpedido = @idpedido');
+                .query('SELECT p.*, u.nombres FROM pedidos p LEFT JOIN usuariosaprueban u ON p.idaprueba = u.idaprueba WHERE p.idpedido = @idpedido;');
 
             if (pedidoResult.recordset.length === 0) {
                 return res.status(404).send('No se encontró el pedido para el idpedido proporcionado.');
@@ -134,7 +134,7 @@ const obtenerPedido = async (req, res) => {
         if (estado && !idusuario && !idpedido) {
             const pedidosResult = await pool.request()
                 .input('estado', sql.VarChar, estado)
-                .query('SELECT * FROM pedidos WHERE estado = @estado');
+                .query('SELECT p.*, u.nombres FROM pedidos p LEFT JOIN usuariosaprueban u ON p.idaprueba = u.idaprueba WHERE p.estado = @estado;');
 
             const pedidos = [];
 

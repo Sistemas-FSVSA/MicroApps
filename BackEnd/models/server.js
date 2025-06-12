@@ -61,8 +61,8 @@ class Server {
 
     // Servir la carpeta "uploads" como estática
     this.app.use(
-      "/uploads",
-      express.static(path.join(__dirname, "../uploads"))
+      '/uploads',
+      express.static('Z:\\uploads') // Esta es la carpeta física
     );
   }
 

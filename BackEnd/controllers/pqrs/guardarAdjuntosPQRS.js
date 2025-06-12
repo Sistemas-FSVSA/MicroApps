@@ -14,7 +14,7 @@ const guardarAdjuntosPQRS = async (req, res) => {
             return res.status(400).json({ error: "Faltan datos requeridos: idpqrs o idusuario." });
         }
 
-        const adjuntos = req.files?.["adjuntos[]"] || []; 
+        const adjuntos = req.files?.["adjuntos[]"] || [];
         if (adjuntos.length === 0) {
             return res.status(400).json({ error: "No se recibieron archivos adjuntos." });
         }
@@ -31,7 +31,12 @@ const guardarAdjuntosPQRS = async (req, res) => {
 
         for (let file of adjuntos) {
             const request = transaction.request();
-            const fileUrl = file.path;
+            // 1. Extraer solo el nombre del archivo
+            const fileName = path.basename(file.path);
+
+            // 2. Construir la ruta pública
+            const fileUrl = `uploads/${fileName}`;
+
             const fileSize = file.size;
             const fileType = path.extname(file.originalname).substring(1).toLowerCase();
 

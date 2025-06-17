@@ -388,12 +388,80 @@
 
       <!-- Pie del modal -->
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-fsvsaoff" data-dismiss="modal">Cancelar</button>
       </div>
 
     </div>
   </div>
 </div>
+<!-- Modal Registrar Proveedor -->
+<div class="modal fade" id="registrarProveedor" tabindex="-1" aria-labelledby="registrarProveedorLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title" id="registrarProveedorLabel">Registrar Proveedor</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form id="formRegistrarProveedor">
+          <div class="row">
+
+            <!-- Tipo de documento -->
+            <div class="col-md-6 mb-3">
+              <label for="tipoDocumento" class="form-label">Tipo de Documento</label>
+              <select class="form-control" id="tipoDocumento" required>
+                <option selected disabled value="">Seleccione una opción</option>
+                <option value="CC">Cédula de Ciudadanía (CC)</option>
+                <option value="NIT">Número Identificación Tributaria (NIT)</option>
+                <option value="TI">Tarjeta de Identidad (TI)</option>
+                <option value="PET">Permiso Especial de Trabajo (PET)</option>
+                <option value="CE">Cédula de Extranjería (CE)</option>
+                <option value="PAS">Pasaporte (PAS)</option>
+              </select>
+            </div>
+
+            <!-- Identificación -->
+            <div class="col-md-6 mb-3">
+              <label for="identificacion" class="form-label">Identificación</label>
+              <input type="text" class="form-control" id="identificacion" required>
+            </div>
+
+            <!-- Razón Social -->
+            <div class="col-md-12 mb-3">
+              <label for="razonSocial" class="form-label">Razón Social</label>
+              <input type="text" class="form-control" id="razonSocial" required>
+            </div>
+
+            <!-- Dirección -->
+            <div class="col-md-8 mb-3">
+              <label for="direccion" class="form-label">Dirección</label>
+              <input type="text" class="form-control" id="direccion" required>
+            </div>
+
+            <!-- Teléfono -->
+            <div class="col-md-4 mb-3">
+              <label for="telefono" class="form-label">Teléfono</label>
+              <input type="tel" class="form-control" id="telefono" required>
+            </div>
+
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-fsvsaoff" data-dismiss="modal">Cancelar</button>
+        <button type="button" form="formRegistrarProveedor" id="BotonRegistrarProveedor" class="btn btn-fsvsaon">Registrar</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 
 
 

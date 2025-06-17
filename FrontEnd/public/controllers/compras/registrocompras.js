@@ -49,6 +49,14 @@ function InicializarRegistroCompras() {
         modal.show();
         obtenerProveedores();
     });
+    document.getElementById('registrarProBtn').addEventListener('click', function () {
+        // Forma correcta para Bootstrap 4
+        $('#registrarProveedor').modal('show');
+    });
+
+    document.getElementById('BotonRegistrarProveedor').addEventListener('click', function () {
+        registrarProveedor();
+    });
 }
 
 //FUNCIONES PARA EL MANEJO DE ITEMS
@@ -812,43 +820,68 @@ function actualizarEstadoProveedor(idproveedor, estado) {
             if (switchInput) switchInput.checked = !estado;
         });
 }
-function registrarProveedor() {
-    const inputCategoria = document.getElementById('categoria');
-    const nombreCategoria = inputCategoria.value.trim();
+async function registrarProveedor() {
+    // Captura de datos del formulario
+    const tipoDocumento = document.getElementById('tipoDocumento').value.trim();
+    const identificacion = document.getElementById('identificacion').value.trim();
+    const razonSocial = document.getElementById('razonSocial').value.trim();
+    const direccion = document.getElementById('direccion').value.trim();
+    const telefono = document.getElementById('telefono').value.trim();
 
-    // Validación
-    if (!nombreCategoria) {
-        Mensaje("error", "Error", "Ingrese un nombre de categoria valido.", false, false);
+    // Validaciones personalizadas
+    if (!tipoDocumento) {
+        Mensaje("error", "Error", "Selecciona un tipo de documento.", false, false);
+        return;
+    }
+    if (!identificacion) {
+        Mensaje("error", "Error", "Ingresa la identificación del proveedor.", false, false);
+        return;
+    }
+    if (!razonSocial) {
+        Mensaje("error", "Error", "Ingresa la razón social del proveedor.", false, false);
         return;
     }
 
-    // Armar payload como array de objetos
-    const categoriasPayload = [
-        {
-            nombre: nombreCategoria,
-            descripcion: null // si más adelante agregas descripción, actualizas aquí
-        }
-    ];
+    // Construcción del objeto con nombres esperados por el backend
+    const proveedor = {
+        tipoidentificacion: tipoDocumento,
+        identificacion: identificacion,
+        nombre: razonSocial,
+        direccion: direccion,
+        telefono: telefono
+    };
 
-    fetch(`${url}/api/compras/guardarCategoria`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(categoriasPayload)
-    })
-        .then(response => {
-            if (!response.ok) throw new Error('Error al registrar categoría');
-            return response.json();
-        })
-        .then(data => {
-            Mensaje("success", "Exito", "Categoria registrada exitosamente.", true, false);
-            inputCategoria.value = ''; // Limpiar campo
-            obtenerCategorias(); // Recargar la tabla
-        })
-        .catch(error => {
-            console.error('Error en registrarCategoria:', error);
-            Mensaje("error", "Error", "Ocurrio un problema.", false, false);
+    // Envío al backend como arreglo de proveedores
+    try {
+        const respuesta = await fetch(`${url}/api/compras/guardarProveedor`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ proveedores: [proveedor] }),
+            credentials: 'include'
         });
+
+        const resultado = await respuesta.json();
+
+        if (respuesta.ok) {
+            Mensaje("success", "Éxito", resultado.mensaje || "Proveedor registrado correctamente", true, false);
+
+            // Limpiar campos si lo deseas
+            const form = document.getElementById('formRegistrarProveedor');
+            form.reset();
+            $('#registrarProveedor').modal('hide');
+
+            // Opcional: recargar la tabla de proveedores
+            obtenerProveedores();
+        } else {
+            Mensaje("error", "Error", resultado.error || "Ocurrió un error al registrar el proveedor.", false, false);
+        }
+
+    } catch (error) {
+        console.error("Error al enviar proveedor:", error);
+        Mensaje("error", "Error", "Error de red o del servidor.", false, false);
+    }
 }
+
+

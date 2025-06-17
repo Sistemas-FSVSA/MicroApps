@@ -50,7 +50,6 @@ const obtenerPedido = async (req, res) => {
             return res.json({ dependencias });
         }
 
-
         // Escenario 2: idusuario + estado
         if (idusuario && estado && !idpedido) {
             const dependenciaResult = await pool.request()
@@ -115,7 +114,8 @@ const obtenerPedido = async (req, res) => {
                     nombre: itemResult.recordset[0].nombre,
                     descripcion: itemResult.recordset[0].descripcion,
                     categoria: categoriaResult.recordset[0].nombre,
-                    nombreCompleto: detalle.nombreusuario || null
+                    nombreCompleto: detalle.nombreusuario || null,
+                    notas: detalle.notas,
                 });
             }
 

@@ -151,7 +151,8 @@ function actualizarTabla(data) {
                 categoria: btn.getAttribute('data-categoria'),
                 descripcion: btn.getAttribute('data-descripcion'),
                 cantidad: "1",
-                nombreCompleto: `${localStorage.getItem('nombres') || ''} ${localStorage.getItem('apellidos') || ''}`.trim()
+                nombreCompleto: `${localStorage.getItem('nombres') || ''} ${localStorage.getItem('apellidos') || ''}`.trim(),
+                notas: "",
             };
 
             agregarItemASessionStorage(nuevoItem);
@@ -197,45 +198,87 @@ function agregarItemASessionStorage(nuevoItem) {
 function renderizarItemsEncargo() {
     const dataTable = $('#tablaItemsSeleccionados').DataTable();
 
-    // Limpiar la tabla antes de cargar los datos
     dataTable.clear().draw();
 
     const items = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
 
     items.forEach((item, index) => {
-        // Crear la fila como un array de datos
+        // Botón de eliminar
+        const btnEliminar = permisos.tienePermisoEliminarItem
+            ? `<button class="btn btn-danger btn-eliminar-item" data-index="${index}">
+                    <i class="fas fa-trash"></i>
+               </button>`
+            : '';
+
+
+
+        // Botón de nota con campanita si aplica
+        const btnNota = `
+    <div class="position-relative d-inline-block">
+        <button class="btn btn-warning btn-nota-item" data-index="${index}" title="Agregar nota">
+            <i class="fas fa-sticky-note"></i>
+        </button>
+        ${item.notas && item.notas.trim() !== '' ? `
+            <span class="campanita-badge">
+                <i class="fas fa-bell fa-xs text-white"></i>
+            </span>` : ''}
+    </div>`;
+
         const rowData = [
             item.id,
             item.nombre,
             item.categoria,
             `<input type="number" class="form-control input-cantidad" value="${item.cantidad}" min="1" data-index="${index}">`,
             item.nombreCompleto,
-            (permisos.tienePermisoEliminarItem ? // Verificar permisos
-                `<button class="btn btn-danger btn-eliminar-item" data-index="${index}">
-                    <i class="fas fa-trash"></i>
-                </button>` : '')
+            btnEliminar + ' ' + btnNota
         ];
 
-        // Agregar la fila a la tabla usando DataTables
         dataTable.row.add(rowData).draw();
     });
 
-    // Agregar evento a los botones de eliminar
+    // Eventos
     document.querySelectorAll('.btn-eliminar-item').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', () => {
             const index = btn.getAttribute('data-index');
             eliminarItemDeSessionStorage(index);
         });
     });
 
-    // Agregar evento a los inputs de cantidad
     document.querySelectorAll('.input-cantidad').forEach(input => {
-        input.addEventListener('input', (e) => {
+        input.addEventListener('input', () => {
             const index = input.getAttribute('data-index');
             actualizarCantidadEnSessionStorage(index, input.value);
         });
     });
+
+    document.querySelectorAll('.btn-nota-item').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const index = btn.getAttribute('data-index');
+            const items = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
+            const notaActual = items[index]?.notas || '';
+
+            const { value: nuevaNota } = await Swal.fire({
+                input: 'textarea',
+                inputLabel: 'Nota para el item',
+                inputValue: notaActual,
+                showCancelButton: true,
+                confirmButtonText: 'Guardar',
+                cancelButtonText: 'Cancelar',
+                inputPlaceholder: 'Escribe una nota aquí...',
+                inputAttributes: {
+                    'aria-label': 'Escribe una nota para este item'
+                }
+            });
+
+            if (nuevaNota !== undefined) {
+                items[index].notas = nuevaNota;
+                sessionStorage.setItem('itemsSeleccionados', JSON.stringify(items));
+                renderizarItemsEncargo(); // Recargar para actualizar campanita
+            }
+        });
+    });
 }
+
 
 function eliminarItemDeSessionStorage(index) {
     let items = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];

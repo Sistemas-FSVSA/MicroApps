@@ -62,7 +62,7 @@ const manejarPedido = async (req, res) => {
 
         // Insertar ítems
         for (const item of items) {
-            const { id, cantidad, nombreCompleto } = item;
+            const { id, cantidad, nombreCompleto, notas } = item;
 
             await pool.request()
                 .input('idpedido', sql.Int, idpedido)
@@ -72,10 +72,11 @@ const manejarPedido = async (req, res) => {
                 .input('cantidad', sql.Int, cantidad)
                 .input('fechasolicitud', sql.DateTime, new Date())
                 .input('estado', sql.VarChar, 'PENDIENTE')
+                .input('notas', sql.VarChar, notas || null)
                 .query(`
                     INSERT INTO detallepedido 
-                    (idpedido, idusuariosolicito, nombreusuario, iditem, cantidad, fechasolicitud, estado) 
-                    VALUES (@idpedido, @idusuariosolicito, @nombreusuario, @iditem, @cantidad, @fechasolicitud, @estado)
+                    (idpedido, idusuariosolicito, nombreusuario, iditem, cantidad, fechasolicitud, estado, notas) 
+                    VALUES (@idpedido, @idusuariosolicito, @nombreusuario, @iditem, @cantidad, @fechasolicitud, @estado, @notas)
                 `);
         }
 

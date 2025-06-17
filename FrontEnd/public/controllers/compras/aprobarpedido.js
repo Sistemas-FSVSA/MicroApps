@@ -21,27 +21,29 @@ async function InicializarAprobarPedido() {
 
         const data = await response.json();
 
-        // Verifica si no hay dependencias asociadas
+        const container = document.getElementById("cards-container");
+        container.innerHTML = "";
+
+        let totalPedidosAgregados = 0;
+
         if (!data.dependencias || data.dependencias.length === 0) {
-            console.warn("El usuario no tiene dependencias asignadas.");
+            mostrarMensajeSinPedidos(container);
             return;
         }
 
-        const container = document.getElementById("cards-container");
-        container.innerHTML = ""; // Limpiar contenido previo
+        container.className = "row g-3"; // restaurar grilla para las cards
 
-        // Iterar sobre las dependencias y sus pedidos
         data.dependencias.forEach(dependencia => {
             dependencia.pedidos
-                .filter(pedido => 
-                    pedido.estado === "CERRADO" || pedido.estado === "RECEPCION"
-                ) // Filtrar solo los pedidos con estado "CERRADO" o "RECEPCION"
+                .filter(pedido => pedido.estado === "CERRADO" || pedido.estado === "RECEPCION")
                 .forEach(pedido => {
+                    totalPedidosAgregados++;
+
                     const card = document.createElement("div");
-                    card.className = "col-lg-3 col-md-4 col-sm-6 mb-3";
+                    card.className = "col-lg-3 col-md-4 col-sm-6";
 
                     card.innerHTML = `
-                        <div class="card text-center shadow-sm h-100">
+                        <div class="card text-center shadow-sm h-100 w-100">
                             <div class="card-body">
                                 <h1><i class="fas fa-file-alt"></i></h1>
                                 <h5 class="card-title mb-2">Pedido #${pedido.idpedido}</h5>
@@ -58,9 +60,27 @@ async function InicializarAprobarPedido() {
                 });
         });
 
+        if (totalPedidosAgregados === 0) {
+            mostrarMensajeSinPedidos(container);
+        }
+
     } catch (error) {
         console.error("Error al inicializar la aprobación de pedidos:", error);
     }
+}
+
+function mostrarMensajeSinPedidos(container) {
+    container.className = "no-pedidos-wrapper";
+    container.innerHTML = `
+        <div class="no-pedidos">
+            <div>
+                <h2>
+                    <i class="fas fa-box-open fa-2x d-block mb-3"></i>
+                    No hay pedidos pendientes por gestionar
+                </h2>
+            </div>
+        </div>
+    `;
 }
 
 function verPedido(idpedido) {

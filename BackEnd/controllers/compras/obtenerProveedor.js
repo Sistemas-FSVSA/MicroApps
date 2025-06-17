@@ -38,7 +38,6 @@ const obtenerProveedores = async (req, res) => {
                     telefono, 
                     estado
                 FROM proveedorescompras
-                WHERE estado = 1
             `);
         }
 

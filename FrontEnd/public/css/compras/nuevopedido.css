@@ -1,15 +1,48 @@
 /* Contenedor flexible para los botones */
 .btn-container {
-    display: flex;
-    justify-content: flex-end; /* Alinea los botones a la derecha */
-    gap: 20px; /* Espaciado entre los botones */
-    position: fixed;
-    bottom: 58px;
-    right: 20px;
-    z-index: 1000;
+  display: flex;
+  justify-content: flex-end; /* Alinea los botones a la derecha */
+  gap: 20px; /* Espaciado entre los botones */
+  position: fixed;
+  bottom: 58px;
+  right: 20px;
+  z-index: 1000;
 }
 
 /* Estilo individual para los botones */
 .btn-container .btn {
-    flex-shrink: 0; /* Evita que los botones se reduzcan */
+  flex-shrink: 0; /* Evita que los botones se reduzcan */
+}
+
+.btn-nota-item {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+}
+
+.position-relative .fa-bell {
+  font-size: 0.6rem;
+}
+
+.position-relative span {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.campanita-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background-color: red;
+    border: 2px solid white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
 }

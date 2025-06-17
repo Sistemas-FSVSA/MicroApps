@@ -27,11 +27,35 @@ function InicializarRegistroCompras() {
         modal.show();
         renderizarUsuarios();
     });
-
     $('#modalEditarUsuario').on('hidden.bs.modal', function () {
         sessionStorage.removeItem('usuariosEncontrados');
         $('#tbodyEditarUsuario').empty();
         $('#inputUsuario').val('');
+    });
+
+    //BOTONES PARA EL MANEJO DE CATEGORIAS
+    document.getElementById('regCategorias').addEventListener('click', function () {
+        let modal = new bootstrap.Modal(document.getElementById('modalCategorias'));
+        modal.show();
+        obtenerCategorias();
+    });
+    document.getElementById('registrarCatBtn').addEventListener('click', () => {
+        registrarCategoria();
+    });
+
+    //BOTONES PARA EL MANEJO DE PROVEEDORES
+    document.getElementById('regProveedores').addEventListener('click', function () {
+        let modal = new bootstrap.Modal(document.getElementById('modalProveedores'));
+        modal.show();
+        obtenerProveedores();
+    });
+    document.getElementById('registrarProBtn').addEventListener('click', function () {
+        // Forma correcta para Bootstrap 4
+        $('#registrarProveedor').modal('show');
+    });
+
+    document.getElementById('BotonRegistrarProveedor').addEventListener('click', function () {
+        registrarProveedor();
     });
 }
 
@@ -536,3 +560,328 @@ async function actualizarUsuario() {
         console.error('Error al actualizar el usuario:', error);
     }
 }
+
+// FUNCIONES PARA EL MANEJO DE CATEGORIAS
+function obtenerCategorias() {
+    fetch(`${url}/api/compras/obtenerCategoria`, {
+        method: 'POST',
+        credentials: 'include'
+    })
+        .then(response => {
+            if (!response.ok) throw new Error('Error al obtener categorías');
+            return response.json();
+        })
+        .then(data => {
+            renderizarDataCategorias(data);
+        })
+        .catch(error => {
+            console.error('Error en obtenerCategorias:', error);
+        });
+}
+function renderizarDataCategorias(data) {
+    const tbody = document.querySelector('#categoriasTable tbody');
+    tbody.innerHTML = ''; // Limpia contenido anterior
+
+    let lastRow = null;
+
+    if (Array.isArray(data) && data.length > 0) {
+        // Ordenar alfabéticamente por nombre (ignorando mayúsculas/minúsculas)
+        data.sort((a, b) => {
+            const nombreA = (a.nombre || a.Nombre || '').toLowerCase();
+            const nombreB = (b.nombre || b.Nombre || '').toLowerCase();
+            return nombreA.localeCompare(nombreB);
+        });
+
+        data.forEach((categoria, index) => {
+            const tr = document.createElement('tr');
+
+            const id = categoria.idcategoriaitem || index;
+            const nombre = categoria.nombre || categoria.Nombre || 'Sin nombre';
+            const estado = categoria.estado ?? categoria.Estado ?? true;
+
+            tr.innerHTML = `
+                <td class="d-none">${id}</td>
+                <td>${nombre}</td>
+                <td class="text-center">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input estado-switch" id="switch-${id}" data-id="${id}" ${estado ? 'checked' : ''}>
+                        <label class="custom-control-label" for="switch-${id}"></label>
+                    </div>
+                </td>
+            `;
+
+            tbody.appendChild(tr);
+            lastRow = tr;
+        });
+
+        // Eventos de cambio de estado en los switches
+        document.querySelectorAll('.estado-switch').forEach(switchInput => {
+            switchInput.addEventListener('change', (e) => {
+                const id = e.target.dataset.id;
+                const nuevoEstado = e.target.checked;
+                actualizarEstadoCategoria(id, nuevoEstado);
+            });
+        });
+
+        // Hacer scroll a la última fila si existe
+        if (lastRow) {
+            setTimeout(() => {
+                lastRow.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }, 200);
+        }
+
+    } else {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="3" class="text-center">No hay categorías registradas.</td>`;
+        tbody.appendChild(tr);
+    }
+}
+function actualizarEstadoCategoria(idcategoriaitem, estado) {
+    fetch(`${url}/api/compras/actualizarEstadoCategoria`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            idcategoriaitem,
+            estado
+        })
+    })
+        .then(response => {
+            if (!response.ok) throw new Error('Error al actualizar estado');
+            return response.json();
+        })
+        .then(data => {
+            Mensaje("success", "Exito", "Estado actualizado correctamente.", true, false);
+            // Puedes mostrar un toast o alerta si deseas
+        })
+        .catch(error => {
+            console.error('Error en actualizarEstadoCategoria:', error);
+            // Puedes revertir el switch si hubo error
+            const switchInput = document.querySelector(`#switch-${idcategoriaitem}`);
+            if (switchInput) switchInput.checked = !estado;
+        });
+}
+function registrarCategoria() {
+    const inputCategoria = document.getElementById('categoria');
+    const nombreCategoria = inputCategoria.value.trim();
+
+    // Validación
+    if (!nombreCategoria) {
+        Mensaje("error", "Error", "Ingrese un nombre de categoria valido.", false, false);
+        return;
+    }
+
+    // Armar payload como array de objetos
+    const categoriasPayload = [
+        {
+            nombre: nombreCategoria,
+            descripcion: null // si más adelante agregas descripción, actualizas aquí
+        }
+    ];
+
+    fetch(`${url}/api/compras/guardarCategoria`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(categoriasPayload)
+    })
+        .then(response => {
+            if (!response.ok) throw new Error('Error al registrar categoría');
+            return response.json();
+        })
+        .then(data => {
+            Mensaje("success", "Exito", "Categoria registrada exitosamente.", true, false);
+            inputCategoria.value = ''; // Limpiar campo
+            obtenerCategorias(); // Recargar la tabla
+        })
+        .catch(error => {
+            console.error('Error en registrarCategoria:', error);
+            Mensaje("error", "Error", "Ocurrio un problema.", false, false);
+        });
+}
+
+//FUNCION PARA EL MANEJO DE PROVEEDORES
+function obtenerProveedores() {
+    fetch(`${url}/api/compras/obtenerProveedores`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+    })
+        .then(response => response.json())
+        .then(data => {
+            renderizarTablaProveedores(data);
+        })
+        .catch(error => {
+            console.error('Error al obtener proveedores:', error);
+        });
+}
+let tablaProveedores;
+function renderizarTablaProveedores(data) {
+    // Destruir tabla existente si ya fue inicializada
+    if ($.fn.DataTable.isDataTable('#ProveedorTable')) {
+        $('#ProveedorTable').DataTable().destroy();
+    }
+
+    // Limpiar contenido
+    const tbody = document.querySelector('#ProveedorTable tbody');
+    tbody.innerHTML = '';
+
+    // Ordenar datos por nombre
+    data.sort((a, b) => (a.nombre || '').toLowerCase().localeCompare((b.nombre || '').toLowerCase()));
+
+    // Construir filas
+    data.forEach((proveedor, index) => {
+        const id = proveedor.idproveedor || index;
+        const nombre = proveedor.nombre || 'Sin nombre';
+        const identificacion = proveedor.identificacion || 'Sin identificación';
+        const estado = proveedor.estado ?? true;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+      <td class="d-none">${id}</td>
+      <td>${identificacion}</td>
+      <td>${nombre}</td>
+      <td class="text-center">
+        <div class="custom-control custom-switch">
+          <input type="checkbox" class="custom-control-input estado-switch" id="switch-prov-${id}" data-id="${id}" ${estado ? 'checked' : ''}>
+          <label class="custom-control-label" for="switch-prov-${id}"></label>
+        </div>
+      </td>
+    `;
+        tbody.appendChild(tr);
+    });
+
+    // Inicializar DataTable
+    tablaProveedores = $('#ProveedorTable').DataTable({
+        pageLength: 5,
+        lengthChange: false,
+        searching: true,
+        language: {
+            url: "https://cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
+        },
+        columnDefs: [
+            { targets: 0, visible: false }
+        ],
+        initComplete: function () {
+            // Limpiar el contenedor del buscador antes de moverlo
+            $('#dataTableSearchWrapper').empty();
+
+            const searchInputWrapper = $('#ProveedorTable_filter').detach();
+            $('#dataTableSearchWrapper').append(searchInputWrapper);
+
+            // Reaplicar clases Bootstrap al input de búsqueda
+            const input = $('#dataTableSearchWrapper input');
+            input.addClass('form-control form-control d-inline-block')
+                .css('width', '200px');
+
+            $('#dataTableSearchWrapper label').addClass('mb-0');
+        }
+    });
+
+    // Asociar eventos a los switches nuevamente
+    document.querySelectorAll('.estado-switch').forEach(switchInput => {
+        switchInput.addEventListener('change', (e) => {
+            const id = e.target.dataset.id;
+            const nuevoEstado = e.target.checked;
+            actualizarEstadoProveedor(id, nuevoEstado);
+        });
+    });
+}
+function actualizarEstadoProveedor(idproveedor, estado) {
+    fetch(`${url}/api/compras/actualizarEstadoProveedor`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            idproveedor,
+            estado
+        })
+    })
+        .then(response => {
+            if (!response.ok) throw new Error('Error al actualizar estado');
+            return response.json();
+        })
+        .then(data => {
+            Mensaje("success", "Exito", "Estado actualizado correctamente.", true, false);
+            // Puedes mostrar un toast o alerta si deseas
+        })
+        .catch(error => {
+            console.error('Error en actualizarEstadoCategoria:', error);
+            // Puedes revertir el switch si hubo error
+            const switchInput = document.querySelector(`#switch-${idproveedor}`);
+            if (switchInput) switchInput.checked = !estado;
+        });
+}
+async function registrarProveedor() {
+    // Captura de datos del formulario
+    const tipoDocumento = document.getElementById('tipoDocumento').value.trim();
+    const identificacion = document.getElementById('identificacion').value.trim();
+    const razonSocial = document.getElementById('razonSocial').value.trim();
+    const direccion = document.getElementById('direccion').value.trim();
+    const telefono = document.getElementById('telefono').value.trim();
+
+    // Validaciones personalizadas
+    if (!tipoDocumento) {
+        Mensaje("error", "Error", "Selecciona un tipo de documento.", false, false);
+        return;
+    }
+    if (!identificacion) {
+        Mensaje("error", "Error", "Ingresa la identificación del proveedor.", false, false);
+        return;
+    }
+    if (!razonSocial) {
+        Mensaje("error", "Error", "Ingresa la razón social del proveedor.", false, false);
+        return;
+    }
+
+    // Construcción del objeto con nombres esperados por el backend
+    const proveedor = {
+        tipoidentificacion: tipoDocumento,
+        identificacion: identificacion,
+        nombre: razonSocial,
+        direccion: direccion,
+        telefono: telefono
+    };
+
+    // Envío al backend como arreglo de proveedores
+    try {
+        const respuesta = await fetch(`${url}/api/compras/guardarProveedor`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ proveedores: [proveedor] }),
+            credentials: 'include'
+        });
+
+        const resultado = await respuesta.json();
+
+        if (respuesta.ok) {
+            Mensaje("success", "Éxito", resultado.mensaje || "Proveedor registrado correctamente", true, false);
+
+            // Limpiar campos si lo deseas
+            const form = document.getElementById('formRegistrarProveedor');
+            form.reset();
+            $('#registrarProveedor').modal('hide');
+
+            // Opcional: recargar la tabla de proveedores
+            obtenerProveedores();
+        } else {
+            Mensaje("error", "Error", resultado.error || "Ocurrió un error al registrar el proveedor.", false, false);
+        }
+
+    } catch (error) {
+        console.error("Error al enviar proveedor:", error);
+        Mensaje("error", "Error", "Error de red o del servidor.", false, false);
+    }
+}
+
+

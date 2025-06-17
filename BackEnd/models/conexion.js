@@ -17,6 +17,7 @@ const config2 = {
   user: process.env.DB2_USER,
   password: process.env.DB2_PASSWORD,
   server: process.env.DB2_SERVER,
+  port: parseInt(process.env.DB2_PORT),
   database: process.env.DB2_DATABASE,
   options: {
     encrypt: false,

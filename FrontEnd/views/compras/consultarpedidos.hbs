@@ -1,0 +1,50 @@
+<link rel="stylesheet" href="/css/compras/consultarorden.css">
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2 align-items-center d-flex justify-content-between">
+            <div class="col-sm-12 d-flex align-items-center">
+                <button class="btn btn-outline-secondary mr-2" onclick="irAtras()">
+                    <i class="fas fa-angle-double-left"></i> Regresar
+                </button>
+                <h1 class="m-0" id="title">Pedidos Generadas</h1>
+            </div>
+        </div>
+    </div>
+    <hr>
+</div>
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-4 col-lg-3">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0">Pedidos generadas</h6>
+                    </div>
+                    <div class="list-group inbox-scroll" id="listaPedidos">
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8 col-lg-9">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">Detalle del Pedido</h6>
+                    </div>
+                    <div class="card-body ticket-scroll">
+                        <small id="pedidoTitle" class="text-muted">Bienvenido</small>
+                        <p id="pedidoContent" class="mt-2">
+                            Selecciona un pedido para ver los detalles.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="/controllers/compras/consultarpedidos.js"></script>
+
+
+

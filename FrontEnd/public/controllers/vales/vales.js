@@ -151,7 +151,14 @@ async function obtenerEncargados() {
             const selectEncargado = document.getElementById('encargado');
             selectEncargado.innerHTML = '<option value="">Seleccione un encargado</option>'; // Resetear opciones
 
-            data.data.forEach(encargado => {
+            // Ordenar alfabéticamente por nombre y apellido
+            const encargadosOrdenados = data.data.sort((a, b) => {
+                const nombreA = `${a.nombres} ${a.apellidos}`.toLowerCase();
+                const nombreB = `${b.nombres} ${b.apellidos}`.toLowerCase();
+                return nombreA.localeCompare(nombreB);
+            });
+
+            encargadosOrdenados.forEach(encargado => {
                 const option = document.createElement('option');
                 option.value = encargado.idusuariovale;
                 option.textContent = `${encargado.nombres} ${encargado.apellidos}`;

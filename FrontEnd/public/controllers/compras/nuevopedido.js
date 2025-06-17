@@ -2,12 +2,12 @@ document.addEventListener("DOMContentLoaded", () => {
     InicializarNuevoPedido();
 });
 
-let permisos = {}; // Variable global para permisos
-
 async function InicializarNuevoPedido() {
     permisos = await cargarPermisosNuevosPedidos(); // sin let aquí, usas la variable global
     añadirItems();
     renderizarItemsEncargo();
+    cargarAprobado();
+    cargarProveedores();
 
     document.getElementById('agregarItem').addEventListener('click', function () {
         let modal = new bootstrap.Modal(document.getElementById('modalAñadirItem'));
@@ -22,6 +22,73 @@ async function InicializarNuevoPedido() {
     document.getElementById('cerrarEncargo').addEventListener('click', () => {
         manejarPedido('CERRADO'); // Estado para aprobar
     });
+
+    document.getElementById('ordenCompra').addEventListener('click', () => {
+        manejarPedido('SINREFERENCIA'); // Estado para generar orden de compra
+    });
+}
+var permisos = permisos || {};
+
+function cargarAprobado() {
+    fetch(`${url}/api/compras/obtenerAprobado`, {
+        credentials: 'include'
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const select = document.getElementById('aprobadoPor');
+            select.innerHTML = '<option value="">Aprobado Por</option>';
+
+            // Filtrar y ordenar
+            const aprobadosActivos = data.data
+                .filter(usuario => usuario.estado === 1 || usuario.estado === '1')
+                .sort((a, b) => a.nombres.localeCompare(b.nombres));
+
+            aprobadosActivos.forEach(usuario => {
+                const option = document.createElement('option');
+                option.value = usuario.idaprueba;
+                option.textContent = usuario.nombres;
+                select.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error al cargar usuarios:', error);
+        });
+}
+
+function cargarProveedores() {
+    fetch(`${url}/api/compras/obtenerProveedores`, {
+        credentials: 'include'
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const select = document.getElementById('proveedor');
+            select.innerHTML = '<option value="">Proveedor...</option>';
+
+            // Filtrar y ordenar
+            const proveedoresActivos = data
+                .filter(proveedor => proveedor.estado === true)
+                .sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+            proveedoresActivos.forEach(proveedor => {
+                const option = document.createElement('option');
+                option.value = proveedor.idproveedor;
+                option.textContent = proveedor.nombre;
+                select.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error al cargar proveedores:', error);
+        });
 }
 
 function añadirItems() {
@@ -50,7 +117,6 @@ function añadirItems() {
         }
     });
 }
-
 
 function actualizarTabla(data) {
     const tbody = document.getElementById('tbodyNuevoItem');
@@ -194,25 +260,39 @@ function actualizarCantidadEnSessionStorage(index, nuevaCantidad) {
         // Guardar en sessionStorage
         sessionStorage.setItem('itemsSeleccionados', JSON.stringify(items));
     } else {
-        alert("La cantidad debe ser mayor a 0.");
+        Mensaje('warning', '¡Espera!', 'La cantidad debe ser mayor a 0.', true, false);
     }
 }
 
-function manejarPedido(estado) {
+async function manejarPedido(estado) {
     // Obtener los ítems del sessionStorage
     const itemsSeleccionados = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
+    const idaprueba = document.getElementById('aprobadoPor')?.value || null;
+    const idproveedor = document.getElementById('proveedor')?.value || null;
+
+    console.log(idaprueba);
 
     if (itemsSeleccionados.length === 0) {
         Mensaje('warning', 'Espera!', 'No hay items para guardar.', false, false);
         return;
     }
 
+    if (estado === 'SINREFERENCIA' && !idaprueba) {
+        Mensaje('warning', 'Espera!', 'Debes seleccionar quién aprueba el pedido.', false, false);
+        return;
+    }
+
+    if (estado === 'SINREFERENCIA' && !idproveedor) {
+        Mensaje('warning', 'Espera!', 'Debes seleccionar el proveedor del pedido.', false, false);
+        return;
+    }
+
     // Crear el objeto JSON con la información necesaria
-    const encargo = {
+    const payload = {
         idusuario: localStorage.getItem('idusuario') || null,
         items: itemsSeleccionados,
         estado: estado, // Agregar el estado al body
-        idpedido: null,
+        idaprueba: idaprueba,// Agregar el idaprueba al body si está definido
     };
 
     // Enviar el JSON al endpoint por medio de fetch
@@ -222,7 +302,7 @@ function manejarPedido(estado) {
             'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify(encargo)
+        body: JSON.stringify(payload)
     })
         .then(response => {
             // Verificar si la respuesta es exitosa
@@ -232,9 +312,29 @@ function manejarPedido(estado) {
             return response.json(); // Cambiar a .json() para obtener el idpedido del backend
         })
         .then(data => {
+            if (estado === 'SINREFERENCIA') {
+                console.log('ID del pedido generado:', data.idpedido);
+
+                const idusuario = localStorage.getItem('idusuario');
+
+                generarOrdenDesdePedido(itemsSeleccionados, idusuario, idproveedor)
+                    .then(resp => {
+                        console.log('Orden generada con ID:', resp.idorden);
+                        return relacionarPedidoYOrden(data.idpedido, resp.idorden);
+                    })
+                    .then(() => {
+                        console.log('Pedido y orden relacionados correctamente.');
+                    })
+                    .catch(err => {
+                        console.error('Error al generar orden o relacionar:', err);
+                    });
+            }
             // Determinar el mensaje y la acción según el estado
             if (estado === 'CERRADO') {
                 Mensaje('success', 'Éxito!', 'El encargo ha sido cerrado con éxito.', true, false);
+                sessionStorage.removeItem('itemsSeleccionados'); // Borrar el sessionStorage
+            } else if (estado === 'SINREFERENCIA') {
+                Mensaje('success', 'Éxito!', 'Orden de compra generada exitosamente.', true, false);
                 sessionStorage.removeItem('itemsSeleccionados'); // Borrar el sessionStorage
             } else {
                 Mensaje('success', 'Éxito!', 'El encargo se ha guardado correctamente.', true, false);
@@ -246,6 +346,8 @@ function manejarPedido(estado) {
                 redireccionUrl = `/compras/continuarpedido?idpedido=${data.idpedido}`;
             } else if (estado === 'CERRADO') {
                 redireccionUrl = '/compras/pedidos';
+            } else if (estado === 'SINREFERENCIA') {
+                redireccionUrl = '/compras/ordenes';
             }
 
             // Redirección después de 2 segundos
@@ -258,5 +360,51 @@ function manejarPedido(estado) {
             // Manejar errores
             console.error('Error al guardar el encargo:', error);
             Mensaje('error', 'Error!', 'Hubo un problema al guardar el encargo.', false, false);
+        });
+}
+
+async function generarOrdenDesdePedido(items, idusuario, idproveedor) {
+    const ordenItems = items.map(item => ({
+        iditem: parseInt(item.id),
+        total: parseInt(item.cantidad),
+        valor: 0
+    }));
+
+    const orden = {
+        tipo: "COMPRA",
+        idusuario: parseInt(idusuario),
+        idproveedor: idproveedor,
+        items: ordenItems
+    };
+
+    return fetch(`${url}/api/compras/manejarOrden`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(orden)
+    }).then(res => {
+        if (!res.ok) throw new Error('Error al crear la orden');
+        return res.json(); // { idorden }
+    });
+}
+
+async function relacionarPedidoYOrden(idpedido, idorden) {
+    const relaciones = [{ idpedido, idorden }];
+    const estadopedido = 'SINREFERENCIA';
+    const estadoorden = 'SINREFERENCIA';
+
+    return fetch(`${url}/api/compras/guardarRelacion`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+            relaciones,
+            estadopedido,
+            estadoorden
+        })
+    })
+        .then(res => {
+            if (!res.ok) throw new Error('Error al relacionar pedido y orden');
+            return res.json(); // mensaje
         });
 }

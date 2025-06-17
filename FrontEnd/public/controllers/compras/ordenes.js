@@ -29,3 +29,18 @@ function redireccionRelacionarOrden() {
     const url = `/compras/relacionarorden`;
     cargarVista(url);
 }
+
+function redireccionConsultarOrden() {
+    const url = `/compras/consultarorden`;
+    cargarVista(url);
+}
+
+function redireccionNuevaOrdenSinPedido() {
+    sessionStorage.setItem("modoPedido", "sinreferencia");
+
+    const param = btoa("sinreferencia");
+    const url = `/compras/nuevopedido?param=${param}`;
+    cargarVista(url);
+}
+
+

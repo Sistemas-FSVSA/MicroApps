@@ -46,7 +46,7 @@ function cargarPermisosSidebar() {
     const tienePermisoRegiCompras = permisos.some(permiso => permiso.vista === "REGISTRO_COMPRAS");
 
     document.getElementById('menuCompras').style.display =
-        (tienePermisoPediCompras || tienePermisoRepoCompras || tienePermisoOrdeCompras ||  tienePermisoRegiCompras) ? '' : 'none';
+        (tienePermisoPediCompras || tienePermisoRepoCompras || tienePermisoOrdeCompras || tienePermisoRegiCompras) ? '' : 'none';
 
     document.getElementById('pedidosCompras').style.display = tienePermisoPediCompras ? '' : 'none';
     document.getElementById('reporteCompras').style.display = tienePermisoRepoCompras ? '' : 'none';
@@ -303,11 +303,28 @@ async function cargarPermisosGestionPQRS() {
 
 async function cargarPermisosNuevosPedidos() {
     const permisos = JSON.parse(localStorage.getItem('permisos'));
+    const modo = sessionStorage.getItem("modoPedido");
 
-    const tienePermisoGuardarPedido = permisos.some(permiso => permiso.elemento === "BOTON_GUARDAR_PEDIDO");
+    const tienePermisoGuardarPedido = permisos.some(permiso => permiso.elemento === "BOTON_GUARDAR_PEDIDO" && modo == 'conreferencia');
     const botonGuardar = document.getElementById('guardarEncargo');
     botonGuardar.style.display = tienePermisoGuardarPedido ? 'inline-block' : 'none';
-    
+
+    const tienePermisoCerrarPedido = permisos.some(permiso => permiso.elemento === "BOTON_GUARDAR_PEDIDO" && modo == 'conreferencia');
+    const botonCerrar = document.getElementById('cerrarEncargo');
+    botonCerrar.style.display = tienePermisoCerrarPedido ? 'inline-block' : 'none';
+
+    const tienePermisoOrdenCompra = permisos.some(permiso => permiso.elemento === "BOTON_ORDEN_COMPRA" && modo == 'sinreferencia');
+    const botonOrden = document.getElementById('ordenCompra');
+    botonOrden.style.display = tienePermisoOrdenCompra ? 'inline-block' : 'none';
+
+    const tienePermisoAprobadoPor = permisos.some(permiso => permiso.elemento === "SELECT_APROBADO_POR" && modo == 'sinreferencia');
+    const aprobadoPor = document.getElementById('aprobadoPor');
+    aprobadoPor.style.display = tienePermisoAprobadoPor ? 'inline-block' : 'none';
+
+    const tienePermisoProveedor = permisos.some(permiso => permiso.elemento === "SELECT_PROVEEDOR" && modo == 'sinreferencia');
+    const proveedor = document.getElementById('proveedor');
+    proveedor.style.display = tienePermisoProveedor ? 'inline-block' : 'none';
+
     const tienePermisoAgregarItem = permisos.some(permiso => permiso.elemento === "BOTON_AGREGAR_ITEM_PEDIDO");
     const botonAgregar = document.getElementById('agregarItem');
     botonAgregar.style.display = tienePermisoAgregarItem ? 'inline-block' : 'none';
@@ -343,19 +360,32 @@ async function cargarPermisosContinuarPedidos() {
     const tienePermisoAutorizarPedido = permisos.some(permiso => permiso.elemento === "BOTON_AUTORIZAR_PEDIDO" && estado == 'APROBADO');
     const botonAutorizar = document.getElementById('autorizarEncargo');
     botonAutorizar.style.display = tienePermisoAutorizarPedido ? 'inline-block' : 'none';
-    
-    const tienePermisoAgregarItem = permisos.some(permiso => permiso.elemento === "BOTON_AGREGAR_ITEM_PEDIDO");
-    const botonAgregar = document.getElementById('agregarItem');
-    botonAgregar.style.display = tienePermisoAgregarItem ? 'inline-block' : 'none';
 
-    const tienePermisoNavePedidos = permisos.some(permiso => permiso.elemento === "NAVEGACION_PEDIDOS");
+    const tienePermisoAprobadoPor = permisos.some(permiso => permiso.elemento === "SELECT_APROBADO_POR" && estado == 'APROBADO');
+    const aprobadoPor = document.getElementById('aprobadoPor');
+    const LabelAprobadoPor = document.getElementById('LabelAprobadoPor');
+    aprobadoPor.style.display = tienePermisoAprobadoPor ? 'inline-block' : 'none';
+    LabelAprobadoPor.style.display = tienePermisoAprobadoPor ? 'inline-block' : 'none';
+
+    const tienePermisoNavePedidos = permisos.some(permiso => permiso.elemento === "NAVEGACION_PEDIDOS" && estado == 'APROBADO');
     const botonSiguiente = document.getElementById('flechaDerecha');
     const botonAnterior = document.getElementById('flechaIzquierda');
     botonSiguiente.style.display = tienePermisoNavePedidos ? 'inline-block' : 'none';
     botonAnterior.style.display = tienePermisoNavePedidos ? 'inline-block' : 'none';
 
+    const tienePermisoConfirmarPedido = permisos.some(permiso => permiso.elemento === "BOTON_CONFIRMAR_PEDIDO" && estado == 'RECEPCION');
+    const botonConfirmar = document.getElementById('confirmarEntrega');
+    botonConfirmar.style.display = tienePermisoConfirmarPedido ? 'inline-block' : 'none';
+
+    const estadosValidos = ['INICIADO', 'APROBADO', 'CERRADO'];
+    
+    const tienePermisoAgregarItem = permisos.some(permiso => permiso.elemento === "BOTON_AGREGAR_ITEM_PEDIDO" && estadosValidos.includes(estado));
+    const botonAgregar = document.getElementById('agregarItem');
+    botonAgregar.style.display = tienePermisoAgregarItem ? 'inline-block' : 'none';
+    
     return {
-        tienePermisoEliminarItem: permisos.some(permiso => permiso.elemento === "BOTON_ELIMINAR_ITEM_PEDIDO"),
+        tienePermisoEliminarItem: permisos.some(permiso => permiso.elemento === "BOTON_ELIMINAR_ITEM_PEDIDO" && estadosValidos.includes(estado)),
+        tienePermisoEditarCantidad: estadosValidos.includes(estado),
     };
 
 }

@@ -111,15 +111,12 @@ async function manejarOrden(tipo = 'SALIDA') {
     const idproveedor = document.getElementById('selectProveedor')?.value;
 
     if (!Array.isArray(itemsSeleccionados) || itemsSeleccionados.length === 0) {
-        return alert('No hay datos para enviar.');
+        return Mensaje('warning', '¡Espera!', 'No hay items para gestionar.', false, false);
     }
 
-    if (!idusuario) {
-        return alert('No se encontró el idusuario. Inicie sesión nuevamente.');
-    }
 
     if (tipo === 'COMPRA' && !idproveedor) {
-        return alert('Seleccione un proveedor para continuar.');
+        return Mensaje('warning', '¡Espera!', 'Selecciona un proveedor para poder continuar.', false, false);
     }
 
     try {
@@ -140,17 +137,17 @@ async function manejarOrden(tipo = 'SALIDA') {
         const resultado = await respuesta.json();
 
         if (respuesta.ok) {
-            alert('Orden generada exitosamente.');
+            Mensaje('success', '¡Exito!', 'Orden generada exitosamente.', true, false);
             sessionStorage.removeItem('itemsSeleccionados');
             $('#modalOrden').removeClass('show').removeAttr('style').attr('aria-hidden', 'true');
             $('.modal-backdrop').remove();
             $('body').removeClass('modal-open');
             await cargarItemSolicitados();
         } else {
-            alert('Error al generar la orden.');
+            Mensaje('error', '¡Error!', 'No fue posible generar la orden.', false, false);
         }
     } catch (error) {
-        alert('Error de conexión.');
+        Mensaje('error', '¡Error!', 'No se pudo obtener la informacion.', false, false);
     }
 }
 
@@ -203,7 +200,7 @@ async function cargarProveedores() {
 
     } catch (error) {
         console.error('Error al cargar proveedores:', error);
-        alert('No se pudieron cargar los proveedores');
+        Mensaje('error', '¡Error!', 'No se pudieron cargar los proveedores', false, false);
     }
 }
 

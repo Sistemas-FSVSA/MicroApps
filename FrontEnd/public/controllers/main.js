@@ -58,6 +58,20 @@ function InicializarMain() {
             cargarVista('/inicio'); // Si no hay historial válido, ir a inicio
         }
     });
+
+    // Si no hay sesión activa, redirige directo al login
+    const sessionStartTime = localStorage.getItem("sessionStartTime");
+    if (!sessionStartTime) {
+        window.location.href = "/login";
+        return;
+    }
+
+    // Validar si la sesión ya expiró
+    const maxInactivityTime = 10 * 60 * 1000;
+    const elapsed = Date.now() - parseInt(sessionStartTime, 10);
+    if (elapsed > maxInactivityTime) {
+        logoutUser(true); // Esto respetará la lógica nueva sin mostrar el mensaje si la pestaña no está visible
+    }
 }
 
 // NAVEGACION DINAMICA CARGANDO EL CONTENIDO SIN REFRESCAR LA PAGINA
@@ -179,6 +193,14 @@ function reinitializeScripts() {
     if (path.includes("/compras/registrocompras")) {
         loadAndRunScript("/controllers/compras/registrocompras.js", "InicializarRegistroCompras");;
     }
+
+    if (path.includes("/compras/consultarorden")) {
+        loadAndRunScript("/controllers/compras/consultarorden.js", "InicializarConsultarOrden");;
+    }
+
+    if (path.includes("/compras/consultarpedidos")) {
+        loadAndRunScript("/controllers/compras/consultarpedidos.js", "InicializarConsultarPedidos");;
+    }
 }
 
 function irAtras() {
@@ -196,9 +218,9 @@ function limpiarEventos() {
 
 async function cargarVista(url, push = true) {
     try {
-        const response = await fetch(url, { 
-            method: "GET", 
-            headers: { "X-Requested-With": "XMLHttpRequest" } 
+        const response = await fetch(url, {
+            method: "GET",
+            headers: { "X-Requested-With": "XMLHttpRequest" }
         });
 
         if (!response.ok) throw new Error("Error al cargar la vista");
@@ -266,42 +288,41 @@ function inactivityTime() {
 
 async function logoutUser(autoLogout = false) {
     try {
-        // Si es un cierre manual, pedir confirmación antes de continuar
         if (!autoLogout) {
             const confirmacion = await Mensaje(
                 'warning',
                 'Confirmación',
                 '¿Estás seguro de que deseas cerrar sesión?',
-                false, // No cerrar automáticamente
-                true   // Pedir confirmación
+                false,
+                true
             );
 
-            if (!confirmacion) return; // Si el usuario cancela, salir de la función
+            if (!confirmacion) return;
         }
 
-        // Proceder con el cierre de sesión
         const response = await fetch(`${url}/api/index/logout`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
         });
 
         const data = await response.json();
         if (data.estado === 'ok') {
-            localStorage.clear(); // Limpia el localStorage
+            localStorage.clear();
 
-            // Determina el mensaje según si es cierre automático o manual
+            // 🔁 Verifica si la pestaña está activa
+            const isTabVisible = document.visibilityState === 'visible';
+
             if (autoLogout) {
-                // Cierre por inactividad: No se cierra automáticamente
-                await Mensaje('warning', 'Sesión Expirada', 'Por inactividad, tu sesión ha expirado.', false, false);
+                if (isTabVisible) {
+                    // Solo mostrar el mensaje si la pestaña está visible (activa)
+                    await Mensaje('warning', 'Sesión Expirada', 'Por inactividad, tu sesión ha expirado.', false, false);
+                }
             } else {
-                // Cierre manual: Se cierra automáticamente
                 await Mensaje('success', 'Sesión Cerrada', 'Has cerrado sesión correctamente.', true, false);
             }
 
-            window.location.href = '/login'; // Redirigir al login
+            window.location.href = '/login';
         } else {
             console.error('Error al cerrar sesión:', data.mensaje);
             await Mensaje('error', 'Error', 'Hubo un problema al cerrar sesión. Inténtalo de nuevo.', false, false);
@@ -311,6 +332,7 @@ async function logoutUser(autoLogout = false) {
         await Mensaje('error', 'Error', 'Hubo un problema al cerrar sesión. Inténtalo de nuevo.', false, false);
     }
 }
+
 
 //FIN FUNCIONES CIERRE DE SESION
 

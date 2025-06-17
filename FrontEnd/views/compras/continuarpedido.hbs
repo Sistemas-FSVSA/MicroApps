@@ -26,14 +26,30 @@
     </div>
     <hr>
 </div>
+
 <div class="content">
     <div class="container-fluid">
-        <!-- Botón Agregar Item -->
-        <div class="d-flex justify-content-start mb-3">
-            <button class="btn btn-fsvsaoff" id="agregarItem"><i class="fas fa-plus"></i> Agregar Item
-            </button>
+        <!-- Fila con botón y select alineados -->
+        <div class="row mb-3">
+            <div class="col-md-6 d-flex align-items-center">
+                <!-- Botón Agregar Item -->
+                <button class="btn btn-fsvsaoff" id="agregarItem">
+                    <i class="fas fa-plus"></i> Agregar Item
+                </button>
+            </div>
+            <div class="col-md-6 d-flex justify-content-end align-items-center">
+                <!-- Select Aprobado por -->
+                <label for="aprobadoPor" class="mb-0 mr-2" id="LabelAprobadoPor">Aprobado por:</label>
+                <select id="aprobadoPor" class="form-control w-auto">
+                    <option value="">Seleccione</option>
+                    <option value="usuario1">Usuario 1</option>
+                    <option value="usuario2">Usuario 2</option>
+                    <!-- Más opciones si necesitas -->
+                </select>
+            </div>
         </div>
 
+        <!-- Tabla de ítems -->
         <div id="item-container" class="mt-4 table-responsive">
             <table id="tablaItemsSeleccionados" class="table table-striped table-bordered">
                 <thead>
@@ -42,7 +58,7 @@
                         <th>Item</th>
                         <th>Categoría</th>
                         <th>Cantidad</th>
-                        <th>Solicito</th>
+                        <th>Solicitó</th>
                         <th>Acción</th>
                     </tr>
                 </thead>
@@ -50,14 +66,16 @@
                     <!-- Filas dinámicas -->
                 </tbody>
             </table>
-
         </div>
     </div>
 </div>
 
+
+
 <div class="btn-container">
     <a class="btn btn-fsvsaoff" id="guardarEncargo" tabindex="-1">Guardar Encargo</a>
     <a class="btn btn-fsvsaon" id="cerrarEncargo">Cerrar Encargo</a>
+    <a class="btn btn-fsvsaon" id="confirmarEntrega">Confirmar Entrega</a>
     <a class="btn btn-fsvsaon" id="aprobarEncargo">Aprobar Encargo</a>
     <a class="btn btn-fsvsaon" id="autorizarEncargo">Autorizar Compra</a>
 </div>

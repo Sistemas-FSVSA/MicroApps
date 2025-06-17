@@ -23,6 +23,13 @@ async function InicializarPedidos() {
         RevisarPedidosPendientes.style.display = 'none';
     }
 
+    // Validación independiente para la card CONSULTAR_PEDIDOS
+    const tieneVistaConsultarPedidos = permisos.some(permiso => permiso.elemento === "CONSULTAR_PEDIDOS");
+    const consultarPedidos = document.getElementById('consultarPedidos');
+    if (!tieneVistaConsultarPedidos) {
+        consultarPedidos.style.display = 'none';
+    }
+
     // Validación y lógica de la card MANEJAR_PEDIDOS
     const tieneVistaPedidos = permisos.some(permiso => permiso.elemento === "MANEJAR_PEDIDOS");
 
@@ -46,12 +53,12 @@ async function InicializarPedidos() {
 
             if (dependenciaResult.message === 'Sin Dependencias') { // corregido
                 mensajeDependencia.style.display = 'block';
-            
+
                 // Ocultar todas las cards
                 document.getElementById('Pedido').style.display = 'none';
                 document.getElementById('PedidoAprobar').style.display = 'none';
                 document.getElementById('RevisarPedido').style.display = 'none';
-            
+
                 return;
             }
 
@@ -98,6 +105,8 @@ async function InicializarPedidos() {
 }
 
 function redireccionNuevoPedido() {
+    sessionStorage.setItem("modoPedido", "conreferencia");
+
     const url = `/compras/nuevopedido`;
     cargarVista(url);
 }
@@ -114,5 +123,10 @@ function redireccionAprobarPedido() {
 
 function redireccionRevisarPedido() {
     const url = `/compras/revisarpedido/`;
+    cargarVista(url);
+}
+
+function redireccionConsultarPedidos() {
+    const url = `/compras/consultarpedidos/`;
     cargarVista(url);
 }

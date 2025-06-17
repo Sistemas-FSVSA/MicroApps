@@ -48,7 +48,7 @@ async function obtenerPedido(estado) {
     }
 }
 
-function renderizarPedidos(pedidos) {
+async function renderizarPedidos(pedidos) {
     const contenedor = document.getElementById('cards-pedidos');
     contenedor.innerHTML = '';
     const relaciones = JSON.parse(sessionStorage.getItem('relacionpedido')) || [];
@@ -63,24 +63,32 @@ function renderizarPedidos(pedidos) {
 
         card.addEventListener('dragover', (e) => e.preventDefault());
 
-        card.addEventListener('drop', (e) => {
+        // Aquí convertimos el manejador de drop en una función async
+        card.addEventListener('drop', async (e) => {
             e.preventDefault();
             const idorden = e.dataTransfer.getData('idorden');
             const idpedido = pedido.idpedido;
 
-            const confirmar = confirm(`¿Deseas relacionar la Orden ${idorden} con el Pedido ${idpedido}?`);
-            if (confirmar) {
+            const confirmado = await Mensaje(
+                'question',
+                'Confirmar Relación',
+                `¿Deseas relacionar la Orden ${idorden} con el Pedido ${idpedido}?`,
+                false,
+                true
+            );
+
+            if (confirmado) {
                 const relacionesActuales = JSON.parse(sessionStorage.getItem('relacionpedido')) || [];
 
                 const yaExisteEnSesion = relacionesActuales.some(rel => rel.idpedido == idpedido && rel.idorden == idorden);
-                const yaExisteEnBD = pedido.ordenesRelacionadas?.includes(Number(idorden)); // 👈 validación contra BD
+                const yaExisteEnBD = pedido.ordenesRelacionadas?.includes(Number(idorden));
 
                 if (yaExisteEnSesion || yaExisteEnBD) {
-                    alert('Esta relación ya existe.');
+                    await Mensaje('warning', '¡Espera!', 'Esta relación ya existe.', false, false);
                 } else {
                     relacionesActuales.push({ idpedido: String(idpedido), idorden: String(idorden) });
                     sessionStorage.setItem('relacionpedido', JSON.stringify(relacionesActuales));
-                    alert('Orden y pedido relacionados.');
+                    await Mensaje('success', '¡Éxito!', 'Relación generada exitosamente.', true, false);
                     obtenerPedido(document.getElementById('estadoPedidos').value);
                     obtenerOrden(document.getElementById('estadoOrdenes').value);
                 }
@@ -100,6 +108,7 @@ function renderizarPedidos(pedidos) {
             </button>
         `;
 
+        // Relacionados desde BD + sesión
         const relacionados = [
             ...(pedido.ordenesRelacionadas || []).map(id => `#${id}`),
             ...relaciones
@@ -116,6 +125,7 @@ function renderizarPedidos(pedidos) {
         contenedor.appendChild(card);
     });
 }
+
 
 async function obtenerOrden(estado) {
     try {
@@ -303,7 +313,7 @@ async function guardarRelacion() {
     const relaciones = JSON.parse(sessionStorage.getItem('relacionpedido')) || [];
 
     if (relaciones.length === 0) {
-        alert('No hay relaciones para guardar.');
+        Mensaje('warning', '¡Espera!', 'No hay relaciones para guardar.', false, false);
         return;
     }
 
@@ -323,7 +333,7 @@ async function guardarRelacion() {
 
         const data = await response.json();
 
-        alert('Relaciones guardadas exitosamente.');
+        Mensaje('success', '¡Exito!', 'Relacionar guardada exitosamente.', true, false);
         sessionStorage.clear();
 
         // Llamadas posteriores
@@ -332,6 +342,6 @@ async function guardarRelacion() {
 
     } catch (error) {
         console.error('Error al guardar relaciones:', error);
-        alert('Ocurrió un error al guardar las relaciones.');
+        Mensaje('error', '¡Error!', 'Ocurrio un problema la guardar la relacion', false, false);
     }
 }

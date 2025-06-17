@@ -4,7 +4,6 @@ const router = Router();
 const rateLimiterStrict = require('../models/rateLimiterStrict'); // 1 solicitud por minuto
 const rateLimiterFast = require('../models/rateLimiterFast'); // 100 solicitudes por segundo
 const authenticateToken = require('../models/authMiddleware');
-const { uploadFirma, uploadFields } = require('../models/multer');
 
 const { guardarCategoria } = require('../controllers/compras/guardarCategoria');
 const { guardarItem } = require('../controllers/compras/guardarItem');
@@ -24,6 +23,12 @@ const { actualizarItems } = require('../controllers/compras/actualizarItems');
 const { obtenerUsuario } = require('../controllers/compras/obtenerUsuario');
 const { obtenerDependencias } = require('../controllers/compras/obtenerDependencias');
 const { actualizarUsuario } = require('../controllers/compras/actualizarUsuario');
+const { guardarProveedor } = require('../controllers/compras/guardarProveedor');
+const { generarOrdenCompra } = require('../controllers/compras/generarOrdenCompra');
+const { generarOrdenSalida } = require('../controllers/compras/generarOrdenSalida');
+const { actualizarFacturaPedido } = require('../controllers/compras/actualizarFacturaPedido');
+const { obtenerAprobado } = require('../controllers/compras/obtenerAprobado');
+const { actualizarEstadoPedido } = require('../controllers/compras/actualizarEstadoPedido');
 
 router.post('/guardarCategoria', authenticateToken, rateLimiterFast, guardarCategoria);
 router.post('/guardarItem', authenticateToken, rateLimiterFast, guardarItem);
@@ -43,5 +48,11 @@ router.post('/actualizarItems', authenticateToken, rateLimiterFast, actualizarIt
 router.post('/obtenerUsuario', authenticateToken, rateLimiterFast, obtenerUsuario);
 router.get('/obtenerDependencias', authenticateToken, rateLimiterFast, obtenerDependencias);
 router.post('/actualizarUsuario', authenticateToken, rateLimiterFast, actualizarUsuario);
+router.post('/guardarProveedor', authenticateToken, rateLimiterFast, guardarProveedor);
+router.post('/generarOrdenCompra', authenticateToken, rateLimiterFast, generarOrdenCompra);
+router.post('/generarOrdenSalida', authenticateToken, rateLimiterFast, generarOrdenSalida);
+router.post('/actualizarFacturaPedido', authenticateToken, rateLimiterFast, actualizarFacturaPedido);
+router.get('/obtenerAprobado', authenticateToken, rateLimiterFast, obtenerAprobado);
+router.post('/actualizarEstadoPedido', authenticateToken, rateLimiterFast, actualizarEstadoPedido);
 
 module.exports = router;

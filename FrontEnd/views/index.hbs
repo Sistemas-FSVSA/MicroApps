@@ -19,8 +19,8 @@
           <div class="card" style="border-radius: 1rem;">
             <div class="row g-0">
               <div class="col-md-6 col-lg-8 d-none d-md-block">
-                <img src="/image/login2.jpg" alt="funerariasanvicente" class="img-fluid"
-                  style="border-radius: 1rem 0 0 1rem; width: 130%;" />
+                <img src="/image/login2.jpg" alt="funerariasanvicente" class="img-fluid h-100 w-100"
+                  style="object-fit: cover; border-radius: 1rem 0 0 1rem;" />
               </div>
               <div class="col-md-6 col-lg-4 d-flex align-items-center">
                 <div class="card-body p-4 text-black w-100">
@@ -46,6 +46,14 @@
                     <div class="d-flex justify-content-center">
                       <button class="btn btn-lg btn-block" type="submit"
                         style="background-color: #96072D; color: white;">Iniciar sesión</button>
+                    </div>
+
+                    <!-- ✅ Checkbox para mantener sesión iniciada -->
+                    <div class="form-check d-flex justify-content-center mt-3">
+                      <input class="form-check-input" type="checkbox" value="" id="mantenerSesion">
+                      <label class="form-check-label ms-2" for="mantenerSesion">
+                        Mantener sesión iniciada
+                      </label>
                     </div>
 
                     <p id="usuarios-activos" class="text-center text-muted mt-3" style="font-size: 0.8rem;">

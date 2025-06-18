@@ -59,20 +59,108 @@ function InicializarMain() {
         }
     });
 
-    // Si no hay sesión activa, redirige directo al login
+    // Redirigir si no hay sesión
     const sessionStartTime = localStorage.getItem("sessionStartTime");
     if (!sessionStartTime) {
         window.location.href = "/login";
         return;
     }
 
-    // Validar si la sesión ya expiró
-    const maxInactivityTime = 10 * 60 * 1000;
+    // Validar expiración inmediata
     const elapsed = Date.now() - parseInt(sessionStartTime, 10);
-    if (elapsed > maxInactivityTime) {
-        logoutUser(true); // Esto respetará la lógica nueva sin mostrar el mensaje si la pestaña no está visible
+    if (elapsed > getMaxInactivityTime()) {
+        logoutUser(true);
     }
 }
+
+//FUNCIONES PARA EL MANEJO DEL CIERRE DE SESION AUTOMATICO LUEGO DE 10MIN
+// 🔄 Obtiene el tiempo máximo de inactividad dinámicamente
+function getMaxInactivityTime() {
+    const mantenerSesion = localStorage.getItem('mantenerSesion') === 'true';
+    return mantenerSesion ? 8 * 60 * 60 * 1000 : 10 * 60 * 1000; // 8 horas o 10 min
+}
+
+// 🔁 Guardar inicio de sesión
+function setSessionStartTime() {
+    localStorage.setItem('sessionStartTime', Date.now());
+}
+
+// 🔁 Reiniciar temporizador al detectar actividad
+function resetSessionTimer() {
+    localStorage.setItem('sessionStartTime', Date.now());
+}
+
+// 🔍 Verificar si ya expiró la sesión al cargar
+function checkSessionExpiration() {
+    const sessionStartTime = localStorage.getItem('sessionStartTime');
+    if (sessionStartTime) {
+        const elapsedTime = Date.now() - parseInt(sessionStartTime, 10);
+        if (elapsedTime > getMaxInactivityTime()) {
+            logoutUser(true);
+        }
+    }
+}
+
+// 💤 Inactividad detectada
+function inactivityTime() {
+    let time;
+
+    function resetTimer() {
+        clearTimeout(time);
+        time = setTimeout(() => logoutUser(true), getMaxInactivityTime());
+        resetSessionTimer();
+    }
+
+    window.onload = resetTimer;
+    document.onmousemove = resetTimer;
+    document.onkeypress = resetTimer;
+    document.onclick = resetTimer;
+    document.onscroll = resetTimer;
+    document.onkeydown = resetTimer;
+}
+
+// 🔚 Cierre de sesión
+async function logoutUser(autoLogout = false) {
+    try {
+        if (!autoLogout) {
+            const confirmacion = await Mensaje(
+                'warning',
+                'Confirmación',
+                '¿Estás seguro de que deseas cerrar sesión?',
+                false,
+                true
+            );
+            if (!confirmacion) return;
+        }
+
+        const response = await fetch(`${url}/api/index/logout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+        });
+
+        const data = await response.json();
+        if (data.estado === 'ok') {
+            localStorage.clear();
+
+            const isTabVisible = document.visibilityState === 'visible';
+            if (autoLogout && isTabVisible) {
+                await Mensaje('warning', 'Sesión Expirada', 'Por inactividad, tu sesión ha expirado.', false, false);
+            } else if (!autoLogout) {
+                await Mensaje('success', 'Sesión Cerrada', 'Has cerrado sesión correctamente.', true, false);
+            }
+
+            window.location.href = '/login';
+        } else {
+            console.error('Error al cerrar sesión:', data.mensaje);
+            await Mensaje('error', 'Error', 'Hubo un problema al cerrar sesión. Inténtalo de nuevo.', false, false);
+        }
+    } catch (error) {
+        console.error('Error al cerrar sesión:', error);
+        await Mensaje('error', 'Error', 'Hubo un problema al cerrar sesión. Inténtalo de nuevo.', false, false);
+    }
+}
+//FIN FUNCIONES CIERRE DE SESION
 
 // NAVEGACION DINAMICA CARGANDO EL CONTENIDO SIN REFRESCAR LA PAGINA
 function reinitializeScripts() {
@@ -246,95 +334,6 @@ async function cargarVista(url, push = true) {
 }
 
 //FINAL NAVEGACION DINAMICA//
-
-//FUNCIONES PARA EL MANEJO DEL CIERRE DE SESION AUTOMATICO LUEGO DE 10MIN
-function setSessionStartTime() {
-    localStorage.setItem('sessionStartTime', Date.now());
-}
-
-function resetSessionTimer() {
-    localStorage.setItem('sessionStartTime', Date.now());
-}
-
-function checkSessionExpiration() {
-    const sessionStartTime = localStorage.getItem('sessionStartTime');
-    const maxInactivityTime = 10 * 60 * 1000; // Tiempo máximo de inactividad (10 minutos)
-
-    if (sessionStartTime) {
-        const elapsedTime = Date.now() - parseInt(sessionStartTime, 10);
-        if (elapsedTime > maxInactivityTime) {
-            logoutUser(true); // Cierre de sesión automático
-        }
-    }
-}
-
-function inactivityTime() {
-    let time;
-    const maxInactivityTime = 10 * 60 * 1000; // Tiempo máximo de inactividad
-
-    function resetTimer() {
-        clearTimeout(time);
-        time = setTimeout(() => logoutUser(true), maxInactivityTime); // Cierre de sesión automático
-        resetSessionTimer();
-    }
-
-    window.onload = resetTimer;
-    document.onmousemove = resetTimer;
-    document.onkeypress = resetTimer;
-    document.onclick = resetTimer;
-    document.onscroll = resetTimer;
-    document.onkeydown = resetTimer;
-}
-
-async function logoutUser(autoLogout = false) {
-    try {
-        if (!autoLogout) {
-            const confirmacion = await Mensaje(
-                'warning',
-                'Confirmación',
-                '¿Estás seguro de que deseas cerrar sesión?',
-                false,
-                true
-            );
-
-            if (!confirmacion) return;
-        }
-
-        const response = await fetch(`${url}/api/index/logout`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-        });
-
-        const data = await response.json();
-        if (data.estado === 'ok') {
-            localStorage.clear();
-
-            // 🔁 Verifica si la pestaña está activa
-            const isTabVisible = document.visibilityState === 'visible';
-
-            if (autoLogout) {
-                if (isTabVisible) {
-                    // Solo mostrar el mensaje si la pestaña está visible (activa)
-                    await Mensaje('warning', 'Sesión Expirada', 'Por inactividad, tu sesión ha expirado.', false, false);
-                }
-            } else {
-                await Mensaje('success', 'Sesión Cerrada', 'Has cerrado sesión correctamente.', true, false);
-            }
-
-            window.location.href = '/login';
-        } else {
-            console.error('Error al cerrar sesión:', data.mensaje);
-            await Mensaje('error', 'Error', 'Hubo un problema al cerrar sesión. Inténtalo de nuevo.', false, false);
-        }
-    } catch (error) {
-        console.error('Error al cerrar sesión:', error);
-        await Mensaje('error', 'Error', 'Hubo un problema al cerrar sesión. Inténtalo de nuevo.', false, false);
-    }
-}
-
-
-//FIN FUNCIONES CIERRE DE SESION
 
 //FUNCIONES EXTRAS
 //FUNCION MOSTRAR MENSAJES GENERAL CON SWEETALERT

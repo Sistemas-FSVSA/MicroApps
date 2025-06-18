@@ -138,21 +138,21 @@ function renderizarItemsEncargo() {
 
         // Botón de nota con campanita si aplica
         const btnNota = `
-    <div class="position-relative d-inline-block">
-        <button class="btn btn-warning btn-nota-item" data-index="${index}" title="Agregar nota">
-            <i class="fas fa-sticky-note"></i>
-        </button>
-        ${item.notas && item.notas.trim() !== '' ? `
-            <span class="campanita-badge">
-                <i class="fas fa-bell fa-xs text-white"></i>
-            </span>` : ''}
-    </div>`;
+            <div class="position-relative d-inline-block">
+                <button class="btn btn-warning btn-nota-item" data-index="${index}" title="Agregar nota">
+                    <i class="fas fa-sticky-note"></i>
+                </button>
+                ${item.notas && item.notas.trim() !== '' ? `
+                    <span class="campanita-badge">
+                        <i class="fas fa-bell fa-xs text-white"></i>
+                    </span>` : ''}
+            </div>`;
 
         const rowData = [
             item.id,
             item.nombre,
             item.categoria,
-            `<input type="number" class="form-control input-cantidad" value="${item.cantidad}" min="1" data-index="${index}">`,
+            `<input type="number" class="form-control input-cantidad" value="${item.cantidad}" min="1" data-index="${index}" ${permisos.tienePermisoEditarCantidad ? '' : 'disabled'}>`,
             item.nombreCompleto,
             btnEliminar + ' ' + btnNota
         ];

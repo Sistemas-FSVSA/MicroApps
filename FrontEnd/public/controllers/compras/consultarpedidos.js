@@ -3,43 +3,34 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function InicializarConsultarPedidos() {
-    cargarPedidos();
+    const select = document.getElementById("estadoPedidoSelect");
+    // Cargar inicialmente los pedidos con el estado seleccionado por defecto
+    cargarPedidosPorEstado(select.value);
+    // Cargar pedidos cada vez que cambia el valor del select
+    select.addEventListener("change", function () {
+        const estadoSeleccionado = select.value;
+        cargarPedidosPorEstado(estadoSeleccionado);
+    });
 }
 
-async function cargarPedidos() {
+async function cargarPedidosPorEstado(estado) {
     try {
-        const [finalizadosRes, recepcionRes] = await Promise.all([
-            fetch(`${url}/api/compras/obtenerPedido`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({ estado: "FINALIZADO" }),
-            }),
-            fetch(`${url}/api/compras/obtenerPedido`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({ estado: "RECEPCION" }),
-            }),
-        ]);
+        const response = await fetch(`${url}/api/compras/obtenerPedido`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ estado }),
+        });
 
-        if (!finalizadosRes.ok || !recepcionRes.ok) {
-            throw new Error("Error al obtener pedidos");
-        }
+        if (!response.ok) throw new Error("Error al obtener pedidos");
 
-        const finalizadosData = await finalizadosRes.json();
-        const recepcionData = await recepcionRes.json();
-
-        // Combinar ambos arrays de pedidos
-        const pedidos = [...finalizadosData.pedidos, ...recepcionData.pedidos];
-
-        renderizarPedidosBandeja(pedidos);
+        const data = await response.json();
+        renderizarPedidosBandeja(data.pedidos);
     } catch (error) {
-        console.error("Error al cargar pedidos:", error);
-        document.getElementById("listaPedidos").innerHTML = `<tr><td colspan="5">Error al cargar datos</td></tr>`;
+        console.error("Error al cargar pedidos por estado:", error);
+        document.getElementById("listaPedidos").innerHTML = `<p class="text-danger m-3">Error al cargar datos</p>`;
     }
 }
-
 
 function renderizarPedidosBandeja(pedidos) {
     const contenedor = document.getElementById("listaPedidos");
@@ -114,17 +105,24 @@ function mostrarDetalleOrden(pedido) {
         ? (() => {
             let totalGeneral = 0;
             const filas = pedido.detalle.map(detalle => {
-                const total = detalle.cantidad * (detalle.valor || 0); // por si no viene valor
+                const total = detalle.cantidad * (detalle.valor || 0);
                 totalGeneral += total;
                 return `
-                    <div class="form-row mb-2">
-                        <div class="col-md-10">
-                            <input type="text" class="form-control" value="${detalle.nombre}" readonly>
-                        </div>
-                        <div class="col-md-2">
-                            <input type="text" class="form-control" value="${detalle.cantidad}" readonly>
-                        </div>
-                    </div>`;
+                <div class="form-row mb-2 align-items-center">
+                    <div class="col-md-8">
+                        <input type="text" class="form-control" value="${detalle.nombre}" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" value="${detalle.cantidad}" readonly>
+                    </div>
+                    <div class="col-md-1">
+                        ${detalle.notas && detalle.notas.trim() !== '' ? `
+                            <button type="button" class="btn btn-outline-warning" onclick="mostrarNota('${detalle.notas.replace(/'/g, "\\'")}')">
+                                <i class="fas fa-bell"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>`;
             }).join('');
 
             return `
@@ -160,11 +158,11 @@ function mostrarDetalleOrden(pedido) {
             ${detallesHTML}
             <div class="form-group mt-3 d-flex justify-content-end">
                 ${pedido.estado === "FINALIZADO"
-                    ? `<button type="button" class="btn btn-fsvsaon mr-2" onclick="enviarRecepcion(${pedido.idpedido})">
+            ? `<button type="button" class="btn btn-fsvsaon mr-2" onclick="enviarRecepcion(${pedido.idpedido})">
                                 <i class="fas fa-paper-plane"></i> Enviar Recepción
                         </button>`
-                    : ""
-                }
+            : ""
+        }
                 <button type="button" class="btn btn-fsvsaoff ml-2" onclick="generarOrdenSalida(${pedido.idpedido})">
                     <i class="fas fa-download"></i> Descargar
                 </button>
@@ -174,6 +172,7 @@ function mostrarDetalleOrden(pedido) {
 }
 
 async function enviarRecepcion(idpedido) {
+    const select = document.getElementById("estadoPedidoSelect");
     try {
         const respuesta = await fetch(`${url}/api/compras/actualizarEstadoPedido`, {
             method: "POST",
@@ -199,7 +198,8 @@ async function enviarRecepcion(idpedido) {
         });
 
         obtenerPedidoPorId(idpedido)
-        
+        cargarPedidosPorEstado(select.value);
+
     } catch (error) {
         console.error("Error al enviar el pedido a recepción:", error);
         Swal.fire({
@@ -260,4 +260,11 @@ async function generarOrdenSalida(idpedido) {
     }
 }
 
-
+function mostrarNota(nota) {
+    Swal.fire({
+        title: 'Nota del Ítem',
+        text: nota,
+        icon: 'info',
+        confirmButtonText: 'Cerrar'
+    });
+}

@@ -105,17 +105,24 @@ function mostrarDetalleOrden(pedido) {
         ? (() => {
             let totalGeneral = 0;
             const filas = pedido.detalle.map(detalle => {
-                const total = detalle.cantidad * (detalle.valor || 0); // por si no viene valor
+                const total = detalle.cantidad * (detalle.valor || 0);
                 totalGeneral += total;
                 return `
-                    <div class="form-row mb-2">
-                        <div class="col-md-10">
-                            <input type="text" class="form-control" value="${detalle.nombre}" readonly>
-                        </div>
-                        <div class="col-md-2">
-                            <input type="text" class="form-control" value="${detalle.cantidad}" readonly>
-                        </div>
-                    </div>`;
+                <div class="form-row mb-2 align-items-center">
+                    <div class="col-md-8">
+                        <input type="text" class="form-control" value="${detalle.nombre}" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" value="${detalle.cantidad}" readonly>
+                    </div>
+                    <div class="col-md-1">
+                        ${detalle.notas && detalle.notas.trim() !== '' ? `
+                            <button type="button" class="btn btn-outline-warning" onclick="mostrarNota('${detalle.notas.replace(/'/g, "\\'")}')">
+                                <i class="fas fa-bell"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>`;
             }).join('');
 
             return `
@@ -253,4 +260,11 @@ async function generarOrdenSalida(idpedido) {
     }
 }
 
-
+function mostrarNota(nota) {
+    Swal.fire({
+        title: 'Nota del Ítem',
+        text: nota,
+        icon: 'info',
+        confirmButtonText: 'Cerrar'
+    });
+}

@@ -31,6 +31,9 @@ function InicializarMain() {
             if (!url) return;
 
             try {
+                // Borra el sessionStorage en cada navegación
+                sessionStorage.clear();
+
                 const response = await fetch(url, { method: "GET", headers: { "X-Requested-With": "XMLHttpRequest" } });
 
                 if (!response.ok) throw new Error("Error al cargar la vista");

@@ -38,7 +38,7 @@ function renderizarPqrs() {
             item.servicio || "No especificado",
             item.contrato || "No especificado",
             formatFecha(item.fechapqrs),
-            item.estado,
+            obtenerEstadoConColor(item.estado),
             item.usuario_nombre || "No especificado",
             `<button class="btn btn-fsvsaon editar-inventario" 
             data-id="${item.idpqrs}" 
@@ -90,3 +90,26 @@ $(document).ready(function () {
     // 🔹 Cargar inventario por primera vez
     cargarPqrs();
 });
+
+function obtenerEstadoConColor(estado) {
+    let claseColor = "estado-otro";
+
+    switch (estado.toUpperCase()) {
+        case "FINALIZADO":
+            claseColor = "estado-finalizado";
+            break;
+        case "EN_PROGRESO":
+            claseColor = "estado-progreso";
+            break;
+        case "RECIBIDO":
+            claseColor = "estado-recibido";
+            break;
+    }
+
+    return `
+        <span class="estado-con-color">
+            <span class="estado-circulo ${claseColor}"></span>
+            ${estado}
+        </span>`;
+}
+

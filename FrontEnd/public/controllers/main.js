@@ -167,6 +167,9 @@ async function logoutUser(autoLogout = false) {
 
 // NAVEGACION DINAMICA CARGANDO EL CONTENIDO SIN REFRESCAR LA PAGINA
 function reinitializeScripts() {
+    // Borra el sessionStorage cada vez que se ejecuta la navegación dinámica
+    sessionStorage.clear();
+
     const path = window.location.pathname;
 
     function loadAndRunScript(scriptPath, functionName) {
@@ -247,6 +250,10 @@ function reinitializeScripts() {
 
     if (path.includes("/recaudo/novedadesrecaudo")) {
         loadAndRunScript("/controllers/recaudo/novedadesrecaudo.js", "incializarNovedadesRecaudo");
+    }
+
+    if (path.includes("/recaudo/nominarecaudo")) {
+        loadAndRunScript("/controllers/recaudo/nominarecaudo.js", "inicializarNominaRecaudo");
     }
 
     if (path.includes("/compras/pedidos")) {

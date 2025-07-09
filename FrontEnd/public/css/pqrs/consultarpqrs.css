@@ -1,0 +1,28 @@
+.estado-con-color {
+    display: inline-flex;
+    align-items: center;
+}
+
+.estado-circulo {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+.estado-finalizado {
+    background-color: #28a745; /* verde */
+}
+
+.estado-progreso {
+    background-color: #ffc107; /* amarillo */
+}
+
+.estado-recibido {
+    background-color: #dc3545; /* rojo */
+}
+
+.estado-otro {
+    background-color: #6c757d; /* gris oscuro */
+}

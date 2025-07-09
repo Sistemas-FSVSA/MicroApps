@@ -22,8 +22,14 @@
                     <div class="card-header bg-primary text-white">
                         <h6 class="mb-0">Órdenes generadas</h6>
                     </div>
+                    <div class="p-2">
+                        <select id="tipoOrdenSelect" class="form-control mb-2">
+                            <option value="COMPRA" selected>COMPRA</option>
+                            <option value="SALIDA">SALIDA</option>
+                        </select>
+                    </div>
                     <div class="list-group inbox-scroll" id="listaOrdenes">
-                        <!-- Órdenes cargadas dinámicamente -->
+                        <!-- Las órdenes se cargarán aquí dinámicamente -->
                     </div>
                 </div>
             </div>

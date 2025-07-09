@@ -35,9 +35,10 @@ const actualizarFacturaPedido = async (req, res) => {
                 await request
                     .input('iditem', sql.Int, item.iditem)
                     .input('valor', sql.Decimal(18, 2), item.valor)
+                    .input('cantidad', sql.Int, item.cantidad || 0) // Asignar cantidad por defecto si no se proporciona
                     .query(`
                         UPDATE detalleorden
-                        SET valor = @valor
+                        SET valor = @valor, cantidad = @cantidad
                         WHERE idorden = @idorden AND iditem = @iditem
                     `);
 

@@ -1,5 +1,3 @@
-<link rel="stylesheet" href="/css/pqrs/consultarpqrs.css">
-
 <div class="content-header">
     <div class="container-fluid">
         <div class="row mb-2 align-items-center d-flex justify-content-between">
@@ -7,11 +5,11 @@
                 <button class="btn btn-outline-secondary mr-2" onclick="irAtras()">
                     <i class="fas fa-angle-double-left"></i> Regresar
                 </button>
-                <h1 class="m-0" id="title">Consulta PQRS</h1>
+                <h1 class="m-0" id="title">Nomina Recaudo</h1>
             </div>
             <div class="col-sm-6 text-right">
                 <h3 id="fechaActual" class="m-0"></h3>
-                <span id="" class="text-muted">Calidad</span>
+                <span id="" class="text-muted">Administracion</span>
             </div>
         </div>
     </div>
@@ -19,8 +17,11 @@
 </div>
 <div class="content">
     <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <button class="btn btn-fsvsaoff" id="registrarTramiteRecaudo">Registar Tramite Recaudo</button>
+        </div>
         <div id="pqrs-container" class="mt-4 table-responsive">
-            <table id="pqrs" class="table table-striped table-bordered" style="width: 99%;">
+            <table id="pqrs" class="table table-striped table-bordered">
                 <thead>
                     <tr>
                         <th>PQRS</th>
@@ -41,4 +42,4 @@
     </div>
 </div>
 
-<script src="/controllers/pqrs/consultarpqrs.js"></script>
+<script src="/controllers/recaudo/nominarecaudo.js"></script>

@@ -1,26 +1,32 @@
 document.addEventListener("DOMContentLoaded", () => {
     InicializarConsultarOrden();
-
 });
 
 async function InicializarConsultarOrden() {
-    cargarOrdenes();
+    const select = document.getElementById("tipoOrdenSelect");
+    cargarOrdenesPorEstado(select.value);
+    select.addEventListener("change", function () {
+        const tipoSeleccionado = select.value;
+        cargarOrdenesPorEstado(tipoSeleccionado);
+    });
 }
 
-async function cargarOrdenes() {
+async function cargarOrdenesPorEstado(tipo) {
     try {
-        const respuesta = await fetch(`${url}/api/compras/obtenerOrden`, {
+        const response = await fetch(`${url}/api/compras/obtenerOrden`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            credentials: "include"
+            credentials: "include",
+            body: JSON.stringify({ tipo }),
         });
 
-        if (!respuesta.ok) throw new Error("Error al obtener datos");
+        if (!response.ok) throw new Error("Error al obtener órdenes");
 
-        const data = await respuesta.json();
-        renderizarOrdenesBandeja(data);
+        const data = await response.json();
+        renderizarOrdenesBandeja(data); // <-- Aquí va `data` directamente
     } catch (error) {
-        document.getElementById("tbodyOrden").innerHTML = `<tr><td colspan="5">Error al cargar datos</td></tr>`;
+        console.error("Error al cargar pedidos por tipo:", error);
+        document.getElementById("listaOrdenes").innerHTML = `<p class="text-danger m-3">Error al cargar datos</p>`;
     }
 }
 
@@ -41,17 +47,17 @@ function renderizarOrdenesBandeja(ordenes) {
         ordenItem.className = "list-group-item list-group-item-action";
         ordenItem.dataset.id = orden.idorden;
         ordenItem.innerHTML = `
-    <div class="ticket-content d-flex justify-content-between">
-        <div class="ticket-main">
-            <strong class="font-weight-bold">Orden #${orden.idorden}</strong>
-            <p class="mb-0 text-ellipsis">${orden.proveedor || 'Sin proveedor'}</p>
-            <small class="text-muted">${formatFechaHora(orden.fecha)}</small>
-        </div>
-        <div class="ticket-side">
-            <span class="badge badge-secondary">${orden.estado}</span>
-        </div>
-    </div>
-`;
+                            <div class="ticket-content d-flex justify-content-between">
+                                <div class="ticket-main">
+                                    <strong class="font-weight-bold">Orden #${orden.idorden}</strong>
+                                    <p class="mb-0 text-ellipsis">${orden.proveedor || 'Sin proveedor'}</p>
+                                    <small class="text-muted">${formatFechaHora(orden.fecha)}</small>
+                                </div>
+                                <div class="ticket-side">
+                                    <span class="badge badge-secondary">${orden.estado}</span>
+                                </div>
+                            </div>
+                        `;
 
         ordenItem.addEventListener("click", (e) => {
             e.preventDefault();
@@ -108,10 +114,10 @@ function mostrarDetalleOrden(orden) {
                             <input type="text" class="form-control" value="${detalle.nombre}" readonly>
                         </div>
                         <div class="col-md-2">
-                            <input type="text" class="form-control" value="${detalle.cantidad}" readonly>
+                            <input type="text" class="form-control cantidad-input" value="${detalle.cantidad}" data-iditem="${detalle.iditem}" readonly>
                         </div>
                         <div class="col-md-2">
-                           <input type="text" class="form-control valor-unitario-input" value="${detalle.valor}" data-iditem="${detalle.iditem}" readonly>
+                        <input type="text" class="form-control valor-unitario-input" value="${detalle.valor}" data-iditem="${detalle.iditem}" readonly>
                         </div>
                         <div class="col-md-2">
                             <input type="text" class="form-control" value="$ ${total.toFixed(2)}" readonly>
@@ -162,15 +168,21 @@ function mostrarDetalleOrden(orden) {
                 <div class="form-group col-md-4">
                     <label>Fecha Entrega</label>
                    <input type="date" class="form-control" id="fechaEntregaInput" value="${orden.fechaentrega ? orden.fechaentrega.split('T')[0] : ''}" readonly>
-
                 </div>
             </div>
             ${detallesHTML}
             <div class="form-group mt-3">
-                ${orden.tipo === "COMPRA" ? `
-                <button type="button" class="btn btn-success" onclick="generarOrdenCompra(${orden.idorden})">
-                    <i class="fas fa-download"></i> Descargar
-                </button>` : ''}
+                ${orden.tipo === "COMPRA" && orden.estado !== "ANULADO"
+            ? `
+                    <button type="button" class="btn btn-fsvsaon" onclick="generarOrdenCompra(${orden.idorden})">
+                        <i class="fas fa-download"></i> Descargar
+                    </button>
+                    <button type="button" class="btn btn-fsvsaoff ml-2" onclick="anularOrden(${orden.idorden})">
+                        <i class="fas fa-ban"></i> Anular
+                    </button>
+                    `
+            : ''
+        }
             </div>
         </form>
     `;
@@ -181,9 +193,15 @@ function editarFactura() {
     const display = document.getElementById("facturaDisplay");
     const currentValue = input.value;
 
-    // Guardar valores originales como atributo data-valor-original
+    // Guardar valores originales y habilitar edición de valor y cantidad
     document.querySelectorAll('.valor-unitario-input').forEach(input => {
         input.dataset.valorOriginal = input.value; // guardar original
+        input.removeAttribute('readonly');
+    });
+
+    // Habilitar edición de cantidad
+    document.querySelectorAll('.cantidad-input').forEach(input => {
+        input.dataset.valorOriginal = input.value;
         input.removeAttribute('readonly');
     });
 
@@ -191,7 +209,6 @@ function editarFactura() {
     const fechaEntregaInput = document.getElementById("fechaEntregaInput");
     fechaEntregaInput.removeAttribute("readonly");
     fechaEntregaInput.dataset.valorOriginal = fechaEntregaInput.value;
-
 
     display.innerHTML = `
         <input type="text" class="form-control" id="facturaInputEdit" value="${currentValue}">
@@ -207,10 +224,18 @@ function editarFactura() {
 function cancelarEdicionFactura(valorOriginal) {
     const display = document.getElementById("facturaDisplay");
 
-    // Restaurar y deshabilitar los inputs
+    // Restaurar y deshabilitar los inputs de valor unitario
     document.querySelectorAll('.valor-unitario-input').forEach(input => {
         if (input.dataset.valorOriginal !== undefined) {
             input.value = input.dataset.valorOriginal; // restaurar valor
+        }
+        input.setAttribute('readonly', true);
+    });
+
+    // Restaurar y deshabilitar los inputs de cantidad
+    document.querySelectorAll('.cantidad-input').forEach(input => {
+        if (input.dataset.valorOriginal !== undefined) {
+            input.value = input.dataset.valorOriginal;
         }
         input.setAttribute('readonly', true);
     });
@@ -221,7 +246,6 @@ function cancelarEdicionFactura(valorOriginal) {
         fechaEntregaInput.value = fechaEntregaInput.dataset.valorOriginal;
     }
     fechaEntregaInput.setAttribute("readonly", true);
-
 
     display.innerHTML = `
         <input type="text" class="form-control" id="facturaInput" value="${valorOriginal}" readonly>
@@ -240,11 +264,19 @@ function confirmarEdicionFactura(idorden) {
         return;
     }
 
-    // Capturar nuevos valores de items
+    // Capturar nuevos valores de items (valor y cantidad)
     const itemsActualizados = Array.from(document.querySelectorAll('.valor-unitario-input')).map(input => {
+        const iditem = parseInt(input.dataset.iditem);
+        const valor = parseFloat(input.value) || 0;
+
+        // Buscar el input de cantidad correspondiente
+        const cantidadInput = document.querySelector(`.cantidad-input[data-iditem="${iditem}"]`);
+        const cantidad = cantidadInput ? parseInt(cantidadInput.value) || 0 : 0;
+
         return {
-            iditem: parseInt(input.dataset.iditem),
-            valor: parseFloat(input.value) || 0
+            iditem,
+            valor,
+            cantidad
         };
     });
 
@@ -255,7 +287,7 @@ function confirmarEdicionFactura(idorden) {
         fechaEntrega: fechaEntrega,
     };
 
-    // Aquí llamas a tu función para guardar, ej. por fetch o como prefieras
+
     guardarFactura(payload);
 }
 
@@ -278,7 +310,7 @@ function guardarFactura(payload) {
             const detallesActualizados = ordenGlobal.detalles.map(detalle => {
                 const itemModificado = payload.items.find(i => i.iditem === detalle.iditem);
                 return itemModificado
-                    ? { ...detalle, valor: itemModificado.valor }
+                    ? { ...detalle, valor: itemModificado.valor, cantidad: itemModificado.cantidad }
                     : detalle;
             });
 
@@ -345,4 +377,39 @@ async function generarOrdenCompra(idorden) {
     }
 }
 
+async function anularOrden(idorden) {
+    const confirmado = await Mensaje(
+        'warning',
+        '¿Está seguro?',
+        'Esta acción anulará la orden de forma permanente y eliminara las relaciones generadas.',
+        false,
+        true
+    );
 
+    if (!confirmado) return; // Si el usuario cancela, no hace nada
+
+    try {
+        const response = await fetch(`${url}/api/compras/actualizarEstadoOrden`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ idorden, estado: "ANULADO" })
+        });
+
+        if (!response.ok) throw new Error("No se pudo anular la orden");
+
+        Mensaje('success', '¡Éxito!', 'La orden ha sido anulada exitosamente.', true, false);
+
+        // Opcional: recargar la lista de órdenes
+        const select = document.getElementById("tipoOrdenSelect");
+        cargarOrdenesPorEstado(select.value);
+
+        // Opcional: limpiar el detalle mostrado
+        document.getElementById("ordenTitle").innerHTML = "";
+        document.getElementById("ordenContent").innerHTML = "";
+
+    } catch (error) {
+        console.error("Error al anular la orden:", error);
+        Mensaje('error', '¡Error!', 'No fue posible anular la orden.', false, false);
+    }
+}

@@ -2,7 +2,7 @@ const { poolPromise, sql } = require('../../models/conexion');
 
 const obtenerOrden = async (req, res) => {
     try {
-        const { estado, idorden } = req.body;
+        const { estado, idorden, tipo } = req.body;
         const pool = await poolPromise;
 
         // Escenario 1: Listar órdenes por estado (sin detalles)
@@ -84,6 +84,36 @@ const obtenerOrden = async (req, res) => {
             };
 
             return res.status(200).json(orden);
+        }
+
+        // Escenario 4: Obtener órdenes por tipo
+        if (tipo) {
+            const result = await pool.request()
+                .input('tipo', sql.VarChar(50), tipo)
+                .query(`
+                    SELECT 
+                        o.idorden, o.fecha, o.estado, o.tipo, o.idusuario, p.nombre as proveedor
+                    FROM orden AS o
+                    LEFT JOIN proveedorescompras AS p ON o.idproveedor = p.idproveedor
+                    WHERE o.tipo = @tipo
+                `);
+
+            const ordenes = [];
+
+            for (const orden of result.recordset) {
+                const pedidosRelacionadosResult = await pool.request()
+                    .input('idorden', sql.Int, orden.idorden)
+                    .query('SELECT idpedido FROM ordenpedido WHERE idorden = @idorden');
+
+                const pedidosRelacionados = pedidosRelacionadosResult.recordset.map(r => r.idpedido);
+
+                ordenes.push({
+                    ...orden,
+                    pedidosRelacionados
+                });
+            }
+
+            return res.status(200).json(ordenes);
         }
 
         // Escenario 3: Obtener todas las órdenes con datos básicos (sin filtros)

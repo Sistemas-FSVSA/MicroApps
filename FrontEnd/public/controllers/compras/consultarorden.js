@@ -9,7 +9,52 @@ async function InicializarConsultarOrden() {
         const tipoSeleccionado = select.value;
         cargarOrdenesPorEstado(tipoSeleccionado);
     });
+    cargarProveedores();
 }
+
+function buscarAvanzado() {
+    const proveedor = document.getElementById("selectProveedor").value.trim().toLowerCase();
+    const nit = document.getElementById("inputNIT").value.trim().toLowerCase();
+    const numeroOrden = document.getElementById("inputOrden").value.trim().toLowerCase();
+    const fecha = document.getElementById("inputFecha").value;
+    const estado = document.getElementById("selectEstado").value.trim().toLowerCase();
+    const factura = document.getElementById("inputFactura").value.trim().toLowerCase();
+    const fechaEntrega = document.getElementById("inputFechaEntrega").value;
+
+    const criterios = {
+        proveedor,
+        nit,
+        numeroOrden,
+        fecha,
+        estado,
+        factura,
+        fechaEntrega,
+    };
+
+    const filtradas = ordenesCargadas.filter((orden) => {
+        return (
+            (!criterios.proveedor || (orden.proveedor || "").toLowerCase().includes(criterios.proveedor)) &&
+            (!criterios.nit || (orden.nit || "").toLowerCase().includes(criterios.nit)) &&
+            (!criterios.numeroOrden || String(orden.idorden).toLowerCase().includes(criterios.numeroOrden)) &&
+            (!criterios.fecha || orden.fecha?.startsWith(criterios.fecha)) &&
+            (!criterios.estado || (orden.estado || "").toLowerCase().includes(criterios.estado)) &&
+            (!criterios.factura || (orden.factura || "").toLowerCase().includes(criterios.factura)) &&
+            (!criterios.fechaEntrega || orden.fechaentrega?.startsWith(criterios.fechaEntrega))
+        );
+    });
+
+    renderizarOrdenesBandeja(filtradas);
+
+    $('#modalBusquedaAvanzada').modal('hide');
+}
+
+function limpiarFiltros() {
+    document.getElementById("formBusquedaAvanzada").reset();
+    renderizarOrdenesBandeja(ordenesCargadas);
+}
+
+// ✅ En lugar de eso, solo usa:
+ordenesCargadas = []; 
 
 async function cargarOrdenesPorEstado(tipo) {
     try {
@@ -23,12 +68,14 @@ async function cargarOrdenesPorEstado(tipo) {
         if (!response.ok) throw new Error("Error al obtener órdenes");
 
         const data = await response.json();
-        renderizarOrdenesBandeja(data); // <-- Aquí va `data` directamente
+        ordenesCargadas = data; // <- Guardamos aquí
+        renderizarOrdenesBandeja(data);
     } catch (error) {
         console.error("Error al cargar pedidos por tipo:", error);
         document.getElementById("listaOrdenes").innerHTML = `<p class="text-danger m-3">Error al cargar datos</p>`;
     }
 }
+
 
 function renderizarOrdenesBandeja(ordenes) {
     const contenedor = document.getElementById("listaOrdenes");
@@ -411,5 +458,36 @@ async function anularOrden(idorden) {
     } catch (error) {
         console.error("Error al anular la orden:", error);
         Mensaje('error', '¡Error!', 'No fue posible anular la orden.', false, false);
+    }
+}
+
+async function cargarProveedores() {
+    try {
+        const response = await fetch(`${url}/api/compras/obtenerProveedores`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+        });
+
+        if (!response.ok) throw new Error("Error al obtener proveedores");
+
+        const proveedores = await response.json();
+
+        // Ordenar alfabéticamente por nombre
+        proveedores.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+
+        const select = document.getElementById("selectProveedor");
+        select.innerHTML = '<option value="">-- Seleccionar --</option>';
+
+        proveedores.forEach(proveedor => {
+            const option = document.createElement("option");
+            option.value = proveedor.nombre;
+            option.textContent = proveedor.nombre;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error("Error cargando proveedores:", error);
     }
 }

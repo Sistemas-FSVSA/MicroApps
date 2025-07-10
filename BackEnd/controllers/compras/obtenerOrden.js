@@ -92,7 +92,7 @@ const obtenerOrden = async (req, res) => {
                 .input('tipo', sql.VarChar(50), tipo)
                 .query(`
                     SELECT 
-                        o.idorden, o.fecha, o.estado, o.tipo, o.idusuario, p.nombre as proveedor
+                        o.idorden, o.fecha, o.estado, o.tipo, o.idusuario, p.nombre as proveedor, p.identificacion, o.factura, o.fechaentrega
                     FROM orden AS o
                     LEFT JOIN proveedorescompras AS p ON o.idproveedor = p.idproveedor
                     WHERE o.tipo = @tipo

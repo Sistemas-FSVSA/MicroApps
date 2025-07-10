@@ -7,7 +7,7 @@
 
 /* Contenedor de la bandeja de entrada */
 .inbox-scroll {
-    height: calc(92vh - 150px); /* Altura máxima con scroll */
+    height: calc(85vh - 150px); /* Altura máxima con scroll */
     overflow-y: auto; /* Scroll vertical si hay muchos tickets */
     padding: 10px;
 }

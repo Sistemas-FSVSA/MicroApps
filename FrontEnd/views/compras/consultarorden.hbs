@@ -98,30 +98,34 @@
                         </div>
                     </div>
                     <div class="form-row">
-                        <div class="form-group col-md-6">
+                        <div class="form-group col-md-4">
                             <label for="selectEstado">Estado</label>
                             <select class="form-control" id="selectEstado">
                                 <option value="">-- Todos --</option>
-                                <option value="PENDIENTE">Pendiente</option>
-                                <option value="APROBADA">Aprobada</option>
-                                <option value="CANCELADA">Cancelada</option>
+                                <option value="SINREFERENCIA">SIN REFERENCIA</option>
+                                <option value="RELACIONADO">RELACIONADO</option>
+                                <option value="RECIBIDO">SIN RELACION</option>
+                                <option value="ANULADO">ANULADO</option>
                             </select>
                         </div>
-                        <div class="form-group col-md-6">
+                        <div class="form-group col-md-4">
                             <label for="inputFactura">Factura</label>
                             <input type="text" class="form-control" id="inputFactura" placeholder="Número de factura">
                         </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label for="inputFechaEntrega">Fecha de Entrega</label>
-                            <input type="date" class="form-control" id="inputFechaEntrega">
+                        <div class="form-group col-md-4">
+                            <label for="selectFactura">Con Factura</label>
+                            <select class="form-control" id="selectFactura">
+                                <option value="">-- Todos --</option>
+                                <option value="SI">Sí</option>
+                                <option value="NO">No</option>
+                            </select>
                         </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-fsvsaoff" onclick="limpiarFiltros()" data-dismiss="modal">Limpiar</button>
+                <button type="button" class="btn btn-fsvsaoff" onclick="limpiarFiltros()"
+                    data-dismiss="modal">Limpiar</button>
                 <button type="button" class="btn btn-fsvsaon" onclick="buscarAvanzado()">Buscar</button>
             </div>
         </div>

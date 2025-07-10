@@ -18,8 +18,9 @@ function buscarAvanzado() {
     const numeroOrden = document.getElementById("inputOrden").value.trim().toLowerCase();
     const fecha = document.getElementById("inputFecha").value;
     const estado = document.getElementById("selectEstado").value.trim().toLowerCase();
+    const selectFactura = document.getElementById("selectFactura").value.trim().toUpperCase();
     const factura = document.getElementById("inputFactura").value.trim().toLowerCase();
-    const fechaEntrega = document.getElementById("inputFechaEntrega").value;
+
 
     const criterios = {
         proveedor,
@@ -28,10 +29,18 @@ function buscarAvanzado() {
         fecha,
         estado,
         factura,
-        fechaEntrega,
+        selectFactura,
     };
 
     const filtradas = ordenesCargadas.filter((orden) => {
+        // Filtro para el selectFactura: "SI" = solo con factura, "NO" = solo sin factura, "" = todos
+        const cumpleFactura = selectFactura === "SI"
+            ? orden.factura != null && orden.factura !== ""
+            : selectFactura === "NO"
+                ? orden.factura == null || orden.factura === ""
+                : true;
+
+
         return (
             (!criterios.proveedor || (orden.proveedor || "").toLowerCase().includes(criterios.proveedor)) &&
             (!criterios.nit || (orden.nit || "").toLowerCase().includes(criterios.nit)) &&
@@ -39,7 +48,7 @@ function buscarAvanzado() {
             (!criterios.fecha || orden.fecha?.startsWith(criterios.fecha)) &&
             (!criterios.estado || (orden.estado || "").toLowerCase().includes(criterios.estado)) &&
             (!criterios.factura || (orden.factura || "").toLowerCase().includes(criterios.factura)) &&
-            (!criterios.fechaEntrega || orden.fechaentrega?.startsWith(criterios.fechaEntrega))
+            cumpleFactura
         );
     });
 
@@ -54,7 +63,7 @@ function limpiarFiltros() {
 }
 
 // ✅ En lugar de eso, solo usa:
-ordenesCargadas = []; 
+ordenesCargadas = [];
 
 async function cargarOrdenesPorEstado(tipo) {
     try {

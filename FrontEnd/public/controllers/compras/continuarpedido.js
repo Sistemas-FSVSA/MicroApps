@@ -430,10 +430,9 @@ function manejarPedido(estado, idpedido) {
                 redireccionUrl = '/compras/aprobarpedido';
             }
 
-            setTimeout(() => {
-                window.history.replaceState(null, "", redireccionUrl);
-                cargarVista(redireccionUrl, false);
-            }, 2000);
+            // Redirección inmediata
+            window.history.replaceState(null, "", redireccionUrl);
+            cargarVista(redireccionUrl, false);
         })
         .catch(error => {
             console.error('Error al guardar el encargo:', error);

@@ -393,11 +393,9 @@ async function manejarPedido(estado) {
                 redireccionUrl = '/compras/ordenes';
             }
 
-            // Redirección después de 2 segundos
-            setTimeout(() => {
-                window.history.replaceState(null, "", redireccionUrl);
-                cargarVista(redireccionUrl, false);
-            }, 2000);
+            // Redirección inmediata
+            window.history.replaceState(null, "", redireccionUrl);
+            cargarVista(redireccionUrl, false);
         })
         .catch(error => {
             // Manejar errores

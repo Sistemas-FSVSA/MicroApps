@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const obtenerItems = async (req, res) => {
     const { query } = req.query;  // Recibimos el valor del query desde la URL
@@ -9,7 +9,7 @@ const obtenerItems = async (req, res) => {
 
     let pool;
     try {
-        pool = await poolPromise;
+        pool = await poolPromiseGestiones;
 
         // Realizamos la consulta con LIKE en el nombre de los items
         const request = pool.request();

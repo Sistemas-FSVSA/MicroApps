@@ -1,11 +1,11 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const obtenerProveedores = async (req, res) => {
     const { query } = req.query;
 
     let pool;
     try {
-        pool = await poolPromise;
+        pool = await poolPromiseGestiones;
         const request = pool.request();
 
         let result;

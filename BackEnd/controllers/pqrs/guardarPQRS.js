@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const guardarPQRS = async (req, res) => {
     try {
@@ -11,7 +11,7 @@ const guardarPQRS = async (req, res) => {
         // Si `plan` es una cadena vacía, establecerlo en `NULL`
         const planValue = plan === '' ? null : plan;
 
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
         const transaction = new sql.Transaction(pool);
         await transaction.begin();
 

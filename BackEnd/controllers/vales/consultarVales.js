@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const consultarVales = async (req, res) => {
     const { categorias } = req.body;
@@ -8,7 +8,7 @@ const consultarVales = async (req, res) => {
     }
 
     try {
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
         const request = pool.request();
 
         // Construir dinámicamente los parámetros para la consulta

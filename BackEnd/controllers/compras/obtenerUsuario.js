@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const obtenerUsuario = async (req, res) => {
     try {
@@ -8,7 +8,7 @@ const obtenerUsuario = async (req, res) => {
             return res.status(400).json({ mensaje: 'Identificación requerida' });
         }
 
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         // 1. Obtener datos del usuario
         const usuarioResult = await pool.request()

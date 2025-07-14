@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const guardarRelacion = async (req, res) => {
     const { relaciones, estadopedido = 'FINALIZADO', estadoorden = 'RELACIONADO' } = req.body;
@@ -7,7 +7,7 @@ const guardarRelacion = async (req, res) => {
         return res.status(400).json({ mensaje: 'No se enviaron relaciones válidas.' });
     }
 
-    const pool = await poolPromise;
+    const pool = await poolPromiseGestiones;
     const transaction = new sql.Transaction(pool);
 
     try {

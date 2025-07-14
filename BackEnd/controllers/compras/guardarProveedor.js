@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const guardarProveedor = async (req, res) => {
     const proveedores = req.body.proveedores;
@@ -11,7 +11,7 @@ const guardarProveedor = async (req, res) => {
     let transaction; // ← Declaración movida fuera del try
 
     try {
-        pool = await poolPromise;
+        pool = await poolPromiseGestiones;
         transaction = new sql.Transaction(pool);
         await transaction.begin();
 

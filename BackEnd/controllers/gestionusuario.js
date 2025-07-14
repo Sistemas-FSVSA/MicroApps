@@ -1,10 +1,10 @@
-const { poolPromise, poolPromise2, sql } = require('../models/conexion');
+const { poolPromiseGestiones, poolPromiseMaestros, sql } = require('../models/conexion');
 const bcrypt = require('bcrypt');
 
 // FUNCION PARA OBTENER LOS PERFILES
 const getPerfiles = async (req, res = response) => {
     try {
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
         const result = await pool.request().query("SELECT * FROM perfiles");
         if (result.recordset.length === 0) { return res.status(404).json({ message: 'No se encontraron perfiles' }); }
         res.json({
@@ -21,7 +21,7 @@ const getPerfiles = async (req, res = response) => {
 const getUsuarios = async (req, res = response) => {
     try {
         const { idUsuario } = req.query; // Extraer idUsuario de los parámetros de consulta
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         // Query principal para obtener la información de los usuarios
         let queryUsuario = "SELECT * FROM usuarios";
@@ -100,7 +100,7 @@ const BuscarUsuario = async (req, res = response) => {
         const { documento } = req.params;
 
         // Conexión a la segunda base de datos
-        const pool = await poolPromise2;
+        const pool = await poolPromiseMaestros;
 
         // Realizamos la consulta con un parámetro para evitar inyección SQL
         const result = await pool.request()
@@ -150,7 +150,7 @@ const actualizarEstadoUsuario = async (req, res = response) => {
             });
         }
 
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         // Actualizar el estado del usuario en la base de datos
         const query = `
@@ -197,7 +197,7 @@ const crearUsuario = async (req, res) => {
             return res.status(400).json({ error: 'El documento debe ser una cadena con al menos 4 caracteres.' });
         }
 
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         // Si idUsuario está presente, es una actualización
         if (idUsuario) {
@@ -361,7 +361,7 @@ const actualizarPasswordUsuario = async (req, res = response) => {
             });
         }
 
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         // Obtener el usuario desde la base de datos para verificar la contraseña anterior
         const queryUsuario = `

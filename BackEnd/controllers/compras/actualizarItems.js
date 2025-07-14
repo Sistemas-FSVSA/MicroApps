@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const actualizarItems = async (req, res) => {
     const { iditem, nombre, descripcion, categoriaId } = req.body;
@@ -10,7 +10,7 @@ const actualizarItems = async (req, res) => {
 
     let pool;
     try {
-        pool = await poolPromise;
+        pool = await poolPromiseGestiones;
 
         const request = pool.request();
 

@@ -158,46 +158,62 @@ function obtenerGestiones() {
 function renderizarGestionesTabla() {
   const tablaId = '#gestiones';
 
-  // Ordenar gestionesData por idplanillatramite de manera descendente
+  // Ordenar por ID descendente
   const gestionesOrdenadas = [...gestionesData].sort((a, b) => b.idplanillatramite - a.idplanillatramite);
 
-  // Si la tabla ya fue inicializada, limpiamos y actualizamos
   if ($.fn.DataTable.isDataTable(tablaId)) {
     const tabla = $(tablaId).DataTable();
     tabla.clear();
 
     gestionesOrdenadas.forEach((gestion) => {
+      const esActiva = !!gestion.estado; // Asegura booleano
+      const estadoTexto = esActiva ? "Activo" : "Anulado";
+
+      const accionHtml = esActiva
+        ? `<button class="btn btn-fsvsaoff" onclick="borrarGestion(${gestion.idplanillatramite})"><i class="fa fa-trash mr-1"></i>Eliminar</button>`
+        : `<button class="btn btn-fsvsaon" title="Trámite anulado" onclick="mostrarInfoAnulacion('${gestion.motivo}', '${gestion.usuarioAnulo}')"><i class="fa fa-bell mr-1"></i>Información</button>`;
+
       tabla.row.add([
         gestion.idplanillatramite || "",
         gestion.nombre || "Sin nombre",
         gestion.cedula || "Sin cédula",
         formatFecha(gestion.fecha),
         gestion.nombreTramite || "Sin gestión",
-        `<button class="btn btn-danger btn-sm" onclick="borrarGestion(${gestion.idplanillatramite})">Borrar</button>`
+        estadoTexto,
+        accionHtml
       ]);
     });
 
     tabla.draw();
   } else {
-    // Si no está inicializada, la creamos con la data
     $(tablaId).DataTable({
-      data: gestionesOrdenadas.map(gestion => [
-        gestion.idplanillatramite || "",
-        gestion.nombre || "Sin nombre",
-        gestion.cedula || "Sin cédula",
-        formatFecha(gestion.fecha),
-        gestion.nombreTramite || "Sin gestión",
-        `<button class="btn btn-danger btn-sm" onclick="borrarGestion(${gestion.idplanillatramite})">Borrar</button>`
-      ]),
+      data: gestionesOrdenadas.map(gestion => {
+        const esActiva = !!gestion.estado;
+        const estadoTexto = esActiva ? "Activo" : "Anulado";
+        const accionHtml = esActiva
+          ? `<button class="btn btn-fsvsaoff" onclick="borrarGestion(${gestion.idplanillatramite})"><i class="fa fa-trash mr-1"></i>Eliminar</button>`
+          : `<button class="btn btn-fsvsaon" title="Trámite anulado" onclick="mostrarInfoAnulacion('${gestion.motivo}', '${gestion.usuarioAnulo}')"><i class="fa fa-bell mr-1"></i>Información</button>`;
+
+        return [
+          gestion.idplanillatramite || "",
+          gestion.nombre || "Sin nombre",
+          gestion.cedula || "Sin cédula",
+          formatFecha(gestion.fecha),
+          gestion.nombreTramite || "Sin gestión",
+          estadoTexto,
+          accionHtml
+        ];
+      }),
       columns: [
         { title: "ID" },
         { title: "Nombre" },
         { title: "Cédula" },
         { title: "Fecha" },
         { title: "Gestión" },
+        { title: "Estado" },
         { title: "Acción", orderable: false }
       ],
-      order: [[0, 'desc']], // Ordenar por la primera columna (ID) descendente
+      order: [[0, 'desc']],
       language: {
         url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-MX.json'
       },
@@ -206,24 +222,126 @@ function renderizarGestionesTabla() {
   }
 }
 
-// Ejemplo de función para borrar (debes implementarla acorde a tu backend)
-function borrarGestion(idplanillatramite) {
-  if (confirm("¿Está seguro de borrar esta gestión?")) {
-    fetch(`${url}/api/recaudo/borrarGestion/${idplanillatramite}`, {
-      method: "DELETE",
-      credentials: "include"
-    })
-      .then(res => {
-        if (res.ok) {
-          Mensaje('success', 'Exito!', 'Gestión borrada exitosamente.', true, false);
-          obtenerGestiones();
-        } else {
-          alert("Error al borrar la gestión.");
+function mostrarInfoAnulacion(motivo, usuario) {
+  Swal.fire({
+    icon: 'info',
+    title: 'Información de Anulación',
+    html: `
+      <p><strong>Motivo:</strong> ${motivo}</p>
+      <p><strong>Anulado por:</strong> ${usuario}</p>
+    `,
+    confirmButtonText: 'Cerrar',
+    customClass: {
+      confirmButton: 'swal-confirm-button'
+    }
+  });
+}
+
+async function borrarGestion(idplanillatramite) {
+  const confirmar = await Mensaje(
+    'warning',
+    '¿Está seguro de anular esta gestión?',
+    'Esta acción no se puede deshacer.',
+    false,
+    true
+  );
+
+  if (confirmar) {
+    const { value: motivo } = await Swal.fire({
+      title: 'Motivo de anulación',
+      input: 'text',
+      inputLabel: 'Por favor ingrese el motivo',
+      inputPlaceholder: 'Ej: Error en los datos',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Debe ingresar un motivo de anulación.';
         }
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Anular',
+      cancelButtonText: 'Cancelar',
+      customClass: {
+        confirmButton: 'swal-confirm-button',
+        cancelButton: 'swal-cancel-button'
+      }
+    });
+
+    if (motivo) {
+      // Obtener el idusuario desde localStorage
+      const idusuario = localStorage.getItem('idusuario');
+
+      if (!idusuario) {
+        Mensaje('error', 'Error', 'No se encontró el ID del usuario en localStorage.', false, false);
+        return;
+      }
+
+      // Enviar al backend
+      fetch(`${url}/api/recaudo/anularTramite`, {
+        method: "POST", // <-- CAMBIADO a POST
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          idplanillatramite,
+          motivo,
+          idusuario: parseInt(idusuario)
+        })
       })
-      .catch(err => {
-        console.error("Error al borrar la gestión:", err);
-      });
+        .then(res => {
+          if (res.ok) {
+            Mensaje('success', 'Éxito', 'Gestión anulada exitosamente.', true, false);
+            obtenerGestiones();
+          } else {
+            Mensaje('error', 'Error', 'No se pudo anular la gestión.', false, false);
+          }
+        })
+        .catch(err => {
+          console.error("Error al anular la gestión:", err);
+          Mensaje('error', 'Error', 'Error de conexión con el servidor.', false, false);
+        });
+    }
   }
 }
+
+function generarNomina() {
+  // Capturar las fechas desde y hasta del modal
+  const fechaDesdeInput = document.getElementById('fechaDesde');
+  const fechaHastaInput = document.getElementById('fechaHasta');
+  const fechaDesde = fechaDesdeInput ? fechaDesdeInput.value : '';
+  const fechaHasta = fechaHastaInput ? fechaHastaInput.value : '';
+
+  // Validar que ambas fechas sean obligatorias
+  if (!fechaDesde || !fechaHasta) {
+    Mensaje('error', 'Campos obligatorios', 'Debe ingresar ambas fechas (Desde y Hasta).', false, false);
+    return;
+  }
+
+  // Enviar fechas al backend para generar la nómina
+  fetch(`${url}/api/recaudo/generarNomina`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    credentials: "include",
+    body: JSON.stringify({
+      fechaDesde,
+      fechaHasta
+    })
+  })
+    .then(res => res.json())
+    .then(data => {
+      // Procesar la respuesta del backend
+      console.log('Respuesta de generarNomina:', data);
+      Mensaje('success', 'Éxito', 'Nómina generada correctamente.', true, false);
+      // Aquí puedes agregar lógica adicional si lo necesitas
+    })
+    .catch(err => {
+      console.error("Error al generar la nómina:", err);
+      Mensaje('error', 'Error', 'No se pudo generar la nómina.', false, false);
+    });
+
+  // Aquí puedes continuar con la lógica para generar la nómina
+}
+
 

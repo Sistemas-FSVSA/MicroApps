@@ -18,8 +18,8 @@
 <div class="content">
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <button class="btn btn-fsvsaoff" id="registrarTramiteRecaudo" data-toggle="modal"
-                data-target="#tramiteRecaudoModal">Registrar Gestion</button>
+            <button class="btn btn-fsvsaoff" id="registrarTramiteRecaudo" data-toggle="modal" data-target="#tramiteRecaudoModal">Registrar Gestion</button>
+            <button class="btn btn-fsvsaon ml-auto" id="generarNomina" data-toggle="modal" data-target="#generarNominaRecaudo">Generar Nomina</button>
         </div>
         <div id="gestiones-container" class="mt-4 table-responsive">
             <table id="gestiones" class="table table-striped table-bordered nowrap" style="width:100%">
@@ -30,6 +30,7 @@
                         <th>Cedula</th>
                         <th>Fecha</th>
                         <th>Gestion</th>
+                        <th>Estado</th>
                         <th>Accion</th>
                     </tr>
                 </thead>
@@ -78,12 +79,47 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-fsvsaoff" data-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-fsvsaon" id="guardarTramiteRecaudo"
-                    onclick="registrarGestion()">Registrar</button>
+                <button type="button" class="btn btn-fsvsaon" id="guardarTramiteRecaudo" onclick="registrarGestion()">Registrar</button>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Modal -->
+<div class="modal fade" id="generarNominaRecaudo" tabindex="-1" role="dialog"
+    aria-labelledby="generarNominaRecaudoLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="generarNominaRecaudoLabel">Generar Nomina Recaudo</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form id="generarNominaRecaudoForm">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="fechaDesde">Fecha Desde</label>
+                            <input type="date" class="form-control" id="fechaDesde" name="fechaDesde">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="fechaHasta">Fecha Hasta</label>
+                            <input type="date" class="form-control" id="fechaHasta" name="fechaHasta">
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-fsvsaoff" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-fsvsaon" id="generarNominaRecaudo" onclick="generarNomina()">Registrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
 
 <script src="/controllers/recaudo/nominarecaudo.js"></script>

@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const obtenerSubfuentes = async (req, res) => {
     try {
@@ -8,7 +8,7 @@ const obtenerSubfuentes = async (req, res) => {
             return res.status(400).json({ error: 'El parámetro idfuente es requerido' });
         }
 
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
         const result = await pool.request()
             .input('idfuente', sql.Int, idfuente)
             .query("SELECT * FROM subfuentes WHERE idfuentepqrs = @idfuente");

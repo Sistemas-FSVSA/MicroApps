@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 const path = require('path');
 const fs = require('fs');
 
@@ -25,7 +25,7 @@ const guardarAdjuntosPQRS = async (req, res) => {
             return res.status(400).json({ error: "Los archivos adjuntos superan el tamaño máximo de 10GB." });
         }
 
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
         const transaction = pool.transaction();
         await transaction.begin();
 

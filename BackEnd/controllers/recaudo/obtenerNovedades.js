@@ -1,8 +1,8 @@
-const { poolPromise3, sql } = require('../../models/conexion');
+const { poolPromiseRecaudo, sql } = require('../../models/conexion');
 
 const obtenerNovedades = async (req, res) => {
     try {
-      const pool = await poolPromise3; // Obtener conexión al pool
+      const pool = await poolPromiseRecaudo; // Obtener conexión al pool
   
       // Consulta para obtener gestiones con estado 'CREADO' y unir con los nombres de usuarios y recaudadores
       const gestiones = await pool.request()

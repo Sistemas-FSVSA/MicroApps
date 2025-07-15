@@ -1,10 +1,10 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const obtenerCategoria = async (req, res) => {
     const { idcategoriaitem } = req.body;
 
     try {
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
         const request = pool.request();
 
         if (idcategoriaitem !== undefined) {

@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 const fs = require("fs");
 const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater");
@@ -16,7 +16,7 @@ const generarOrdenCompra = async (req, res) => {
     if (!idorden) return res.status(400).json({ error: "idorden es requerido" });
 
     try {
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         // 1. Obtener información de la orden y proveedor
         const result = await pool.request().query(`

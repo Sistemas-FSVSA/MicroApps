@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const guardarGestionPQRS = async (req, res) => {
     try {
@@ -15,7 +15,7 @@ const guardarGestionPQRS = async (req, res) => {
         const fechaServicioValor = (!fechaServicio || fechaServicio.trim() === "") ? null : fechaServicio;
 
 
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
         const transaction = new sql.Transaction(pool);
         await transaction.begin();
 

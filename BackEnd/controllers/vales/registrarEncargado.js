@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const registrarEncargado = async (req, res) => {
     try {
@@ -8,7 +8,7 @@ const registrarEncargado = async (req, res) => {
             return res.status(400).json({ message: 'El array de encargados es requerido y no puede estar vacío' });
         }
 
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         for (const encargado of encargados) {
             const { documento, nombres, apellidos, placa, categoria } = encargado;

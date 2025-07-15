@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const actualizarUsuario = async (req, res) => {
     try {
@@ -8,7 +8,7 @@ const actualizarUsuario = async (req, res) => {
             return res.status(400).json({ mensaje: 'Datos incompletos para actualizar.' });
         }
 
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
         const transaction = new sql.Transaction(pool);
 
         await transaction.begin();

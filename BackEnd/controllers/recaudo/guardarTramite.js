@@ -1,4 +1,4 @@
-const { poolPromise3, sql } = require("../../models/conexion");
+const { poolPromiseRecaudo, sql } = require("../../models/conexion");
 
 // POST /api/recaudo/guardarTramite
 const guardarTramite = async (req, res) => {
@@ -10,7 +10,7 @@ const guardarTramite = async (req, res) => {
       return res.status(400).json({ message: "Faltan datos requeridos." });
     }
 
-    const pool = await poolPromise3;
+    const pool = await poolPromiseRecaudo;
 
     await pool.request()
       .input("cedula", sql.VarChar(20), cedula)

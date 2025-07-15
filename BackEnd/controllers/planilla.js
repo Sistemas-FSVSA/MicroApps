@@ -1,5 +1,5 @@
 //IMPORTANCIO LIBRERIA MSSQL Y CONEXION BASE DE DATOS
-const { poolPromise, sql } = require('../models/conexion');
+const { poolPromiseGestiones, sql } = require('../models/conexion');
 
 // FUNCIÓN PARA VERIFICAR SI UN USUARIO LOGUEADO TIENE PLANILLAS GUARDADAS
 const getPlanilla = async (req, res = response) => {
@@ -11,7 +11,7 @@ const getPlanilla = async (req, res = response) => {
 
     try {
         // Obtener una conexión al pool de la base de datos
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         // Ejecutar la consulta para obtener las planillas en estado "GUARDADO" para el usuario especificado
         const resultPlanillas = await pool.request()
@@ -56,7 +56,7 @@ const getPlanillas = async (req, res = response) => {
 
     try {
         // Obtener una conexión al pool de la base de datos
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         // Ejecutar la consulta para obtener las planillas en estado "CERRADO" y los datos relacionados del usuario
         const resultPlanillas = await pool.request()
@@ -106,7 +106,7 @@ const getPlanillasFiltro = async (req, res = response) => {
         }
 
         // Obtener una conexión al pool de base de datos
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         // Ejecutar la consulta SQL para obtener los datos filtrados por las fechas y el estado "APROBADO"
         const resultPlanillas = await pool.request()
@@ -155,7 +155,7 @@ const cerrarPlanilla = async (req, res = response) => {
 
     try {
         // Obtener una conexión al pool de base de datos
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         // Ejecutar la consulta SQL para actualizar el estado de la planilla a "CERRADO" y registrar la fecha de cierre
         const result = await pool.request()
@@ -194,7 +194,7 @@ const aprobarPlanilla = async (req, res = response) => {
 
     try {
         // Establecer conexión con la base de datos
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         // Realizar la actualización del estado, el ajuste, la fecha de aprobación y limpiar campos de rechazo
         const result = await pool.request()
@@ -250,7 +250,7 @@ const rechazarPlanilla = async (req, res = response) => {
         }
 
         // Establecer conexión con la base de datos
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         // Realizar la actualización del estado de la planilla y almacenar el motivo
         const result = await pool.request()
@@ -286,7 +286,7 @@ const pagarPlanillasPorFechas = async (req, res = response) => {
 
     try {
         // Establecer conexión con la base de datos
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         // Validar que se enviaron las fechas necesarias
         if (!fechaInicio || !fechaFin) {

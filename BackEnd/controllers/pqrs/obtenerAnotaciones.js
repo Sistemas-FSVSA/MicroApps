@@ -1,10 +1,10 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const obtenerAnotaciones = async (req, res) => {
     const { idpqrs } = req.body; // Solo necesitamos el ID de PQRS
 
     try {
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         // Consultar las anotaciones de la PQRS específica
         const result = await pool.request()

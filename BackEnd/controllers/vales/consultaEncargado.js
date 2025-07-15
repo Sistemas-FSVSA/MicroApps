@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const consultaEncargados = async (req, res) => {
     try {
@@ -9,7 +9,7 @@ const consultaEncargados = async (req, res) => {
             return res.status(400).json({ error: 'La categoría es requerida' });
         }
 
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
         const result = await pool.request()
             .input('categoria', sql.NVarChar, categoria) // Pasar la categoría como parámetro seguro
             .input('estado', sql.Bit, estado) // Pasar la categoría como parámetro seguro

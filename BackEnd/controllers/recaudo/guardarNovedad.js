@@ -1,4 +1,4 @@
-const { poolPromise3, sql } = require('../../models/conexion');
+const { poolPromiseRecaudo, sql } = require('../../models/conexion');
 
 // Función para guardar la novedad
 const guardarNovedad = async (req, res) => {
@@ -18,7 +18,7 @@ const guardarNovedad = async (req, res) => {
     const estado = 'CREADO';
   
     try {
-      const pool = await poolPromise3; // Obtener conexión del pool
+      const pool = await poolPromiseRecaudo; // Obtener conexión del pool
   
       // Aquí puedes agregar la consulta SQL para guardar la novedad en la base de datos
       const result = await pool.request()

@@ -1,9 +1,9 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const obtenerOrden = async (req, res) => {
     try {
         const { estado, idorden, tipo } = req.body;
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         // Escenario 1: Listar órdenes por estado (sin detalles)
         if (estado) {

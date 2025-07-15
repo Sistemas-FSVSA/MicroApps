@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const actualizarEstadoPedido = async (req, res) => {
   const { idpedido, estado, idusuario } = req.body;
@@ -8,7 +8,7 @@ const actualizarEstadoPedido = async (req, res) => {
   }
 
   try {
-    const pool = await poolPromise;
+    const pool = await poolPromiseGestiones;
     const request = pool.request()
       .input('idpedido', sql.Int, idpedido)
       .input('estado', sql.VarChar, estado);

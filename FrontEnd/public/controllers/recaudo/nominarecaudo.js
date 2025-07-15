@@ -86,32 +86,24 @@ async function obtenerTramites() {
 }
 
 function registrarGestion() {
-  // Obtener el recaudador seleccionado
   const selectRecaudador = document.getElementById("recaudador");
   const recaudadorOption = selectRecaudador.options[selectRecaudador.selectedIndex];
   const idrecaudador = recaudadorOption.value;
   const cedula = recaudadorOption.getAttribute("data-cedula");
   const nombre = recaudadorOption.textContent;
 
-  // Obtener el tipo de trámite seleccionado
   const selectTramite = document.getElementById("tipoTramite");
   const idtramite = selectTramite.value;
-
-  // Obtener la fecha seleccionada
-  const fechaInput = document.getElementById("fechaHora");
-  const fecha = fechaInput.value;
-
-  // Obtener el idusuario del localStorage
+  const fecha = document.getElementById("fechaHora").value;
   const idusuario = localStorage.getItem("idusuario");
 
   const data = {
-    cedula: cedula,
-    idrecaudador: idrecaudador,
-    idtramite: idtramite,
-    fecha: fecha,
-    nombre: nombre,
-    idusuario: idusuario
+    cedula, idrecaudador, idtramite, fecha, nombre, idusuario
   };
+
+  // 👉 Guardar recaudador actualmente seleccionado en el filtro de tabla
+  const filtro = document.getElementById("filtroRecaudador");
+  const nombreSeleccionado = filtro.value;
 
   fetch(`${url}/api/recaudo/guardarTramite`, {
     method: "POST",
@@ -123,12 +115,13 @@ function registrarGestion() {
   })
     .then(res => {
       if (res.ok) {
-        Mensaje('success', 'Exito!', 'Gestion registrada exitosamente.', true, false);
-        // Resetear los campos del modal
+        Mensaje('success', 'Éxito!', 'Gestión registrada exitosamente.', true, false);
         selectRecaudador.selectedIndex = 0;
         selectTramite.selectedIndex = 0;
         cargarFechaModal();
-        obtenerGestiones();
+
+        // 👇 Llama a obtenerGestiones con la selección previa
+        obtenerGestiones(nombreSeleccionado);
       } else {
         console.error("Error al registrar trámite.");
       }
@@ -140,64 +133,112 @@ function registrarGestion() {
 
 let gestionesData = []; // Variable global para mantener los datos
 
-function obtenerGestiones() {
+function obtenerGestiones(nombreSeleccionado = null) {
   fetch(`${url}/api/recaudo/obtenerGestiones`, {
     method: "GET",
     credentials: "include"
   })
     .then(res => res.json())
     .then(data => {
-      gestionesData = data; // Guardamos los datos globalmente
-      renderizarGestionesTabla(); // Llamamos la función de renderizado
+      gestionesData = data;
+
+      const select = document.getElementById("filtroRecaudador");
+
+      // ✅ Reemplazar opciones manteniendo la seleccion previa
+      const nombresUnicos = [...new Set(gestionesData.map(g => g.nombre).filter(Boolean))];
+      nombresUnicos.sort();
+
+      select.innerHTML = '<option value="">-- Selecciona un recaudador --</option>';
+      nombresUnicos.forEach(nombre => {
+        const option = document.createElement("option");
+        option.value = nombre;
+        option.textContent = nombre;
+        select.appendChild(option);
+      });
+
+      // ✅ Restaurar valor seleccionado si se indicó uno
+      if (nombreSeleccionado) {
+        select.value = nombreSeleccionado;
+      }
+
+      // ✅ Filtrar automáticamente por el valor actual
+      filtrarGestionesPorRecaudador();
     })
     .catch(err => {
       console.error("Error al obtener las gestiones:", err);
     });
 }
 
-function renderizarGestionesTabla() {
+function filtrarGestionesPorRecaudador() {
+  const seleccion = document.getElementById("filtroRecaudador").value;
+  if (!seleccion) {
+    renderizarGestionesTabla([]); // Vacía
+    return;
+  }
+
+  const filtradas = gestionesData.filter(g => g.nombre === seleccion);
+  renderizarGestionesTabla(filtradas);
+}
+
+function renderizarGestionesTabla(gestionesParaMostrar = []) {
   const tablaId = '#gestiones';
 
-  // Ordenar gestionesData por idplanillatramite de manera descendente
-  const gestionesOrdenadas = [...gestionesData].sort((a, b) => b.idplanillatramite - a.idplanillatramite);
+  // Ordenar por ID descendente
+  const gestionesOrdenadas = [...gestionesParaMostrar].sort((a, b) => b.idplanillatramite - a.idplanillatramite);
 
-  // Si la tabla ya fue inicializada, limpiamos y actualizamos
   if ($.fn.DataTable.isDataTable(tablaId)) {
     const tabla = $(tablaId).DataTable();
     tabla.clear();
 
     gestionesOrdenadas.forEach((gestion) => {
+      const esActiva = !!gestion.estado; // Asegura booleano
+      const estadoTexto = esActiva ? "Activo" : "Anulado";
+
+      const accionHtml = esActiva
+        ? `<button class="btn btn-fsvsaoff" onclick="borrarGestion(${gestion.idplanillatramite})"><i class="fa fa-trash mr-1"></i>Eliminar</button>`
+        : `<button class="btn btn-fsvsaon" title="Trámite anulado" onclick="mostrarInfoAnulacion('${gestion.motivo}', '${gestion.usuarioAnulo}')"><i class="fa fa-bell mr-1"></i>Información</button>`;
+
       tabla.row.add([
         gestion.idplanillatramite || "",
         gestion.nombre || "Sin nombre",
         gestion.cedula || "Sin cédula",
         formatFecha(gestion.fecha),
         gestion.nombreTramite || "Sin gestión",
-        `<button class="btn btn-danger btn-sm" onclick="borrarGestion(${gestion.idplanillatramite})">Borrar</button>`
+        estadoTexto,
+        accionHtml
       ]);
     });
 
     tabla.draw();
   } else {
-    // Si no está inicializada, la creamos con la data
     $(tablaId).DataTable({
-      data: gestionesOrdenadas.map(gestion => [
-        gestion.idplanillatramite || "",
-        gestion.nombre || "Sin nombre",
-        gestion.cedula || "Sin cédula",
-        formatFecha(gestion.fecha),
-        gestion.nombreTramite || "Sin gestión",
-        `<button class="btn btn-danger btn-sm" onclick="borrarGestion(${gestion.idplanillatramite})">Borrar</button>`
-      ]),
+      data: gestionesOrdenadas.map(gestion => {
+        const esActiva = !!gestion.estado;
+        const estadoTexto = esActiva ? "Activo" : "Anulado";
+        const accionHtml = esActiva
+          ? `<button class="btn btn-fsvsaoff" onclick="borrarGestion(${gestion.idplanillatramite})"><i class="fa fa-trash mr-1"></i>Eliminar</button>`
+          : `<button class="btn btn-fsvsaon" title="Trámite anulado" onclick="mostrarInfoAnulacion('${gestion.motivo}', '${gestion.usuarioAnulo}')"><i class="fa fa-bell mr-1"></i>Información</button>`;
+
+        return [
+          gestion.idplanillatramite || "",
+          gestion.nombre || "Sin nombre",
+          gestion.cedula || "Sin cédula",
+          formatFecha(gestion.fecha),
+          gestion.nombreTramite || "Sin gestión",
+          estadoTexto,
+          accionHtml
+        ];
+      }),
       columns: [
         { title: "ID" },
         { title: "Nombre" },
         { title: "Cédula" },
         { title: "Fecha" },
         { title: "Gestión" },
+        { title: "Estado" },
         { title: "Acción", orderable: false }
       ],
-      order: [[0, 'desc']], // Ordenar por la primera columna (ID) descendente
+      order: [[0, 'desc']],
       language: {
         url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-MX.json'
       },
@@ -206,24 +247,212 @@ function renderizarGestionesTabla() {
   }
 }
 
-// Ejemplo de función para borrar (debes implementarla acorde a tu backend)
-function borrarGestion(idplanillatramite) {
-  if (confirm("¿Está seguro de borrar esta gestión?")) {
-    fetch(`${url}/api/recaudo/borrarGestion/${idplanillatramite}`, {
-      method: "DELETE",
-      credentials: "include"
-    })
-      .then(res => {
-        if (res.ok) {
-          Mensaje('success', 'Exito!', 'Gestión borrada exitosamente.', true, false);
-          obtenerGestiones();
-        } else {
-          alert("Error al borrar la gestión.");
+function mostrarInfoAnulacion(motivo, usuario) {
+  Swal.fire({
+    icon: 'info',
+    title: 'Información de Anulación',
+    html: `
+      <p><strong>Motivo:</strong> ${motivo}</p>
+      <p><strong>Anulado por:</strong> ${usuario}</p>
+    `,
+    confirmButtonText: 'Cerrar',
+    customClass: {
+      confirmButton: 'swal-confirm-button'
+    }
+  });
+}
+
+async function borrarGestion(idplanillatramite) {
+  const confirmar = await Mensaje(
+    'warning',
+    '¿Está seguro de anular esta gestión?',
+    'Esta acción no se puede deshacer.',
+    false,
+    true
+  );
+
+  if (confirmar) {
+    const { value: motivo } = await Swal.fire({
+      title: 'Motivo de anulación',
+      input: 'text',
+      inputLabel: 'Por favor ingrese el motivo',
+      inputPlaceholder: 'Ej: Error en los datos',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Debe ingresar un motivo de anulación.';
         }
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Anular',
+      cancelButtonText: 'Cancelar',
+      customClass: {
+        confirmButton: 'swal-confirm-button',
+        cancelButton: 'swal-cancel-button'
+      }
+    });
+
+    if (motivo) {
+      // Obtener el idusuario desde localStorage
+      const idusuario = localStorage.getItem('idusuario');
+
+      if (!idusuario) {
+        Mensaje('error', 'Error', 'No se encontró el ID del usuario en localStorage.', false, false);
+        return;
+      }
+
+      // Enviar al backend
+      fetch(`${url}/api/recaudo/anularTramite`, {
+        method: "POST", // <-- CAMBIADO a POST
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          idplanillatramite,
+          motivo,
+          idusuario: parseInt(idusuario)
+        })
       })
-      .catch(err => {
-        console.error("Error al borrar la gestión:", err);
-      });
+        .then(res => {
+          if (res.ok) {
+            Mensaje('success', 'Éxito', 'Gestión anulada exitosamente.', true, false);
+            obtenerGestiones();
+          } else {
+            Mensaje('error', 'Error', 'No se pudo anular la gestión.', false, false);
+          }
+        })
+        .catch(err => {
+          console.error("Error al anular la gestión:", err);
+          Mensaje('error', 'Error', 'Error de conexión con el servidor.', false, false);
+        });
+    }
   }
 }
+
+function generarNomina() {
+  const fechaDesde = document.getElementById('fechaDesde')?.value || '';
+  const fechaHasta = document.getElementById('fechaHasta')?.value || '';
+
+  if (!fechaDesde || !fechaHasta) {
+    Mensaje('error', 'Campos obligatorios', 'Debe ingresar ambas fechas.', false, false);
+    return;
+  }
+
+  showSpinner(); // Mostrar spinner
+
+  fetch(`${url}/api/recaudo/generarNomina`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    credentials: "include",
+    body: JSON.stringify({ fechaDesde, fechaHasta })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.resumen || !Array.isArray(data.resumen)) {
+        throw new Error("Respuesta inválida del servidor");
+      }
+
+      // Generar ambos Excel
+      generarExcelResumen(data.resumen);
+      generarExcelPlanillas(data.resumen);
+
+      Mensaje('success', 'Éxito', 'Nómina generada correctamente.', true, false);
+    })
+    .catch(err => {
+      console.error("Error al generar la nómina:", err);
+      Mensaje('error', 'Error', 'No se pudo generar la nómina.', false, false);
+    })
+    .finally(() => {
+      hideSpinner(); // Ocultar spinner al final
+    });
+}
+
+function generarExcelResumen(resumen) {
+  const encabezados = Object.keys(resumen[0] || {});
+  const datos = [encabezados];
+
+  resumen.forEach(vendedor => {
+    const fila = encabezados.map(key => vendedor[key]);
+    datos.push(fila);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(datos);
+
+  // Aplicar formato moneda a columnas monetarias
+  encabezados.forEach((key, colIndex) => {
+    const isMonetario = key.startsWith("Pago") || key.toLowerCase().includes("valor") || key.toLowerCase().includes("monto");
+
+    if (isMonetario) {
+      for (let rowIndex = 1; rowIndex < datos.length; rowIndex++) {
+        const cellRef = XLSX.utils.encode_cell({ r: rowIndex, c: colIndex });
+        if (ws[cellRef]) {
+          ws[cellRef].t = 'n';
+          ws[cellRef].z = '"$"#,##0.00'; // Formato de moneda COP
+        }
+      }
+    }
+  });
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "ResumenNomina");
+
+  XLSX.writeFile(wb, `Resumen_Nomina_${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+
+
+function generarExcelPlanillas(resumen) {
+  const fechaActual = new Date();
+  const datos = [
+    [
+      'Cédula Empleado',
+      'Código Concepto',
+      'Código Centro de Costos',
+      'Código Concepto Referencia',
+      'Horas',
+      'Valor',
+      'Período',
+      'Fecha',
+      'Salario',
+      'Unidades Producidas',
+      'Es Prestación',
+      'Número Préstamo',
+      'Días mes 1',
+      'Días mes 2',
+      'Fecha Inicio',
+      'Base',
+      'Fecha Final Vacación',
+    ],
+  ];
+
+  resumen.forEach(item => {
+    const total =
+      (item.PagoMesHumanos || 0) +
+      (item.PagoMesMascotas || 0) +
+      (item.PagoAnualidadHumanos || 0) +
+      (item.PagoAnualidadMascotas || 0) +
+      (item.PagoMesSeguro || 0);
+
+    const gestionesPago = Object.entries(item)
+      .filter(([k, _]) => k.startsWith("Pago") && typeof item[k] === "number" && !k.includes("PagoMes") && !k.includes("PagoAnualidad") && !k.includes("PagoMesSeguro"))
+      .reduce((acc, [_, val]) => acc + val, 0);
+
+    const valorFinal = total + gestionesPago;
+
+    datos.push([
+      item.Vendedor,
+      '074', '018', '', '', valorFinal, '', '', '', '', '', '', '', '', '', '', ''
+    ]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(datos);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Planilla");
+
+  XLSX.writeFile(wb, `Planilla_Nomina_${fechaActual.toISOString().split('T')[0]}.xlsx`);
+}
+
+
+
 

@@ -267,6 +267,13 @@ app.get("/recaudo/novedadesrecaudo", (req, res) => {
     res.render("recaudo/novedadesrecaudo");
 });
 
+app.get("/recaudo/nominarecaudo", (req, res) => {
+    if (req.xhr) {
+        return res.render("recaudo/nominarecaudo", { layout: false }); // Solo la vista
+    }
+    res.render("recaudo/nominarecaudo");
+});
+
 app.get("/config.js", (req, res) => {
     res.setHeader("Content-Type", "application/javascript");
   

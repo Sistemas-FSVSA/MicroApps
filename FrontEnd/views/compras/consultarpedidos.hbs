@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="/css/compras/consultarorden.css">
+<link rel="stylesheet" href="/css/compras/consultarpedido.css">
 
 <div class="content-header">
     <div class="container-fluid">
@@ -13,6 +13,7 @@
     </div>
     <hr>
 </div>
+
 <div class="content">
     <div class="container-fluid">
         <div class="row">
@@ -21,11 +22,17 @@
                     <div class="card-header bg-primary text-white">
                         <h6 class="mb-0">Pedidos generadas</h6>
                     </div>
+                    <div class="p-2">
+                        <select id="estadoPedidoSelect" class="form-control mb-2">
+                            <option value="FINALIZADO" selected>FINALIZADO</option>
+                            <option value="RECEPCION">RECEPCION</option>
+                            <option value="ENTREGADO">ENTREGADO</option>
+                        </select>
+                    </div>
                     <div class="list-group inbox-scroll" id="listaPedidos">
                     </div>
                 </div>
             </div>
-
             <div class="col-md-8 col-lg-9">
                 <div class="card">
                     <div class="card-header bg-info text-white">
@@ -41,10 +48,6 @@
             </div>
         </div>
     </div>
-
 </div>
 
 <script src="/controllers/compras/consultarpedidos.js"></script>
-
-
-

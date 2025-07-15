@@ -2,7 +2,7 @@ const { poolPromise, sql } = require('../../models/conexion');
 
 const obtenerOrden = async (req, res) => {
     try {
-        const { estado, idorden } = req.body;
+        const { estado, idorden, tipo } = req.body;
         const pool = await poolPromise;
 
         // Escenario 1: Listar órdenes por estado (sin detalles)
@@ -43,14 +43,18 @@ const obtenerOrden = async (req, res) => {
                         o.idorden, o.fecha, o.estado, o.idusuario, o.tipo,
                         do.iddetalleorden, do.iditem, do.cantidad,
                         i.nombre, do.valor, o.factura, p.nombre AS proveedor,
-                        ua.nombres AS aprobado, o.fechaentrega
+                        o.fechaentrega,
+                        (
+                            SELECT TOP 1 ua.nombres
+                            FROM ordenpedido op
+                            INNER JOIN pedidos pe ON op.idpedido = pe.idpedido
+                            INNER JOIN usuariosaprueban ua ON pe.idaprueba = ua.idaprueba
+                            WHERE op.idorden = o.idorden
+                        ) AS aprobado
                     FROM orden o
                     INNER JOIN detalleorden do ON o.idorden = do.idorden
                     INNER JOIN items i ON do.iditem = i.iditem
                     LEFT JOIN proveedorescompras p ON o.idproveedor = p.idproveedor
-                    LEFT JOIN ordenpedido op ON o.idorden = op.idorden
-                    LEFT JOIN pedidos pe ON op.idpedido = pe.idpedido
-                    LEFT JOIN usuariosaprueban ua ON pe.idaprueba = ua.idaprueba
                     WHERE o.idorden = @idorden
                 `);
 
@@ -80,6 +84,36 @@ const obtenerOrden = async (req, res) => {
             };
 
             return res.status(200).json(orden);
+        }
+
+        // Escenario 4: Obtener órdenes por tipo
+        if (tipo) {
+            const result = await pool.request()
+                .input('tipo', sql.VarChar(50), tipo)
+                .query(`
+                    SELECT 
+                        o.idorden, o.fecha, o.estado, o.tipo, o.idusuario, p.nombre as proveedor, p.identificacion, o.factura, o.fechaentrega
+                    FROM orden AS o
+                    LEFT JOIN proveedorescompras AS p ON o.idproveedor = p.idproveedor
+                    WHERE o.tipo = @tipo
+                `);
+
+            const ordenes = [];
+
+            for (const orden of result.recordset) {
+                const pedidosRelacionadosResult = await pool.request()
+                    .input('idorden', sql.Int, orden.idorden)
+                    .query('SELECT idpedido FROM ordenpedido WHERE idorden = @idorden');
+
+                const pedidosRelacionados = pedidosRelacionadosResult.recordset.map(r => r.idpedido);
+
+                ordenes.push({
+                    ...orden,
+                    pedidosRelacionados
+                });
+            }
+
+            return res.status(200).json(ordenes);
         }
 
         // Escenario 3: Obtener todas las órdenes con datos básicos (sin filtros)

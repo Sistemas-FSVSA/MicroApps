@@ -22,8 +22,22 @@
                     <div class="card-header bg-primary text-white">
                         <h6 class="mb-0">Órdenes generadas</h6>
                     </div>
+                    <div class="p-2">
+                        <div class="input-group">
+                            <select id="tipoOrdenSelect" class="form-control mb-2">
+                                <option value="COMPRA" selected>COMPRA</option>
+                                <option value="SALIDA">SALIDA</option>
+                            </select>
+                            <div class="input-group-append">
+                                <button class="btn btn-fsvsaoff mb-2" type="button" style="width: 2.5rem;"
+                                    data-toggle="modal" data-target="#modalBusquedaAvanzada">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="list-group inbox-scroll" id="listaOrdenes">
-                        <!-- Órdenes cargadas dinámicamente -->
+                        <!-- Las órdenes se cargarán aquí dinámicamente -->
                     </div>
                 </div>
             </div>
@@ -46,5 +60,77 @@
     </div>
 
 </div>
+
+<!-- Modal de Búsqueda Avanzada -->
+<div class="modal fade" id="modalBusquedaAvanzada" tabindex="-1" role="dialog" aria-labelledby="busquedaAvanzadaLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="busquedaAvanzadaLabel">Búsqueda Avanzada</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="formBusquedaAvanzada">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="selectProveedor">Proveedor</label>
+                            <select class="form-control" id="selectProveedor">
+                                <option value="">-- Seleccionar --</option>
+                                <!-- Opciones dinámicas -->
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="inputNIT">NIT</label>
+                            <input type="text" class="form-control" id="inputNIT" placeholder="NIT del proveedor">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="inputOrden">Número de Orden</label>
+                            <input type="text" class="form-control" id="inputOrden" placeholder="Número de orden">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="inputFecha">Fecha</label>
+                            <input type="date" class="form-control" id="inputFecha">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label for="selectEstado">Estado</label>
+                            <select class="form-control" id="selectEstado">
+                                <option value="">-- Todos --</option>
+                                <option value="SINREFERENCIA">SIN REFERENCIA</option>
+                                <option value="RELACIONADO">RELACIONADO</option>
+                                <option value="RECIBIDO">SIN RELACION</option>
+                                <option value="ANULADO">ANULADO</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="inputFactura">Factura</label>
+                            <input type="text" class="form-control" id="inputFactura" placeholder="Número de factura">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="selectFactura">Con Factura</label>
+                            <select class="form-control" id="selectFactura">
+                                <option value="">-- Todos --</option>
+                                <option value="SI">Sí</option>
+                                <option value="NO">No</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-fsvsaoff" onclick="limpiarFiltros()"
+                    data-dismiss="modal">Limpiar</button>
+                <button type="button" class="btn btn-fsvsaon" onclick="buscarAvanzado()">Buscar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script src="/controllers/compras/consultarorden.js"></script>

@@ -62,7 +62,7 @@ class Server {
     // Servir la carpeta "uploads" como estática
     this.app.use(
       '/uploads',
-      express.static('\\\\192.168.1.153\\MicroApps\\uploads') // ✅ Ruta UNC al NAS
+      express.static('\\\\' + process.env.UPLOAD_PATH)
     );
   }
 

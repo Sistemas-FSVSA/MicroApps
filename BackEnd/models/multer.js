@@ -3,7 +3,8 @@ const path = require('path');
 const fs = require('fs');
 
 // Ruta absoluta al NAS montado (unidad de red)
-const uploadDir = path.join('\\\\192.168.1.153\\MicroApps', 'uploads');
+// 🔧 reconstruimos la ruta UNC con doble barra inicial
+const uploadDir = '\\\\' + process.env.UPLOAD_PATH;
 
 // Verificamos si el NAS está montado y accesible
 if (!fs.existsSync(uploadDir)) {

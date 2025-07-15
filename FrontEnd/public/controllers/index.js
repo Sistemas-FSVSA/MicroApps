@@ -10,9 +10,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const identificacion = document.getElementById("identificacion").value;
     const password = document.getElementById("password").value;
 
-    // Crear un controlador de abort para cancelar la petición si tarda demasiado
+    // ✅ Capturar estado del checkbox y guardarlo
+    const mantenerSesion = document.getElementById("mantenerSesion").checked;
+    localStorage.setItem("mantenerSesion", mantenerSesion);
+
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 segundos
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     fetch(`${url}/api/index/postUsuario`, {
       method: "POST",
@@ -21,11 +24,10 @@ document.addEventListener("DOMContentLoaded", function () {
       },
       credentials: "include",
       body: JSON.stringify({ identificacion, password }),
-      signal: controller.signal, // Se asocia el controlador de abort a la petición
+      signal: controller.signal,
     })
       .then((response) => {
-        clearTimeout(timeoutId); // Limpiar el timeout si la respuesta llega a tiempo
-
+        clearTimeout(timeoutId);
         if (!response.ok) {
           return response.json().then((data) => {
             throw data;
@@ -34,7 +36,6 @@ document.addEventListener("DOMContentLoaded", function () {
         return response.json();
       })
       .then((data) => {
-        // Guardar datos en el localStorage
         localStorage.setItem("nombres", data.user.nombres);
         localStorage.setItem("apellidos", data.user.apellidos);
         localStorage.setItem("idusuario", data.user.idusuario);

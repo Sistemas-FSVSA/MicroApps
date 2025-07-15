@@ -379,11 +379,28 @@ function generarExcelResumen(resumen) {
   });
 
   const ws = XLSX.utils.aoa_to_sheet(datos);
+
+  // Aplicar formato moneda a columnas monetarias
+  encabezados.forEach((key, colIndex) => {
+    const isMonetario = key.startsWith("Pago") || key.toLowerCase().includes("valor") || key.toLowerCase().includes("monto");
+
+    if (isMonetario) {
+      for (let rowIndex = 1; rowIndex < datos.length; rowIndex++) {
+        const cellRef = XLSX.utils.encode_cell({ r: rowIndex, c: colIndex });
+        if (ws[cellRef]) {
+          ws[cellRef].t = 'n';
+          ws[cellRef].z = '"$"#,##0.00'; // Formato de moneda COP
+        }
+      }
+    }
+  });
+
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "ResumenNomina");
 
   XLSX.writeFile(wb, `Resumen_Nomina_${new Date().toISOString().split('T')[0]}.xlsx`);
 }
+
 
 function generarExcelPlanillas(resumen) {
   const fechaActual = new Date();

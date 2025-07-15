@@ -139,8 +139,7 @@ const generarNomina = async (req, res) => {
             `);
         const pagos = pagosResult.recordset[0];
         if (!pagos) return res.status(404).json({ message: "No se encontraron tarifas de pago" });
-
-        // === GESTIONES ===
+        
         // === GESTIONES ===
         const poolGestiones = await poolPromiseRecaudo;
         const cedulas = Object.values(resumenPorVendedor).map(r => r.Vendedor?.trim()).filter(Boolean);

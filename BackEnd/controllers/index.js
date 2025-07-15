@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require("../models/conexion");
+const { poolPromiseGestiones, sql } = require("../models/conexion");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
@@ -44,7 +44,7 @@ const postUsuario = async (req, res) => {
 
   try {
     // Intentar obtener la conexión a la base de datos
-    const pool = await poolPromise;
+    const pool = await poolPromiseGestiones;
 
     if (!pool) {
       return res.status(503).json({ error: "Base de datos no disponible." });

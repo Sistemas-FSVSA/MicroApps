@@ -1,9 +1,9 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const obtenerPQRS = async (req, res) => {
     try {
         const { idpqrs } = req.body;
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
         let request = pool.request();
 
         if (idpqrs) {

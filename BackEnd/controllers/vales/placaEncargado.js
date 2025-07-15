@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const placaEncargado = async (req, res) => {
     try {
@@ -9,7 +9,7 @@ const placaEncargado = async (req, res) => {
             return res.status(400).json({ message: 'El idusuariovale es requerido' });
         }
 
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
         const result = await pool
             .request()
             .input('idusuariovale', sql.Int, idusuariovale)

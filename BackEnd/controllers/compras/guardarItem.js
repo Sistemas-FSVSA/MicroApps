@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const guardarItem = async (req, res) => {
     const { items, idcategoria } = req.body; // Se recibe un array de items y el idcategoria
@@ -11,7 +11,7 @@ const guardarItem = async (req, res) => {
     let transaction;
 
     try {
-        pool = await poolPromise;
+        pool = await poolPromiseGestiones;
         transaction = new sql.Transaction(pool);
         await transaction.begin();
 

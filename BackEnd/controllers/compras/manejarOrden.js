@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const manejarOrden = async (req, res) => {
     try {
@@ -14,7 +14,7 @@ const manejarOrden = async (req, res) => {
         }
 
 
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
         const transaction = new sql.Transaction(pool);
 
         await transaction.begin();

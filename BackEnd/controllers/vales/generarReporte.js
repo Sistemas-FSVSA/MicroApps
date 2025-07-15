@@ -1,9 +1,9 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const generarReporte = async (req, res) => {
     try {
         let { fechaInicio, fechaFin, dependencias, tipoReporte } = req.body;
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         // Validaciones iniciales
         if (!fechaInicio || !fechaFin || !dependencias || !tipoReporte) {

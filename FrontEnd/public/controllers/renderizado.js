@@ -36,8 +36,15 @@ function cargarPermisosSidebar() {
 
     //PERMISOS PARA EL MENU DE RECAUDO
     const tienePermisoNoveRecau = permisos.some(permiso => permiso.vista === "NOVEDADES_RECAUDADO");
-    document.getElementById('menuRecaudo').style.display = tienePermisoNoveRecau ? '' : 'none';
     document.getElementById('novedadesRecaudo').style.display = tienePermisoNoveRecau ? '' : 'none';
+
+    const tienePermisoNomiRecau = permisos.some(permiso => permiso.vista === "NOMINA_RECAUDADO");
+    document.getElementById('nominaRecaudo').style.display = tienePermisoNomiRecau ? '' : 'none';
+
+    document.getElementById('menuRecaudo').style.display =
+        (tienePermisoNoveRecau || tienePermisoNomiRecau) ? '' : 'none';
+
+
 
     //PERMISOS PARA EL MENU DE COMPRAS
     const tienePermisoPediCompras = permisos.some(permiso => permiso.vista === "PEDIDO_COMPRAS");
@@ -378,11 +385,11 @@ async function cargarPermisosContinuarPedidos() {
     botonConfirmar.style.display = tienePermisoConfirmarPedido ? 'inline-block' : 'none';
 
     const estadosValidos = ['INICIADO', 'APROBADO', 'CERRADO'];
-    
+
     const tienePermisoAgregarItem = permisos.some(permiso => permiso.elemento === "BOTON_AGREGAR_ITEM_PEDIDO" && estadosValidos.includes(estado));
     const botonAgregar = document.getElementById('agregarItem');
     botonAgregar.style.display = tienePermisoAgregarItem ? 'inline-block' : 'none';
-    
+
     return {
         tienePermisoEliminarItem: permisos.some(permiso => permiso.elemento === "BOTON_ELIMINAR_ITEM_PEDIDO" && estadosValidos.includes(estado)),
         tienePermisoEditarCantidad: estadosValidos.includes(estado),

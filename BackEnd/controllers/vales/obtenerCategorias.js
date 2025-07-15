@@ -1,8 +1,8 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const obtenerCategorias = async (req, res) => {
     try {
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         // Consulta para obtener los valores únicos de la columna "categoria"
         const dependenciasResult = await pool.request().query(`

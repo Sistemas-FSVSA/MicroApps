@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const cargaMasivaPQRS = async (req, res) => {
     try {
@@ -16,7 +16,7 @@ const cargaMasivaPQRS = async (req, res) => {
         const subfuenteValue = subfuente === '' ? null : subfuente;
         const fechaServicioValor = (!fechaServicio || fechaServicio.trim() === "") ? null : fechaServicio;
 
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
         const transaction = new sql.Transaction(pool);
         await transaction.begin();
 

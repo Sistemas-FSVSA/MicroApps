@@ -1,9 +1,9 @@
-const { poolPromise, sql } = require('../models/conexion');
+const { poolPromiseGestiones, sql } = require('../models/conexion');
 
 // FUNCION PARA OBTENER LOS MUNICIPIOS
 const getMunicipios = async (req, res) => {
     try {
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
         const result = await pool.request().query("SELECT * FROM municipios");
         if (result.recordset.length === 0) {
             return res.status(404).json({ message: 'No se encontraron municipios' });}
@@ -19,7 +19,7 @@ const getMunicipios = async (req, res) => {
 // FUNCION PARA OBTENER LOS TRAMITES
 const getTramites = async (req, res) => {
     try {
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
         const result = await pool.request().query("SELECT * FROM tramites");
         if (result.recordset.length === 0) {
             return res.status(404).json({ message: 'No se encontraron trámites' });}
@@ -35,7 +35,7 @@ const getTramites = async (req, res) => {
 //FUNCION PARA OBTENER LOS USUARIOS
 const getResponsable = async (req, res = response) => {
     try {
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
         const result = await pool.request().query("SELECT idusuario, nombres, apellidos, identificacion FROM usuarios WHERE responsable = 'true'");
         if (result.recordset.length === 0) {
             return res.status(404).json({message: 'No se encontraron usuarios'});}
@@ -65,7 +65,7 @@ const manejarPlanilla = async (req, res) => {
     const estado = tramites[0]?.estado || 'GUARDADO';
     const idtramitador = tramites[0]?.idtramitador;
 
-    const pool = await poolPromise;
+    const pool = await poolPromiseGestiones;
     const transaction = new sql.Transaction(pool);
 
     try {
@@ -263,7 +263,7 @@ const obtenerPlanillaUsuario = async (req, res = response) => {
     const { idplanilla } = req.query;
     
     try {
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         // Crear la consulta base para obtener las planillas filtradas por idusuario y estado
         let query = "SELECT * FROM planillas WHERE idusuario = @idusuario AND estado = @estado";

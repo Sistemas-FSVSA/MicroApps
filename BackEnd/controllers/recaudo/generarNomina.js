@@ -85,10 +85,18 @@ const generarNomina = async (req, res) => {
 
         const resumenPorVendedor = {};
         for (const c of cobrosEnriquecidos) {
-            const v = c.Vendedor;
-            if (!resumenPorVendedor[v]) resumenPorVendedor[v] = {
-                Vendedor: v, CantidadCobrosHumano: 0, CantidadCobrosMascota: 0, AnualidadesHumano: 0, AnualidadesMascota: 0
-            };
+            const v = c.Vendedor?.toString().replace(/\s+/g, ''); // limpiar espacios
+
+            if (!resumenPorVendedor[v]) {
+                resumenPorVendedor[v] = {
+                    Vendedor: v,
+                    CantidadCobrosHumano: 0,
+                    CantidadCobrosMascota: 0,
+                    AnualidadesHumano: 0,
+                    AnualidadesMascota: 0
+                };
+            }
+
             if (c.TipoContrato === 'Humano') {
                 resumenPorVendedor[v].CantidadCobrosHumano++;
                 resumenPorVendedor[v].AnualidadesHumano += c.Anualidades;
@@ -118,10 +126,11 @@ const generarNomina = async (req, res) => {
 
         const resumenSeguros = {};
         for (const s of segurosRows) {
-            const v = s.Vendedor?.trim();
+            const v = s.Vendedor?.toString().replace(/\s+/g, '');
             if (!resumenSeguros[v]) resumenSeguros[v] = { CobrosSeguros: 0 };
             resumenSeguros[v].CobrosSeguros++;
         }
+
 
         for (const v in resumenPorVendedor) {
             resumenPorVendedor[v].CobrosSeguros = resumenSeguros[v]?.CobrosSeguros || 0;
@@ -139,10 +148,13 @@ const generarNomina = async (req, res) => {
             `);
         const pagos = pagosResult.recordset[0];
         if (!pagos) return res.status(404).json({ message: "No se encontraron tarifas de pago" });
-        
+
         // === GESTIONES ===
         const poolGestiones = await poolPromiseRecaudo;
-        const cedulas = Object.values(resumenPorVendedor).map(r => r.Vendedor?.trim()).filter(Boolean);
+        const cedulas = Object.values(resumenPorVendedor)
+            .map(r => r.Vendedor?.trim().replace(/\s+/g, '')) // quitar espacios
+            .filter(Boolean);
+
         let gestiones = {};
 
         for (const chunk of dividirEnChunks(cedulas, 500)) {
@@ -209,8 +221,11 @@ const generarNomina = async (req, res) => {
         const listaGestiones = Array.from(todosLosNombresGestiones);
 
         const resumenFinal = Object.values(resumenPorVendedor).map(r => {
+            const vendedorRaw = r.Vendedor?.toString() || '';
+            const Vendedor = vendedorRaw.replace(/\s+/g, ''); // quitar todos los espacios
+
             const {
-                Vendedor, CantidadCobrosHumano, CantidadCobrosMascota,
+                CantidadCobrosHumano, CantidadCobrosMascota,
                 AnualidadesHumano, AnualidadesMascota
             } = r;
 

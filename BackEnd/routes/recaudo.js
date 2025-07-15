@@ -15,6 +15,7 @@ const { obtenerTramite } = require('../controllers/recaudo/obtenerTramites');
 const { guardarTramite } = require('../controllers/recaudo/guardarTramite');
 const { obtenerGestiones } = require('../controllers/recaudo/obtenerGestiones');
 const { anularTramite } = require('../controllers/recaudo/anularTramite');
+const { generarNomina } = require('../controllers/recaudo/generarNomina');
 
 router.get('/obtenerNovedades', authenticateToken, rateLimiterFast, obtenerNovedades);
 router.post('/actualizarNovedad', authenticateToken, rateLimiterFast, actualizarNovedad);
@@ -24,6 +25,7 @@ router.get('/obtenerRecaudadores', rateLimiterFast, obtenerRecaudadores);
 router.get('/obtenerTramites', rateLimiterFast, obtenerTramite);
 router.post('/guardarTramite', authenticateToken, rateLimiterFast, guardarTramite);
 router.get('/obtenerGestiones', authenticateToken, rateLimiterFast, obtenerGestiones);
-router.post('/anularTramite', authenticateToken, rateLimiterStrict, anularTramite);
+router.post('/anularTramite', authenticateToken, rateLimiterFast, anularTramite);
+router.post('/generarNomina', authenticateToken, rateLimiterFast, generarNomina);
 
 module.exports = router;

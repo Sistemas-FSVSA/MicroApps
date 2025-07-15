@@ -86,32 +86,24 @@ async function obtenerTramites() {
 }
 
 function registrarGestion() {
-  // Obtener el recaudador seleccionado
   const selectRecaudador = document.getElementById("recaudador");
   const recaudadorOption = selectRecaudador.options[selectRecaudador.selectedIndex];
   const idrecaudador = recaudadorOption.value;
   const cedula = recaudadorOption.getAttribute("data-cedula");
   const nombre = recaudadorOption.textContent;
 
-  // Obtener el tipo de trámite seleccionado
   const selectTramite = document.getElementById("tipoTramite");
   const idtramite = selectTramite.value;
-
-  // Obtener la fecha seleccionada
-  const fechaInput = document.getElementById("fechaHora");
-  const fecha = fechaInput.value;
-
-  // Obtener el idusuario del localStorage
+  const fecha = document.getElementById("fechaHora").value;
   const idusuario = localStorage.getItem("idusuario");
 
   const data = {
-    cedula: cedula,
-    idrecaudador: idrecaudador,
-    idtramite: idtramite,
-    fecha: fecha,
-    nombre: nombre,
-    idusuario: idusuario
+    cedula, idrecaudador, idtramite, fecha, nombre, idusuario
   };
+
+  // 👉 Guardar recaudador actualmente seleccionado en el filtro de tabla
+  const filtro = document.getElementById("filtroRecaudador");
+  const nombreSeleccionado = filtro.value;
 
   fetch(`${url}/api/recaudo/guardarTramite`, {
     method: "POST",
@@ -123,12 +115,13 @@ function registrarGestion() {
   })
     .then(res => {
       if (res.ok) {
-        Mensaje('success', 'Exito!', 'Gestion registrada exitosamente.', true, false);
-        // Resetear los campos del modal
+        Mensaje('success', 'Éxito!', 'Gestión registrada exitosamente.', true, false);
         selectRecaudador.selectedIndex = 0;
         selectTramite.selectedIndex = 0;
         cargarFechaModal();
-        obtenerGestiones();
+
+        // 👇 Llama a obtenerGestiones con la selección previa
+        obtenerGestiones(nombreSeleccionado);
       } else {
         console.error("Error al registrar trámite.");
       }
@@ -140,26 +133,58 @@ function registrarGestion() {
 
 let gestionesData = []; // Variable global para mantener los datos
 
-function obtenerGestiones() {
+function obtenerGestiones(nombreSeleccionado = null) {
   fetch(`${url}/api/recaudo/obtenerGestiones`, {
     method: "GET",
     credentials: "include"
   })
     .then(res => res.json())
     .then(data => {
-      gestionesData = data; // Guardamos los datos globalmente
-      renderizarGestionesTabla(); // Llamamos la función de renderizado
+      gestionesData = data;
+
+      const select = document.getElementById("filtroRecaudador");
+
+      // ✅ Reemplazar opciones manteniendo la seleccion previa
+      const nombresUnicos = [...new Set(gestionesData.map(g => g.nombre).filter(Boolean))];
+      nombresUnicos.sort();
+
+      select.innerHTML = '<option value="">-- Selecciona un recaudador --</option>';
+      nombresUnicos.forEach(nombre => {
+        const option = document.createElement("option");
+        option.value = nombre;
+        option.textContent = nombre;
+        select.appendChild(option);
+      });
+
+      // ✅ Restaurar valor seleccionado si se indicó uno
+      if (nombreSeleccionado) {
+        select.value = nombreSeleccionado;
+      }
+
+      // ✅ Filtrar automáticamente por el valor actual
+      filtrarGestionesPorRecaudador();
     })
     .catch(err => {
       console.error("Error al obtener las gestiones:", err);
     });
 }
 
-function renderizarGestionesTabla() {
+function filtrarGestionesPorRecaudador() {
+  const seleccion = document.getElementById("filtroRecaudador").value;
+  if (!seleccion) {
+    renderizarGestionesTabla([]); // Vacía
+    return;
+  }
+
+  const filtradas = gestionesData.filter(g => g.nombre === seleccion);
+  renderizarGestionesTabla(filtradas);
+}
+
+function renderizarGestionesTabla(gestionesParaMostrar = []) {
   const tablaId = '#gestiones';
 
   // Ordenar por ID descendente
-  const gestionesOrdenadas = [...gestionesData].sort((a, b) => b.idplanillatramite - a.idplanillatramite);
+  const gestionesOrdenadas = [...gestionesParaMostrar].sort((a, b) => b.idplanillatramite - a.idplanillatramite);
 
   if ($.fn.DataTable.isDataTable(tablaId)) {
     const tabla = $(tablaId).DataTable();
@@ -305,43 +330,112 @@ async function borrarGestion(idplanillatramite) {
 }
 
 function generarNomina() {
-  // Capturar las fechas desde y hasta del modal
-  const fechaDesdeInput = document.getElementById('fechaDesde');
-  const fechaHastaInput = document.getElementById('fechaHasta');
-  const fechaDesde = fechaDesdeInput ? fechaDesdeInput.value : '';
-  const fechaHasta = fechaHastaInput ? fechaHastaInput.value : '';
+  const fechaDesde = document.getElementById('fechaDesde')?.value || '';
+  const fechaHasta = document.getElementById('fechaHasta')?.value || '';
 
-  // Validar que ambas fechas sean obligatorias
   if (!fechaDesde || !fechaHasta) {
-    Mensaje('error', 'Campos obligatorios', 'Debe ingresar ambas fechas (Desde y Hasta).', false, false);
+    Mensaje('error', 'Campos obligatorios', 'Debe ingresar ambas fechas.', false, false);
     return;
   }
 
-  // Enviar fechas al backend para generar la nómina
+  showSpinner(); // Mostrar spinner
+
   fetch(`${url}/api/recaudo/generarNomina`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
     credentials: "include",
-    body: JSON.stringify({
-      fechaDesde,
-      fechaHasta
-    })
+    body: JSON.stringify({ fechaDesde, fechaHasta })
   })
     .then(res => res.json())
     .then(data => {
-      // Procesar la respuesta del backend
-      console.log('Respuesta de generarNomina:', data);
+      if (!data.resumen || !Array.isArray(data.resumen)) {
+        throw new Error("Respuesta inválida del servidor");
+      }
+
+      // Generar ambos Excel
+      generarExcelResumen(data.resumen);
+      generarExcelPlanillas(data.resumen);
+
       Mensaje('success', 'Éxito', 'Nómina generada correctamente.', true, false);
-      // Aquí puedes agregar lógica adicional si lo necesitas
     })
     .catch(err => {
       console.error("Error al generar la nómina:", err);
       Mensaje('error', 'Error', 'No se pudo generar la nómina.', false, false);
+    })
+    .finally(() => {
+      hideSpinner(); // Ocultar spinner al final
     });
-
-  // Aquí puedes continuar con la lógica para generar la nómina
 }
+
+function generarExcelResumen(resumen) {
+  const encabezados = Object.keys(resumen[0] || {});
+  const datos = [encabezados];
+
+  resumen.forEach(vendedor => {
+    const fila = encabezados.map(key => vendedor[key]);
+    datos.push(fila);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(datos);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "ResumenNomina");
+
+  XLSX.writeFile(wb, `Resumen_Nomina_${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+
+function generarExcelPlanillas(resumen) {
+  const fechaActual = new Date();
+  const datos = [
+    [
+      'Cédula Empleado',
+      'Código Concepto',
+      'Código Centro de Costos',
+      'Código Concepto Referencia',
+      'Horas',
+      'Valor',
+      'Período',
+      'Fecha',
+      'Salario',
+      'Unidades Producidas',
+      'Es Prestación',
+      'Número Préstamo',
+      'Días mes 1',
+      'Días mes 2',
+      'Fecha Inicio',
+      'Base',
+      'Fecha Final Vacación',
+    ],
+  ];
+
+  resumen.forEach(item => {
+    const total =
+      (item.PagoMesHumanos || 0) +
+      (item.PagoMesMascotas || 0) +
+      (item.PagoAnualidadHumanos || 0) +
+      (item.PagoAnualidadMascotas || 0) +
+      (item.PagoMesSeguro || 0);
+
+    const gestionesPago = Object.entries(item)
+      .filter(([k, _]) => k.startsWith("Pago") && typeof item[k] === "number" && !k.includes("PagoMes") && !k.includes("PagoAnualidad") && !k.includes("PagoMesSeguro"))
+      .reduce((acc, [_, val]) => acc + val, 0);
+
+    const valorFinal = total + gestionesPago;
+
+    datos.push([
+      item.Vendedor,
+      '074', '018', '', '', valorFinal, '', '', '', '', '', '', '', '', '', '', ''
+    ]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(datos);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Planilla");
+
+  XLSX.writeFile(wb, `Planilla_Nomina_${fechaActual.toISOString().split('T')[0]}.xlsx`);
+}
+
+
 
 

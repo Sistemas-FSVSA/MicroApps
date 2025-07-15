@@ -45,7 +45,8 @@ const DBPREVISION = {
   database: process.env.DBPREVISION_DATABASE,
   options: {
     encrypt: false,
-    enableArithAbort: true
+    enableArithAbort: true,
+    requestTimeout: 300000
   }
 };
 

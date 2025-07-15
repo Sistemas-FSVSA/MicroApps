@@ -42,11 +42,11 @@ const DBPREVISION = {
   user: process.env.DBPREVISION_USER,
   password: process.env.DBPREVISION_PASSWORD,
   server: process.env.DBPREVISION_SERVER,
+  port: parseInt(process.env.DBPREVISION_PORT),
   database: process.env.DBPREVISION_DATABASE,
   options: {
     encrypt: false,
-    enableArithAbort: true,
-    requestTimeout: 300000
+    enableArithAbort: true
   }
 };
 

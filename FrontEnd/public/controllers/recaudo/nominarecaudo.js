@@ -4,11 +4,50 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 function inicializarNominaRecaudo() {
-  obtenerRecaudadores()
-  cargarFechaModal()
+  obtenerRecaudadores();
+  cargarFechaModal();
   obtenerTramites();
-  obtenerGestiones()
+  obtenerGestiones();
+  cargarRecaudadoresFaltantes(); // 👈 aquí se llama
 }
+
+
+async function cargarRecaudadoresFaltantes() {
+  try {
+    const response = await fetch(`${url}/api/recaudo/obtenerFaltaRecaudador`, {
+      method: "GET",
+      credentials: "include" // 👈 Esto envía cookies de sesión u otras credenciales
+    });
+
+    if (!response.ok) throw new Error("Error en la respuesta del servidor");
+
+    const faltantes = await response.json();
+
+    const badge = document.getElementById("badgeFaltantes");
+    const lista = document.getElementById("listaRecaudadoresFaltantes");
+
+    // Mostrar cantidad en badge
+    if (faltantes.length > 0) {
+      badge.textContent = faltantes.length;
+      badge.style.display = "inline-block";
+    } else {
+      badge.style.display = "none";
+    }
+
+    // Limpiar lista y renderizar
+    lista.innerHTML = "";
+    faltantes.forEach((rec) => {
+      const li = document.createElement("li");
+      li.className = "list-group-item";
+      li.textContent = rec.nombre; // Ajusta si el campo tiene otro nombre
+      lista.appendChild(li);
+    });
+
+  } catch (error) {
+    console.error("Error al cargar recaudadores faltantes:", error);
+  }
+}
+
 
 function cargarFechaModal() {
   var fechaInput = document.getElementById('fechaHora');
@@ -91,16 +130,21 @@ function registrarGestion() {
   const idrecaudador = recaudadorOption.value;
   const cedula = recaudadorOption.getAttribute("data-cedula");
   const nombre = recaudadorOption.textContent;
-
+  const cantidad = document.getElementById("cantidad").value;
   const selectTramite = document.getElementById("tipoTramite");
   const idtramite = selectTramite.value;
   const fecha = document.getElementById("fechaHora").value;
   const idusuario = localStorage.getItem("idusuario");
 
   const data = {
-    cedula, idrecaudador, idtramite, fecha, nombre, idusuario
+    cedula, idrecaudador, idtramite, fecha, nombre, idusuario, cantidad
   };
 
+  // Validar que cantidad sea un valor numérico y mayor que cero
+  if (isNaN(cantidad) || cantidad === "" || Number(cantidad) <= 0) {
+    Mensaje('error', 'Cantidad inválida', 'Ingrese una cantidad numérica válida.', false, false);
+    return;
+  }
   // 👉 Guardar recaudador actualmente seleccionado en el filtro de tabla
   const filtro = document.getElementById("filtroRecaudador");
   const nombreSeleccionado = filtro.value;
@@ -118,10 +162,12 @@ function registrarGestion() {
         Mensaje('success', 'Éxito!', 'Gestión registrada exitosamente.', true, false);
         selectRecaudador.selectedIndex = 0;
         selectTramite.selectedIndex = 0;
+        document.getElementById("cantidad").value = ""; // Limpiar input cantidad
         cargarFechaModal();
 
-        // 👇 Llama a obtenerGestiones con la selección previa
+        //  Llama a obtenerGestiones con la selección previa
         obtenerGestiones(nombreSeleccionado);
+        cargarRecaudadoresFaltantes();
       } else {
         console.error("Error al registrar trámite.");
       }
@@ -400,7 +446,6 @@ function generarExcelResumen(resumen) {
 
   XLSX.writeFile(wb, `Resumen_Nomina_${new Date().toISOString().split('T')[0]}.xlsx`);
 }
-
 
 function generarExcelPlanillas(resumen) {
   const fechaActual = new Date();

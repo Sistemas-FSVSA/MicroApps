@@ -43,7 +43,7 @@ const obtenerOrden = async (req, res) => {
                         o.idorden, o.fecha, o.estado, o.idusuario, o.tipo,
                         do.iddetalleorden, do.iditem, do.cantidad,
                         i.nombre, do.valor, o.factura, p.nombre AS proveedor,
-                        o.fechaentrega,
+                        o.fechaentrega, do.observacion,
                         (
                             SELECT TOP 1 ua.nombres
                             FROM ordenpedido op
@@ -67,7 +67,8 @@ const obtenerOrden = async (req, res) => {
                 iditem: row.iditem,
                 cantidad: row.cantidad,
                 nombre: row.nombre,
-                valor: row.valor
+                valor: row.valor,
+                observacion: row.observacion || '',
             }));
 
             const orden = {

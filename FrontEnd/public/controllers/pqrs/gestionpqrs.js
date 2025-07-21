@@ -11,14 +11,10 @@ function getQueryParams() {
 }
 
 async function inicializarGestionPQRS() {
-    const pqrsData = await fetchPQRSData(); // Obtener datos PQRS antes de cargar selects
+    fetchPQRSData(); // Obtener datos PQRS antes de cargar selects
     fetchPQRSExtra();
-    cargarPermisosGestionPQRS()
 
-    fetchOptions(`${url}/api/pqrs/obtenerProcesos`, 'proceso', 'data', 'idtipoproceso', pqrsData?.gestionpqrs?.idtipoproceso);
-    fetchOptions(`${url}/api/pqrs/obtenerFuentes`, 'fuente', 'data', 'idfuentepqrs', pqrsData?.gestionpqrs?.idfuentepqrs);
-    fetchOptions(`${url}/api/pqrs/obtenerPlanes`, 'plan', 'data', 'idtipoplan', pqrsData?.pqrs?.idtipoplan);
-    fetchOptions(`${url}/api/pqrs/obtenerTiposPQRS`, 'tipopqrs', 'data', 'idtipopqrs', pqrsData?.pqrs?.idtipopqrs);
+
 
     const tabAnotaciones = document.getElementById("tabAnotaciones");
     const tabDocumentos = document.getElementById("tabDocumentos");
@@ -53,7 +49,7 @@ async function inicializarGestionPQRS() {
     document.getElementById("btnGuardar").addEventListener("click", function () {
         enviarDatosPQRS("EN_PROGRESO");
     });
-    
+
     document.getElementById("btnAbrir").addEventListener("click", async function () {
         const confirmacion = await Mensaje("warning", "¿Estas seguro?", "¿Está seguro de Abrir esta PQRS?", false, true);
         if (confirmacion) {
@@ -101,13 +97,13 @@ async function inicializarGestionPQRS() {
 
     document.getElementById('fuente').addEventListener('change', function () {
         const idFuente = this.value; // Capturar el id de la fuente seleccionada
-    
+
         if (!idFuente) {
             // Si no hay selección válida, limpiar el select de subfuentes
             document.getElementById('detallefuente').innerHTML = '<option value="">Seleccionar</option>';
             return;
         }
-    
+
         // Llamada al backend para obtener los subfuentes de la fuente seleccionada
         fetch(`${url}/api/pqrs/obtenerSubfuentes/${idFuente}`, {
             credentials: 'include'
@@ -118,16 +114,16 @@ async function inicializarGestionPQRS() {
                 const subfuentes = data.subfuentes
                     .filter(item => item.estado === true)
                     .sort((a, b) => a.nombre.localeCompare(b.nombre));
-    
+
                 const selectDetalle = document.getElementById('detallefuente');
                 selectDetalle.innerHTML = ''; // Limpiar opciones previas
-    
+
                 // Opción por defecto
                 const defaultOption = document.createElement('option');
                 defaultOption.value = '';
                 defaultOption.textContent = 'Seleccionar';
                 selectDetalle.appendChild(defaultOption);
-    
+
                 // Agregar opciones dinámicas
                 subfuentes.forEach(subfuente => {
                     const option = document.createElement('option');
@@ -200,6 +196,11 @@ async function fetchPQRSData() {
         });
 
         const data = await response.json();
+
+        fetchOptions(`${url}/api/pqrs/obtenerProcesos`, 'proceso', 'data', 'idtipoproceso', data?.gestionpqrs?.idtipoproceso);
+        fetchOptions(`${url}/api/pqrs/obtenerFuentes`, 'fuente', 'data', 'idfuentepqrs', data?.gestionpqrs?.idfuentepqrs);
+        fetchOptions(`${url}/api/pqrs/obtenerPlanes`, 'plan', 'data', 'idtipoplan', data?.pqrs?.idtipoplan);
+        fetchOptions(`${url}/api/pqrs/obtenerTiposPQRS`, 'tipopqrs', 'data', 'idtipopqrs', data?.pqrs?.idtipopqrs);
 
         renderizarFormulario(data);
         renderizarGestion(data);
@@ -341,16 +342,16 @@ async function renderizarGestion(data) {
     const pertinenciaSelect = document.getElementById("pertinencia");
     const eficazSelect = document.getElementById("eficaz");
 
-    pertinenciaSelect.value = (gestionpqrs.pertinencia === "Sí" || gestionpqrs.pertinencia === "No") 
-        ? gestionpqrs.pertinencia 
+    pertinenciaSelect.value = (gestionpqrs.pertinencia === "Sí" || gestionpqrs.pertinencia === "No")
+        ? gestionpqrs.pertinencia
         : "";
 
-    eficazSelect.value = (gestionpqrs.eficaz === "Sí" || gestionpqrs.eficaz === "No") 
-        ? gestionpqrs.eficaz 
+    eficazSelect.value = (gestionpqrs.eficaz === "Sí" || gestionpqrs.eficaz === "No")
+        ? gestionpqrs.eficaz
         : "";
 
-    document.getElementById("fechaServicio").value = gestionpqrs.fechaservicio 
-        ? gestionpqrs.fechaservicio.split("T")[0] 
+    document.getElementById("fechaServicio").value = gestionpqrs.fechaservicio
+        ? gestionpqrs.fechaservicio.split("T")[0]
         : "";
 
     // Obtener fuente y detallefuente
@@ -394,7 +395,7 @@ async function fetchSubfuentes(idFuente, idSubfuenteSeleccionado) {
         // Agregar opciones dinámicas
         subfuentes.forEach(subfuente => {
             const option = document.createElement('option');
-            option.value = subfuente.idsubfuente; 
+            option.value = subfuente.idsubfuente;
             option.textContent = subfuente.nombre;
             if (idSubfuenteSeleccionado && idSubfuenteSeleccionado == subfuente.idsubfuente) {
                 option.selected = true; // Seleccionar la subfuente guardada
@@ -406,7 +407,6 @@ async function fetchSubfuentes(idFuente, idSubfuenteSeleccionado) {
         console.error(`Error al obtener los subfuentes:`, error);
     }
 }
-
 
 // Función para obtener opciones y seleccionar la preexistente
 async function fetchOptions(url, selectId, keyName, idKey, selectedValue) {
@@ -552,10 +552,23 @@ async function guardarAnotacion() {
 async function enviarDatosPQRS(estado) {
     const { idpqrs } = getQueryParams();
 
-    // Capturar datos de los inputs editables
+    // Capturar datos de los inputs editables y del formulario principal
     const dataPQRS = {
         idpqrs,
         estado,
+        // Datos del formulario principal
+        titular: document.getElementById("titular").value.trim(),
+        cc: document.getElementById("cc").value.trim(),
+        direccion: document.getElementById("direccion").value.trim(),
+        telefono: document.getElementById("telefono").value.trim(),
+        afiliado: document.getElementById("afiliado").value,
+        contrato: document.getElementById("contrato").value.trim(),
+        plan: document.getElementById("plan").value,
+        numeroServicio: document.getElementById("numeroServicio").value.trim(),
+        nombreFallecido: document.getElementById("nombreFallecido").value.trim(),
+        fechaFallecimiento: document.getElementById("fechaFallecimiento").value,
+        detalle: document.getElementById("reclamo").value.trim(),
+        // Datos de gestión
         fechaServicio: document.getElementById("fechaServicio").value,
         coordinador: document.getElementById("responsable").value.trim(),
         proceso: document.getElementById("proceso").value,

@@ -306,6 +306,51 @@ async function cargarPermisosGestionPQRS() {
     const tienePermisoAbrirPqrs = permisos.some(permiso => permiso.elemento === "BOTON_ABRIR_PQRS" && estado == 'FINALIZADO');
     const botonAbrir = document.getElementById('btnAbrir');
     botonAbrir.style.display = tienePermisoAbrirPqrs ? 'inline-block' : 'none';
+
+    const tienePermisoInputTitular = permisos.some(permiso => permiso.elemento === "INPUT_TITULAR_PQRS");
+    const inputTitular = document.getElementById('titular');
+    inputTitular.disabled = !(tienePermisoInputTitular && estado !== "FINALIZADO");
+
+    const tienePermisoInputCC = permisos.some(permiso => permiso.elemento === "INPUT_CC_PQRS");
+    const inputCC = document.getElementById('cc');
+    inputCC.disabled = !(tienePermisoInputCC && estado !== "FINALIZADO");
+
+    const tienePermisoInputDireccion = permisos.some(permiso => permiso.elemento === "INPUT_DIRECCION_PQRS");
+    const inputDireccion = document.getElementById('direccion');
+    inputDireccion.disabled = !(tienePermisoInputDireccion && estado !== "FINALIZADO");
+
+    const tienePermisoInputTelefono = permisos.some(permiso => permiso.elemento === "INPUT_TELEFONO_PQRS");
+    const inputTelefono = document.getElementById('telefono');
+    inputTelefono.disabled = !(tienePermisoInputTelefono && estado !== "FINALIZADO");
+
+    const tienePermisoInputAfiliado = permisos.some(permiso => permiso.elemento === "INPUT_AFILIADO_PQRS");
+    const inputAfiliado = document.getElementById('afiliado');
+    inputAfiliado.disabled = !(tienePermisoInputAfiliado && estado !== "FINALIZADO");
+
+    const tienePermisoInputContrato = permisos.some(permiso => permiso.elemento === "INPUT_CONTRATO_PQRS");
+    const inputContrato = document.getElementById('contrato');
+    inputContrato.disabled = !(tienePermisoInputContrato && estado !== "FINALIZADO");
+
+    const tienePermisoInputPlan = permisos.some(permiso => permiso.elemento === "INPUT_PLAN_PQRS");
+    const inputPlan = document.getElementById('plan');
+    inputPlan.disabled = !(tienePermisoInputPlan && estado !== "FINALIZADO");
+
+    const tienePermisoInputNumeroServicio = permisos.some(permiso => permiso.elemento === "INPUT_NUMERO_SERVICIO_PQRS");
+    const inputNumeroServicio = document.getElementById('numeroServicio');
+    inputNumeroServicio.disabled = !(tienePermisoInputNumeroServicio && estado !== "FINALIZADO");
+
+    const tienePermisoInputNombreFallecido = permisos.some(permiso => permiso.elemento === "INPUT_NOMBRE_FALLECIDO_PQRS");
+    const inputNombreFallecido = document.getElementById('nombreFallecido');
+    inputNombreFallecido.disabled = !(tienePermisoInputNombreFallecido && estado !== "FINALIZADO");
+
+    const tienePermisoInputFechaFallecimiento = permisos.some(permiso => permiso.elemento === "INPUT_FECHA_FALLECIMIENTO_PQRS");
+    const inputFechaFallecimiento = document.getElementById('fechaFallecimiento');
+    inputFechaFallecimiento.disabled = !(tienePermisoInputFechaFallecimiento && estado !== "FINALIZADO");
+
+    const tienePermisoInputReclamo = permisos.some(permiso => permiso.elemento === "INPUT_RECLAMO_PQRS");
+    const inputReclamo = document.getElementById('reclamo');
+    inputReclamo.disabled = !(tienePermisoInputReclamo && estado !== "FINALIZADO");
+
 }
 
 async function cargarPermisosNuevosPedidos() {

@@ -41,7 +41,7 @@ const generarOrdenCompra = async (req, res) => {
 
         // 2. Obtener detalles de la orden
         const detallesResult = await pool.request().query(`
-            SELECT d.iddetalleorden, d.cantidad, d.valor, i.nombre, i.descripcion
+            SELECT d.iddetalleorden, d.cantidad, d.valor, i.nombre, i.descripcion, d.observacion
             FROM detalleorden d
             INNER JOIN items i ON d.iditem = i.iditem
             WHERE d.idorden = ${idorden}
@@ -57,7 +57,8 @@ const generarOrdenCompra = async (req, res) => {
                 item: item.nombre || item.descripcion || "Item sin nombre",
                 cantidad: item.cantidad.toString(),
                 vu: `$${item.valor.toFixed(2)}`,
-                vt: `$${subtotal.toFixed(2)}`
+                vt: `$${subtotal.toFixed(2)}`,
+                observacion: item.observacion || "Sin observación"
             };
         });
 

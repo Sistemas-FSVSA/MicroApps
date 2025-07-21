@@ -62,6 +62,14 @@ async function renderizarItemsSeleccionadosModal(esOrdenCompra = false) {
                     value="${item.total}"
                     min="1" style="width: 80px;">
             </td>
+            ${esOrdenCompra
+                ? `<td>
+                            <input type="text" class="form-control input-observacion-item"
+                                data-iditem="${item.iditem}" value="${item.observacion || ''}"
+                                placeholder="Observación" style="width: 150px;">
+                    </td>`
+                : ''
+            }
             <td class="td-valor-item">
                 <input type="number" class="form-control input-valor-item"
                     data-iditem="${item.iditem}"
@@ -70,11 +78,12 @@ async function renderizarItemsSeleccionadosModal(esOrdenCompra = false) {
             </td>
         `;
 
+
         tbody.appendChild(row);
     });
 
-    // Escuchar cambios de cantidad y valor
-    tbody.querySelectorAll('.input-cantidad, .input-valor-item').forEach(input => {
+    // Escuchar cambios de cantidad, valor y observación
+    tbody.querySelectorAll('.input-cantidad, .input-valor-item, .input-observacion-item').forEach(input => {
         input.addEventListener('input', function () {
             const iditem = parseInt(this.dataset.iditem);
             const items = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
@@ -85,6 +94,8 @@ async function renderizarItemsSeleccionadosModal(esOrdenCompra = false) {
                         item.total = parseInt(this.value);
                     } else if (this.classList.contains('input-valor-item')) {
                         item.valor = parseFloat(this.value);
+                    } else if (this.classList.contains('input-observacion-item')) {
+                        item.observacion = this.value;
                     }
                 }
                 return item;
@@ -93,6 +104,7 @@ async function renderizarItemsSeleccionadosModal(esOrdenCompra = false) {
             sessionStorage.setItem('itemsSeleccionados', JSON.stringify(nuevosItems));
         });
     });
+
 
     // Inicializar la tabla de DataTables
     $('#ordenSalidaTable').DataTable({

@@ -313,8 +313,6 @@ async function manejarPedido(estado) {
     const idaprueba = document.getElementById('aprobadoPor')?.value || null;
     const idproveedor = document.getElementById('proveedor')?.value || null;
 
-    console.log(idaprueba);
-
     if (itemsSeleccionados.length === 0) {
         Mensaje('warning', 'Espera!', 'No hay items para guardar.', false, false);
         return;
@@ -408,7 +406,8 @@ async function generarOrdenDesdePedido(items, idusuario, idproveedor) {
     const ordenItems = items.map(item => ({
         iditem: parseInt(item.id),
         total: parseInt(item.cantidad),
-        valor: 0
+        valor: 0,
+        observacion: item.notas || "",
     }));
 
     const orden = {
@@ -417,6 +416,8 @@ async function generarOrdenDesdePedido(items, idusuario, idproveedor) {
         idproveedor: idproveedor,
         items: ordenItems
     };
+
+    console.log(orden)
 
     return fetch(`${url}/api/compras/manejarOrden`, {
         method: 'POST',

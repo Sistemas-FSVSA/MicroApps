@@ -166,16 +166,19 @@ function mostrarDetalleOrden(orden) {
                 totalGeneral += total;
                 return `
                     <div class="form-row mb-2">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <input type="text" class="form-control" value="${detalle.nombre}" readonly>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-5">
+                            <input type="text" class="form-control observacion-input" value="${detalle.observacion}" data-iditem="${detalle.iditem}" readonly>
+                        </div>
+                        <div class="col-md-1">
                             <input type="text" class="form-control cantidad-input" value="${detalle.cantidad}" data-iditem="${detalle.iditem}" readonly>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-1">
                         <input type="text" class="form-control valor-unitario-input" value="${detalle.valor}" data-iditem="${detalle.iditem}" readonly>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-1">
                             <input type="text" class="form-control" value="$ ${total.toFixed(2)}" readonly>
                         </div>
                     </div>`;
@@ -261,6 +264,12 @@ function editarFactura() {
         input.removeAttribute('readonly');
     });
 
+    // Habilitar edición de cantidad
+    document.querySelectorAll('.observacion-input').forEach(input => {
+        input.dataset.valorOriginal = input.value;
+        input.removeAttribute('readonly');
+    });
+
     // Habilitar el input de fecha de entrega
     const fechaEntregaInput = document.getElementById("fechaEntregaInput");
     fechaEntregaInput.removeAttribute("readonly");
@@ -296,6 +305,14 @@ function cancelarEdicionFactura(valorOriginal) {
         input.setAttribute('readonly', true);
     });
 
+    // Restaurar y deshabilitar los inputs de cantidad
+    document.querySelectorAll('.observacion-input').forEach(input => {
+        if (input.dataset.valorOriginal !== undefined) {
+            input.value = input.dataset.valorOriginal;
+        }
+        input.setAttribute('readonly', true);
+    });
+
     // Restaurar el input de fecha de entrega
     const fechaEntregaInput = document.getElementById("fechaEntregaInput");
     if (fechaEntregaInput.dataset.valorOriginal !== undefined) {
@@ -315,10 +332,6 @@ function confirmarEdicionFactura(idorden) {
     const nuevoValorFactura = document.getElementById("facturaInputEdit").value.trim();
     const fechaEntregaInput = document.getElementById("fechaEntregaInput");
     const fechaEntrega = fechaEntregaInput.value || null;
-    if (!nuevoValorFactura) {
-        Mensaje('error', '¡Error!', 'La factura no puede estar vacia.', false, false);
-        return;
-    }
 
     // Capturar nuevos valores de items (valor y cantidad)
     const itemsActualizados = Array.from(document.querySelectorAll('.valor-unitario-input')).map(input => {
@@ -329,10 +342,15 @@ function confirmarEdicionFactura(idorden) {
         const cantidadInput = document.querySelector(`.cantidad-input[data-iditem="${iditem}"]`);
         const cantidad = cantidadInput ? parseInt(cantidadInput.value) || 0 : 0;
 
+        const observacionInput = document.querySelector(`.observacion-input[data-iditem="${iditem}"]`);
+        const observacion = observacionInput ? observacionInput.value : '';
+
+
         return {
             iditem,
             valor,
-            cantidad
+            cantidad,
+            observacion
         };
     });
 
@@ -342,6 +360,8 @@ function confirmarEdicionFactura(idorden) {
         items: itemsActualizados,
         fechaEntrega: fechaEntrega,
     };
+
+    console.log(payload)
 
 
     guardarFactura(payload);
@@ -366,7 +386,7 @@ function guardarFactura(payload) {
             const detallesActualizados = ordenGlobal.detalles.map(detalle => {
                 const itemModificado = payload.items.find(i => i.iditem === detalle.iditem);
                 return itemModificado
-                    ? { ...detalle, valor: itemModificado.valor, cantidad: itemModificado.cantidad }
+                    ? { ...detalle, valor: itemModificado.valor, cantidad: itemModificado.cantidad, observacion: itemModificado.observacion }
                     : detalle;
             });
 

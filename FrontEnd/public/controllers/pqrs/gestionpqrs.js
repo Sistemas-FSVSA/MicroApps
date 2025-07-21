@@ -551,11 +551,12 @@ async function guardarAnotacion() {
 
 async function enviarDatosPQRS(estado) {
     const { idpqrs } = getQueryParams();
-
+    const idusuario = JSON.parse(localStorage.getItem("idusuario"));
     // Capturar datos de los inputs editables y del formulario principal
     const dataPQRS = {
         idpqrs,
         estado,
+        idusuario: idusuario,
         // Datos del formulario principal
         titular: document.getElementById("titular").value.trim(),
         cc: document.getElementById("cc").value.trim(),
@@ -581,11 +582,6 @@ async function enviarDatosPQRS(estado) {
         eficaz: document.getElementById("eficaz").value
     };
 
-    // Si el estado es "FINALIZADO", agregar el idusuario
-    if (estado === "FINALIZADO") {
-        const idusuario = JSON.parse(localStorage.getItem("idusuario"));
-        dataPQRS.idusuario = idusuario;
-    }
 
     try {
         const response = await fetch(`${url}/api/pqrs/guardarGestionPQRS`, {

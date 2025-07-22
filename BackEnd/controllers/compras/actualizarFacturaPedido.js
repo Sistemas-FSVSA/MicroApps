@@ -3,10 +3,6 @@ const { poolPromiseGestiones, sql } = require('../../models/conexion');
 const actualizarFacturaPedido = async (req, res) => {
     const { idorden, factura, items, fechaEntrega } = req.body;
 
-    if (!idorden || !factura) {
-        return res.status(400).json({ error: 'Faltan datos requeridos para la actualización' });
-    }
-
     let pool;
     try {
         pool = await poolPromiseGestiones;

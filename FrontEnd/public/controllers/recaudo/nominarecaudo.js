@@ -36,15 +36,76 @@ async function cargarRecaudadoresFaltantes() {
 
     // Limpiar lista y renderizar
     lista.innerHTML = "";
-    faltantes.forEach((rec) => {
+    faltantes.forEach((rec, index) => {
       const li = document.createElement("li");
       li.className = "list-group-item";
-      li.textContent = rec.nombre; // Ajusta si el campo tiene otro nombre
+
+      const checkboxId = `recaudadorCheck${index}`;
+
+      const label = document.createElement("label");
+      label.className = "form-check-label d-flex align-items-center w-100";
+      label.setAttribute("for", checkboxId);
+      label.style.cursor = "pointer";
+      label.style.gap = "0.75rem";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.className = "form-check-input styled-checkbox";
+      checkbox.id = checkboxId;
+
+      const span = document.createElement("span");
+      span.textContent = rec.nombre;
+      span.className = "flex-grow-1";
+
+      label.appendChild(checkbox);
+      label.appendChild(span);
+      li.appendChild(label);
       lista.appendChild(li);
+
+      // ✅ Escuchar selección y confirmar
+      checkbox.addEventListener("change", async (e) => {
+        if (e.target.checked) {
+          const confirmado = await Mensaje(
+            "warning",
+            "Confirmar asistencia",
+            `¿Estás segura? Esta acción quitará a "${rec.nombre}" de la lista por hoy.`,
+            false,
+            true
+          );
+
+          if (confirmado) {
+            confirmarAsistencia(rec.idrecaudador);
+            li.remove(); // Eliminar visualmente de la lista
+          } else {
+            checkbox.checked = false; // Si cancela, desmarca el check
+          }
+        }
+      });
     });
+
+
+
 
   } catch (error) {
     console.error("Error al cargar recaudadores faltantes:", error);
+  }
+}
+
+async function confirmarAsistencia(idrecaudador) {
+  try {
+
+    // Ejemplo de petición POST (ajústala a tu ruta y backend)
+    await fetch(`${url}/api/recaudo/confirmarAsistencia`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ idrecaudador })
+    });
+    
+    await cargarRecaudadoresFaltantes(); // Recargar lista de faltantes
+  } catch (error) {
+    console.error("Error al confirmar asistencia:", error);
+    await Mensaje("error", "Error", "No se pudo registrar la asistencia.");
   }
 }
 

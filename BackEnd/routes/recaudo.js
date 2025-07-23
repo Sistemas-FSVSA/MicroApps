@@ -17,6 +17,7 @@ const { obtenerGestiones } = require('../controllers/recaudo/obtenerGestiones');
 const { anularTramite } = require('../controllers/recaudo/anularTramite');
 const { generarNomina } = require('../controllers/recaudo/generarNomina');
 const { obtenerFaltaRecaudador } = require('../controllers/recaudo/obtenerFaltaRecaudador');
+const { confirmarAsistencia } = require('../controllers/recaudo/confirmarAsistencia');
 
 router.get('/obtenerNovedades', authenticateToken, rateLimiterFast, obtenerNovedades);
 router.post('/actualizarNovedad', authenticateToken, rateLimiterFast, actualizarNovedad);
@@ -29,5 +30,6 @@ router.get('/obtenerGestiones', authenticateToken, rateLimiterFast, obtenerGesti
 router.post('/anularTramite', authenticateToken, rateLimiterFast, anularTramite);
 router.post('/generarNomina', authenticateToken, rateLimiterFast, generarNomina);
 router.get('/obtenerFaltaRecaudador', authenticateToken, rateLimiterFast, obtenerFaltaRecaudador);
+router.post('/confirmarAsistencia', authenticateToken, rateLimiterFast, confirmarAsistencia);
 
 module.exports = router;

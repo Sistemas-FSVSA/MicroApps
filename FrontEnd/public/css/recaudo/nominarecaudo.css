@@ -1,0 +1,19 @@
+/* Mejora visual para el checkbox */
+.styled-checkbox {
+  width: 1.2em;
+  height: 1.2em;
+  accent-color: #28a745; /* Verde Bootstrap */
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+/* Cambia tamaño y agrega efecto hover */
+.styled-checkbox:hover {
+  transform: scale(1.1);
+}
+
+/* Opcional: resalta línea seleccionada */
+input.styled-checkbox:checked + span {
+  font-weight: 500;
+  color: #28a745;
+}

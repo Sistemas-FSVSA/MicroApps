@@ -19,8 +19,6 @@ const guardarTramite = async (req, res) => {
     }
 
     const pool = await poolPromiseRecaudo;
-
-    // Convertimos la cantidad a número entero
     const repeticiones = parseInt(cantidad, 10);
 
     for (let i = 0; i < repeticiones; i++) {
@@ -38,6 +36,15 @@ const guardarTramite = async (req, res) => {
           VALUES (@cedula, @nombre, @idtramite, @fecha, @idrecaudador, @idgenero, @estado)
         `);
     }
+
+    // 🔄 Actualizar campo ultimoregistro
+    await pool.request()
+      .input("idrecaudador", sql.Int, parseInt(idrecaudador))
+      .query(`
+        UPDATE [recaudo].[dbo].[recaudador]
+        SET ultimoregistro = GETDATE()
+        WHERE idrecaudador = @idrecaudador
+      `);
 
     res.status(200).json({ message: `Se registraron ${repeticiones} gestiones correctamente.` });
 

@@ -5,7 +5,7 @@ const obtenerFaltaRecaudador = async (req, res) => {
   try {
     const pool = await poolPromiseRecaudo;
 
-    // Obtenemos la fecha de hoy a medianoche
+    // Fecha de hoy a medianoche
     const fechaHoy = new Date();
     fechaHoy.setHours(0, 0, 0, 0);
 
@@ -14,11 +14,11 @@ const obtenerFaltaRecaudador = async (req, res) => {
       .query(`
         SELECT r.*
         FROM recaudador r
-        WHERE r.idrecaudador NOT IN (
-          SELECT DISTINCT pt.idrecaudador
-          FROM planillatramites pt
-          WHERE CONVERT(date, pt.fecha) = CONVERT(date, @fechaHoy)
-        )
+        WHERE r.estado = 1
+          AND (
+            r.ultimoregistro IS NULL
+            OR CONVERT(date, r.ultimoregistro) <> CONVERT(date, @fechaHoy)
+          )
       `);
 
     res.status(200).json(result.recordset);
@@ -27,5 +27,6 @@ const obtenerFaltaRecaudador = async (req, res) => {
     res.status(500).json({ message: "Error al obtener los recaudadores que no han registrado trámite hoy." });
   }
 };
+
 
 module.exports = { obtenerFaltaRecaudador };

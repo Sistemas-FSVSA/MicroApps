@@ -149,7 +149,7 @@ function renderizarItemsEncargo(paginaDeseada = null) {
             item.id,
             item.nombre,
             item.categoria,
-            `<input type="number" class="form-control input-cantidad" value="${item.cantidad}" min="1" data-index="${index}" ${permisos.tienePermisoEditarCantidad ? '' : 'disabled'}>`,
+            `<input type="number" class="form-control input-cantidad" value="${item.cantidad}" min="1" data-index="${index}">`,
             item.nombreCompleto,
             btnEliminar + ' ' + btnNota
         ];

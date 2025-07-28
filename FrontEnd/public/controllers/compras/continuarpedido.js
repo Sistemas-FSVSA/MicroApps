@@ -119,24 +119,22 @@ function renderizadoInfo(data) {
     }
 }
 
-function renderizarItemsEncargo() {
+function renderizarItemsEncargo(paginaDeseada = null) {
     const dataTable = $('#tablaItemsSeleccionados').DataTable();
 
-    dataTable.clear().draw();
+    // Guardar la página actual solo si no se pasa una página deseada
+    const paginaActual = paginaDeseada !== null ? paginaDeseada : dataTable.page();
+
+    dataTable.clear();
 
     const items = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
 
     items.forEach((item, index) => {
-        // Botón de eliminar
         const btnEliminar = permisos.tienePermisoEliminarItem
             ? `<button class="btn btn-danger btn-eliminar-item" data-index="${index}">
                     <i class="fas fa-trash"></i>
-               </button>`
-            : '';
+               </button>` : '';
 
-
-
-        // Botón de nota con campanita si aplica
         const btnNota = `
             <div class="position-relative d-inline-block">
                 <button class="btn btn-warning btn-nota-item" data-index="${index}" title="Agregar nota">
@@ -157,54 +155,56 @@ function renderizarItemsEncargo() {
             btnEliminar + ' ' + btnNota
         ];
 
-        dataTable.row.add(rowData).draw();
+        dataTable.row.add(rowData);
     });
 
-    // Eventos
-    document.querySelectorAll('.btn-eliminar-item').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const index = btn.getAttribute('data-index');
-            eliminarItemDeSessionStorage(index);
-        });
+    // Volver a la página deseada sin reiniciar
+    dataTable.draw(false).page(paginaActual).draw(false);
+
+    const $tabla = $('#tablaItemsSeleccionados tbody');
+
+    // Delegación de eventos
+    $tabla.off('click', '.btn-eliminar-item').on('click', '.btn-eliminar-item', function () {
+        const index = $(this).data('index');
+        eliminarItemDeSessionStorage(index);
     });
 
-    document.querySelectorAll('.input-cantidad').forEach(input => {
-        input.addEventListener('input', () => {
-            const index = input.getAttribute('data-index');
-            actualizarCantidadEnSessionStorage(index, input.value);
-        });
+    $tabla.off('input', '.input-cantidad').on('input', '.input-cantidad', function () {
+        const index = $(this).data('index');
+        const valor = $(this).val();
+        actualizarCantidadEnSessionStorage(index, valor);
     });
 
-    document.querySelectorAll('.btn-nota-item').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const index = btn.getAttribute('data-index');
-            const items = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
-            const notaActual = items[index]?.notas || '';
+    $tabla.off('click', '.btn-nota-item').on('click', '.btn-nota-item', async function () {
+        const index = $(this).data('index');
+        const items = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
+        const notaActual = items[index]?.notas || '';
 
-            const { value: nuevaNota } = await Swal.fire({
-                input: 'textarea',
-                inputLabel: 'Nota para el item',
-                inputValue: notaActual,
-                inputPlaceholder: 'Escribe una nota aquí...',
-                inputAttributes: {
-                    'aria-label': 'Escribe una nota para este item'
-                },
-                showCancelButton: true,
-                confirmButtonText: 'Guardar',
-                cancelButtonText: 'Cancelar',
-                customClass: {
-                    confirmButton: 'swal-confirm-button',
-                    cancelButton: 'swal-cancel-button'
-                }
-            });
-
-
-            if (nuevaNota !== undefined) {
-                items[index].notas = nuevaNota;
-                sessionStorage.setItem('itemsSeleccionados', JSON.stringify(items));
-                renderizarItemsEncargo(); // Recargar para actualizar campanita
+        const { value: nuevaNota } = await Swal.fire({
+            input: 'textarea',
+            inputLabel: 'Nota para el item',
+            inputValue: notaActual,
+            inputPlaceholder: 'Escribe una nota aquí...',
+            inputAttributes: {
+                'aria-label': 'Escribe una nota para este item'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Guardar',
+            cancelButtonText: 'Cancelar',
+            customClass: {
+                confirmButton: 'swal-confirm-button',
+                cancelButton: 'swal-cancel-button'
             }
         });
+
+        if (nuevaNota !== undefined) {
+            items[index].notas = nuevaNota;
+            sessionStorage.setItem('itemsSeleccionados', JSON.stringify(items));
+
+            // Mantener la página actual al recargar
+            const page = $('#tablaItemsSeleccionados').DataTable().page();
+            renderizarItemsEncargo(page);
+        }
     });
 }
 
@@ -302,8 +302,8 @@ function agregarItemASessionStorage(nuevoItem) {
     items.push(nuevoItem);
     sessionStorage.setItem('itemsSeleccionados', JSON.stringify(items));
 
-    // Actualizar la tabla principal
-    renderizarItemsEncargo();
+     const page = $('#tablaItemsSeleccionados').DataTable().page();
+    renderizarItemsEncargo(page);
 
 
     // Mostrar mensaje de éxito
@@ -319,8 +319,8 @@ function eliminarItemDeSessionStorage(index) {
     // Guardar la nueva lista
     sessionStorage.setItem('itemsSeleccionados', JSON.stringify(items));
 
-    // Volver a renderizar la tabla
-    renderizarItemsEncargo();
+    const page = $('#tablaItemsSeleccionados').DataTable().page();
+    renderizarItemsEncargo(page);
 }
 
 function actualizarCantidadEnSessionStorage(index, nuevaCantidad) {

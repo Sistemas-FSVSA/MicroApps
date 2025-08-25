@@ -1,3 +1,5 @@
+require('dotenv').config(); // Carga las variables del .env
+
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
@@ -12,7 +14,7 @@ const {
 class Server {
   constructor() {
     this.app = express();
-    this.port = process.env.PORT;
+    this.port = process.env.PORT || 4201; // Usa 4201 como fallback
 
     // Rutas principales
     this.indexPath = "/api/index";
@@ -23,14 +25,11 @@ class Server {
     this.valesPath = "/api/vales";
     this.comprasPath = "/api/compras";
     this.recaudoPath = "/api/recaudo";
+    this.agendaPath = "/api/agenda";
 
     // Middlewares y rutas
     this.middlewares();
     this.routes();
-
-    // Ruta especial para ver usuarios conectados
-    this.app.get("/api/online", getSessionCount); // 👈 Añádela aquí si quieres
-    this.app.get("/api/activeusers", getSessionUsers); // 👈 Añádela aquí si quieres
   }
 
   middlewares() {
@@ -41,7 +40,6 @@ class Server {
     this.app.use(
       cors({
         origin: function (origin, callback) {
-          // Permitir solicitudes sin origen (como Postman o herramientas locales)
           if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
           } else {
@@ -49,45 +47,48 @@ class Server {
           }
         },
         methods: ["POST", "GET", "PUT", "DELETE", "PATCH"],
-        credentials: true, // Habilita el envío de cookies y credenciales
+        credentials: true,
       })
     );
 
     this.app.use(cookieParser());
     this.app.use(express.json());
 
-    // 👇 Aquí van los middlewares de sesión
-    this.app.use(sessionMiddleware);
+    // Comenta temporalmente sessionMiddleware para depurar
+    // this.app.use(sessionMiddleware);
 
-    // Servir la carpeta "uploads" como estática
+    // Carpeta "uploads"
     this.app.use(
-      '/uploads',
-      express.static('\\\\' + process.env.UPLOAD_PATH)
+      "/uploads",
+      express.static("\\\\" + process.env.UPLOAD_PATH)
     );
   }
 
   routes() {
-    this.app.use(this.indexPath, require("../routes/index"));
-    this.app.use(this.planillaPath, require("../routes/planilla"));
-    this.app.use(
-      this.gestionplanillaPath,
-      require("../routes/gestionplanilla")
-    );
-    this.app.use(this.gestionUsuarioPath, require("../routes/gestionusuario"));
-    this.app.use(this.pqrsPath, require("../routes/pqrs"));
-    this.app.use(this.valesPath, require("../routes/vales"));
-    this.app.use(this.comprasPath, require("../routes/compras"));
-    this.app.use(this.recaudoPath, require("../routes/recaudo"));
+    try {
+      this.app.use(this.indexPath, require("../routes/index"));
+      this.app.use(this.planillaPath, require("../routes/planilla"));
+      this.app.use(this.gestionplanillaPath, require("../routes/gestionplanilla"));
+      this.app.use(this.gestionUsuarioPath, require("../routes/gestionusuario"));
+      this.app.use(this.pqrsPath, require("../routes/pqrs"));
+      this.app.use(this.valesPath, require("../routes/vales"));
+      this.app.use(this.comprasPath, require("../routes/compras"));
+      this.app.use(this.recaudoPath, require("../routes/recaudo"));
+      this.app.use(this.agendaPath, require("../routes/agenda"));
+    } catch (error) {
+      console.error('Error cargando rutas:', error);
+    }
   }
 
   listen() {
     this.app.listen(this.port, () => {
-      console.log(`Escuchando desde http://localhost:${this.port}`),
-        console.log(
-          `Archivos estáticos disponibles en http://localhost:${this.port}/uploads`
-        );
+      console.log(`Escuchando desde http://localhost:${this.port}`);
+      console.log(`Archivos estáticos disponibles en http://localhost:${this.port}/uploads`);
+    }).on('error', (err) => {
+      console.error('Error al iniciar el servidor:', err.message);
     });
   }
 }
 
-module.exports = Server;
+const server = new Server();
+server.listen(); // Asegúrate de llamar a listen() al final

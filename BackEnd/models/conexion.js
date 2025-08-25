@@ -1,6 +1,6 @@
 const sql = require("mssql");
 
-// Configuración para la primera base de datos
+// Configuración para la base de datos de gestiones
 const DBGESTIONES = {
   user: process.env.DBGESTIONES_USER,
   password: process.env.DBGESTIONES_PASSWORD,
@@ -12,7 +12,7 @@ const DBGESTIONES = {
   }
 };
 
-// Configuración para la segunda base de datos
+// Configuración para la base de datos de maestros
 const DBMAESTROS = {
   user: process.env.DBMAESTROS_USER,
   password: process.env.DBMAESTROS_PASSWORD,
@@ -25,7 +25,7 @@ const DBMAESTROS = {
   }
 };
 
-// Configuración para la segunda base de datos
+// Configuración para la base de datos de recaudo
 const DBRECAUDO = {
   user: process.env.DBRECAUDO_USER,
   password: process.env.DBRECAUDO_PASSWORD,
@@ -37,7 +37,7 @@ const DBRECAUDO = {
   }
 };
 
-// Configuración para la segunda base de datos
+// Configuración para la base de datos de previsión
 const DBPREVISION = {
   user: process.env.DBPREVISION_USER,
   password: process.env.DBPREVISION_PASSWORD,
@@ -50,12 +50,11 @@ const DBPREVISION = {
   }
 };
 
-// Configuración para la segunda base de datos
+
 const DBAGENDA = {
   user: process.env.DBAGENDA_USER,
   password: process.env.DBAGENDA_PASSWORD,
   server: process.env.DBAGENDA_SERVER,
-  port: parseInt(process.env.DBAGENDA_PORT),
   database: process.env.DBAGENDA_DATABASE,
   options: {
     encrypt: false,
@@ -105,3 +104,4 @@ module.exports = {
   poolPromisePrevision,
   poolPromiseAgenda,
 };
+

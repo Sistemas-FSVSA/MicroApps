@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Agenda - Sala de Juntas | Funeraria San Vicente S.A.</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- SweetAlert2 CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.10.1/sweetalert2.min.css" rel="stylesheet">
+
+    <!-- CSS personalizado -->
+    <link rel="stylesheet" href="/css/agenda/agendasala.css">
+
+    <style>
+        /* Estilos adicionales para SweetAlert2 */
+        .swal2-popup {
+            border-radius: 15px !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        
+        .swal2-icon.swal2-error {
+            border-color: #f27474 !important;
+            color: #f27474 !important;
+        }
+        
+        .swal2-icon.swal2-success {
+            border-color: #a5dc86 !important;
+            color: #a5dc86 !important;
+        }
+        
+        .swal2-icon.swal2-question {
+            border-color: #87ceeb !important;
+            color: #87ceeb !important;
+        }
+        
+        .swal2-confirm {
+            background-color: #2c4a6b !important;
+            border-radius: 6px !important;
+            font-weight: 600 !important;
+        }
+        
+        .swal2-cancel {
+            background-color: #6c757d !important;
+            border-radius: 6px !important;
+            font-weight: 600 !important;
+        }
+        
+        .swal2-confirm:hover {
+            background-color: #a4343a !important;
+        }
+        
+        .conflict-details {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .success-details {
+            background: #d1edff;
+            border: 1px solid #b3d7ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .confirmation-details {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <main>
+        <!-- Sidebar izquierda con logo e información -->
+        <div class="sidebar">
+            <img src="/image/logonegro.png" alt="Logo Funeraria San Vicente S.A.">
+            <div class="info-text">
+                <h3>Agenda - Sala de Juntas</h3>
+                <p><strong>Instrucciones de uso:</strong></p>
+                <p>• Haga clic en cualquier día para crear una nueva reservación</p>
+                <p>• Los eventos existentes aparecerán marcados en el calendario</p>
+                <p>• Haga clic en un evento para ver sus detalles</p>
+                <p>• Use los botones de navegación para cambiar de mes</p>
+                <p>• Cambie la vista usando los botones: mes, semana, día o lista</p>
+            </div>
+        </div>
+
+        <!-- Contenedor del calendario -->
+        <div class="calendar-container">
+            <div id="calendar"></div>
+            
+            <!-- Indicador de carga -->
+            <div id="loadingIndicator" class="d-none text-center p-3">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-2">Cargando calendario...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal ingreso reserva -->
+    <div class="modal fade" id="reservaModal" tabindex="-1" aria-labelledby="reservaModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="reservaForm" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reservaModalLabel">
+                        <i class="fas fa-calendar-plus"></i> Nueva Reservación
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="fechaSeleccionada" name="fechaReservacion">
+                    
+                    <div class="mb-3">
+                        <label for="usuario" class="form-label">
+                            <i class="fas fa-user"></i> Usuario *
+                        </label>
+                        <input id="usuario" class="form-control" name="usuario" required
+                               placeholder="Ingrese el nombre del usuario">
+                        <div class="invalid-feedback">
+                            El campo usuario es obligatorio
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="correo" class="form-label">
+                            <i class="fas fa-envelope"></i> Correo Electrónico *
+                        </label>
+                        <input type="email" id="correo" class="form-control" name="correo" required
+                               placeholder="usuario@ejemplo.com">
+                        <div class="invalid-feedback">
+                            Ingrese un correo electrónico válido
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="dependencia" class="form-label">
+                            <i class="fas fa-building"></i> Dependencia *
+                        </label>
+                        <select id="dependencia" name="dependencia" class="form-select" required>
+                            <option value="">Seleccione una dependencia</option>
+                            <option value="1">Sala de Reuniones A</option>
+                            <option value="2">Auditorio Principal</option>
+                            <option value="3">Sala de Conferencias</option>
+                            <option value="4">Centro de Convenciones</option>
+                        </select>
+                        <div class="invalid-feedback">
+                            Debe seleccionar una dependencia
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="horaInicio" class="form-label">
+                                    <i class="fas fa-clock"></i> Hora de Inicio *
+                                </label>
+                                <input type="time" id="horaInicio" class="form-control" name="horaInicio" required
+                                       min="08:00" max="22:00">
+                                <div class="invalid-feedback">
+                                    Hora de inicio requerida (8:00 AM - 10:00 PM)
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="horaFin" class="form-label">
+                                    <i class="fas fa-clock"></i> Hora de Fin *
+                                </label>
+                                <input type="time" id="horaFin" class="form-control" name="horaFin" required 
+                                       min="08:00" max="22:00">
+                                <div class="invalid-feedback">
+                                    Hora de fin requerida (8:00 AM - 10:00 PM)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="detalles" class="form-label" name="detallesReservacion" rows="3">
+                            <i class="fas fa-info-circle"></i> Detalles de la Reunión
+                        </label>
+                        <textarea id="detalles" class="form-control" name="detallesReservacion" rows="3"
+                                  placeholder="Describe el propósito de la reunión, participantes, etc."></textarea>
+                        <small class="form-text text-muted">Campo opcional</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button class="btn btn-primary" type="submit" id="btnGuardar">
+                        <i class="fas fa-save"></i> Guardar Reservación
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal detalle evento -->
+    <div class="modal fade" id="detalleModal" tabindex="-1" aria-labelledby="detalleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detalleModalLabel">
+                        Detalles de la Reservación
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="detalleTitulo"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.10.1/sweetalert2.all.min.js"></script>
+    <!-- JavaScript personalizado -->
+    <script src="/js/agenda.js"></script>
+</body>
+
+</html>

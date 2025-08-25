@@ -50,11 +50,25 @@ const DBPREVISION = {
   }
 };
 
+// Configuración para la segunda base de datos
+const DBAGENDA = {
+  user: process.env.DBAGENDA_USER,
+  password: process.env.DBAGENDA_PASSWORD,
+  server: process.env.DBAGENDA_SERVER,
+  port: parseInt(process.env.DBAGENDA_PORT),
+  database: process.env.DBAGENDA_DATABASE,
+  options: {
+    encrypt: false,
+    enableArithAbort: true
+  }
+};
+
 // Crear las conexiones
 let poolPromiseGestiones = null;
 let poolPromiseMaestros = null;
 let poolPromiseRecaudo = null;
 let poolPromisePrevision = null;
+let poolPromiseAgenda = null;
 
 const connectWithRetry = async (config, retryInterval = 5000) => {
   while (true) {
@@ -81,10 +95,13 @@ poolPromiseRecaudo = connectWithRetry(DBRECAUDO);
 // Conexión a la segunda base de datos
 poolPromisePrevision = connectWithRetry(DBPREVISION);
 
+poolPromiseAgenda = connectWithRetry(DBAGENDA);
+
 module.exports = {
   sql,
   poolPromiseGestiones,
   poolPromiseMaestros,
   poolPromiseRecaudo, 
-  poolPromisePrevision
+  poolPromisePrevision,
+  poolPromiseAgenda,
 };

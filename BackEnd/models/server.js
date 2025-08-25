@@ -23,6 +23,7 @@ class Server {
     this.valesPath = "/api/vales";
     this.comprasPath = "/api/compras";
     this.recaudoPath = "/api/recaudo";
+    this.agendaPath = "/api/agenda";
 
     // Middlewares y rutas
     this.middlewares();
@@ -78,6 +79,7 @@ class Server {
     this.app.use(this.valesPath, require("../routes/vales"));
     this.app.use(this.comprasPath, require("../routes/compras"));
     this.app.use(this.recaudoPath, require("../routes/recaudo"));
+    this.app.use(this.agendaPath, require("../routes/agenda"));
   }
 
   listen() {

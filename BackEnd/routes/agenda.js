@@ -1,19 +1,24 @@
-const express = require('express');
-const router = express.Router();
+const { Router } = require('express');
+const router = Router();
 
-const agendaController = require('../controllers/agenda/agenda');
-const dependenciaController = require('../controllers/agenda/dependencia');
+const rateLimiterStrict = require('../models/rateLimiterStrict'); // 1 solicitud por minuto
+const rateLimiterFast = require('../models/rateLimiterFast'); // 100 solicitudes por segundo
+const authenticateToken = require('../models/authMiddleware');
+const { uploadFirma, uploadFields } = require('../models/multer');
 
-// Rutas de agenda
-router.get('/eventos', agendaController.getEventos);
-router.post('/', agendaController.nuevaReservacion);
+const { crearReservacion } = require('../controllers/agenda/crearReservacion');
+const { getReservaciones } = require('../controllers/agenda/getReservaciones');
+const { limpiarReservacionesExpiradas } = require('../controllers/agenda/limpiarReservacionesExpiradas');
+const { nuevaReservacion } = require('../controllers/agenda/nuevaReservacion');
+const { listarDependencias } = require('../controllers/agenda/listarDependencias');
+const { obtenerDependenciaPorId } = require('../controllers/agenda/obtenerDependenciaPorId');
 
-// Rutas de dependencias
-router.get('/dependencias', dependenciaController.listarDependencias);
+router.post('/crearReservacion', rateLimiterFast, crearReservacion);
+router.get('/getReservaciones', rateLimiterFast, getReservaciones);
+router.post('/limpiarReservaciones', rateLimiterStrict, limpiarReservacionesExpiradas);
+router.post('/nuevaReservacion', rateLimiterFast, nuevaReservacion);
+router.get('/listarDependencias', rateLimiterFast, listarDependencias);
+router.get('/obtenerDependencia/:id', rateLimiterFast, obtenerDependenciaPorId);
+
 
 module.exports = router;
-
-
-// const rateLimiterStrict = require('../models/rateLimiterStrict'); // 1 solicitud por minuto
-// const rateLimiterFast = require('../models/rateLimiterFast'); // 100 solicitudes por segundo
-// const authenticateToken = require('../models/authMiddleware');

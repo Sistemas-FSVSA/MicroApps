@@ -50,7 +50,7 @@ const DBPREVISION = {
   }
 };
 
-// Configuración para la base de datos de agenda
+
 const DBAGENDA = {
   user: process.env.DBAGENDA_USER,
   password: process.env.DBAGENDA_PASSWORD,
@@ -94,7 +94,6 @@ poolPromiseRecaudo = connectWithRetry(DBRECAUDO);
 // Conexión a la segunda base de datos
 poolPromisePrevision = connectWithRetry(DBPREVISION);
 
-// Conexión a la segunda base de datos
 poolPromiseAgenda = connectWithRetry(DBAGENDA);
 
 module.exports = {
@@ -105,3 +104,4 @@ module.exports = {
   poolPromisePrevision,
   poolPromiseAgenda,
 };
+

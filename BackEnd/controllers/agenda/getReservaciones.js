@@ -24,30 +24,15 @@ const getReservaciones = async (req, res) => {
         ORDER BY dr.inicioReservacion ASC
       `);
 
-    console.log('=== DEPURACIÓN DE RESERVACIONES ===');
-    console.log('Total registros obtenidos:', result.recordset.length);
-
-    result.recordset.forEach((record, index) => {
-      console.log(`Registro ${index + 1}:`, {
-        id: record.reservacionId,
-        usuario: record.usuario,
-        dependencia: record.dependencia,
-        iddependencia: record.iddependencia,
-        fechaReservacion: record.fechaReservacion,
-        horaInicio: record.horaInicio,
-        horaFin: record.horaFin,
-        inicioCompleto: record.inicioReservacion,
-        finCompleto: record.finReservacion
-      });
-    });
-
-    console.log('=== FIN DEPURACIÓN ===');
-    return result.recordset;
+    // Respuesta directa a Postman
+    res.json(result.recordset);
 
   } catch (error) {
-    console.error('Error en getReservaciones:', error);
-    throw error;
+    res.status(500).json({
+      error: 'Error al obtener reservaciones',
+      details: error.message
+    });
   }
-}
+};
 
 module.exports = { getReservaciones };

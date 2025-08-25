@@ -70,10 +70,7 @@ class Server {
   routes() {
     this.app.use(this.indexPath, require("../routes/index"));
     this.app.use(this.planillaPath, require("../routes/planilla"));
-    this.app.use(
-      this.gestionplanillaPath,
-      require("../routes/gestionplanilla")
-    );
+    this.app.use(this.gestionplanillaPath,require("../routes/gestionplanilla"));
     this.app.use(this.gestionUsuarioPath, require("../routes/gestionusuario"));
     this.app.use(this.pqrsPath, require("../routes/pqrs"));
     this.app.use(this.valesPath, require("../routes/vales"));

@@ -5,180 +5,74 @@ const crearReservacion = async (req, res) => {
   const transaction = new sql.Transaction(pool);
 
   try {
+    const data = req.body; // 🔹 Capturar datos enviados por POSTMAN
+
     await transaction.begin();
-    console.log('🔄 Iniciando transacción para crear reservación...');
 
     // 🔹 VALIDACIONES DE DATOS
     if (!data.usuario || !data.correo || !data.dependencia || !data.fechaReservacion || !data.horaInicio || !data.horaFin) {
-      throw new Error('Faltan campos obligatorios');
+      return res.status(400).json({ error: 'Faltan campos obligatorios' });
     }
 
-    // Validar que la dependencia sea un número entero
     const dependenciaId = parseInt(data.dependencia);
     if (isNaN(dependenciaId)) {
-      throw new Error('ID de dependencia inválido');
+      return res.status(400).json({ error: 'ID de dependencia inválido' });
     }
 
-    console.log('✅ Datos recibidos:', {
-      usuario: data.usuario,
-      correo: data.correo,
-      dependencia: dependenciaId,
-      fechaReservacion: data.fechaReservacion,
-      horaInicio: data.horaInicio,
-      horaFin: data.horaFin
-    });
-
-    // Validar formato de email básico
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(data.correo)) {
-      throw new Error('Formato de correo electrónico inválido');
+      return res.status(400).json({ error: 'Formato de correo electrónico inválido' });
     }
 
-    // 🔹 VERIFICAR QUE LA DEPENDENCIA EXISTE Y ESTÁ ACTIVA
+    // 🔹 Verificar dependencia activa
     const requestVerificar = new sql.Request(transaction);
     const verificarDep = await requestVerificar
       .input('iddependencia', sql.Int, dependenciaId)
-      .query('SELECT COUNT(*) as count, nombre FROM dependencias WHERE iddependencia = @iddependencia AND estado = 1 GROUP BY nombre');
+      .query('SELECT COUNT(*) as count FROM dependencias WHERE iddependencia = @iddependencia AND estado = 1');
 
     if (verificarDep.recordset.length === 0 || verificarDep.recordset[0].count === 0) {
-      throw new Error(`La dependencia con ID ${dependenciaId} no existe o está inactiva`);
+      return res.status(400).json({ error: `La dependencia con ID ${dependenciaId} no existe o está inactiva` });
     }
 
-    console.log('✅ Dependencia verificada:', verificarDep.recordset[0]);
-
-    // 🔹 VALIDACIÓN DE FECHA SIMPLIFICADA
+    // 🔹 Validar fechas
     const fechaHoy = new Date();
     const fechaReserva = new Date(data.fechaReservacion + 'T' + data.horaInicio);
-
-    // Comparar solo con fecha actual (sin considerar hora exacta del día)
     const hoyInicio = new Date(fechaHoy.getFullYear(), fechaHoy.getMonth(), fechaHoy.getDate());
-    const reservaFecha = new Date(fechaReserva.getFullYear(), fechaReserva.getMonth(), fechaReserva.getDate());
 
-    console.log('📅 Validación de fecha:', {
-      fechaHoy: hoyInicio.toISOString().split('T')[0],
-      fechaReserva: reservaFecha.toISOString().split('T')[0],
-      esPasada: reservaFecha < hoyInicio
-    });
-
-    if (reservaFecha < hoyInicio) {
-      throw new Error('No se pueden crear reservaciones en fechas pasadas');
+    if (fechaReserva < hoyInicio) {
+      return res.status(400).json({ error: 'No se pueden crear reservaciones en fechas pasadas' });
     }
 
-    // 🔹 CONSTRUIR FECHAS DATETIME CORRECTAMENTE - SIN CONVERSIÓN DE ZONA HORARIA
+    // 🔹 Construir fechas
     const inicioStr = `${data.fechaReservacion} ${data.horaInicio}`;
     const finStr = `${data.fechaReservacion} ${data.horaFin}`;
 
-    console.log('🕒 Fechas construidas (formato ISO):', {
-      inicioStr,
-      finStr
-    });
-
-    // 🔹 VERIFICAR CONFLICTOS DE HORARIOS GLOBALES - SIN IMPORTAR LA DEPENDENCIA
-    console.log('🔍 INICIANDO VALIDACIÓN DE CONFLICTOS GLOBALES...');
-    console.log('📊 Datos para validar:', {
-      usuario: data.usuario,
-      dependenciaSolicitada: dependenciaId,
-      fechaCompleta: data.fechaReservacion,
-      horaInicio: data.horaInicio,
-      horaFin: data.horaFin,
-      inicioStr: inicioStr,
-      finStr: finStr
-    });
-
+    // 🔹 Verificar conflictos globales
     const requestConflicto = new sql.Request(transaction);
     const conflictos = await requestConflicto
       .input('inicioStr', sql.NVarChar(19), inicioStr)
       .input('finStr', sql.NVarChar(19), finStr)
       .query(`
-        SELECT 
-          dr.id,
-          dr.usuario,
-          d.nombre as dependencia_nombre,
-          dr.inicioReservacion,
-          dr.finReservacion,
-          FORMAT(dr.inicioReservacion, 'yyyy-MM-dd HH:mm:ss') as inicio_formateado,
-          FORMAT(dr.finReservacion, 'yyyy-MM-dd HH:mm:ss') as fin_formateado,
-          dr.detallesReservacion,
-          -- Debug: Mostrar las comparaciones
-          CASE 
-            WHEN CONVERT(datetime2, @inicioStr, 120) < dr.finReservacion 
-                 AND CONVERT(datetime2, @finStr, 120) > dr.inicioReservacion 
-            THEN 'CONFLICTO_DETECTADO' 
-            ELSE 'SIN_CONFLICTO' 
-          END as estado_validacion
+        SELECT dr.inicioReservacion, dr.finReservacion
         FROM datosreservacion dr
         INNER JOIN dependencias d ON dr.iddependencia = d.iddependencia
-        WHERE 
-          dr.finReservacion > GETDATE() -- Solo reservaciones futuras
-          AND d.estado = 1 -- Solo dependencias activas
-        ORDER BY dr.inicioReservacion ASC
+        WHERE dr.finReservacion > GETDATE()
+          AND d.estado = 1
       `);
 
-    console.log('📋 TODAS las reservaciones existentes (TODAS las dependencias):');
-    conflictos.recordset.forEach((reserva, index) => {
-      console.log(`   ${index + 1}. ${reserva.usuario} en ${reserva.dependencia_nombre}: ${reserva.inicio_formateado} - ${reserva.fin_formateado} [${reserva.estado_validacion}]`);
-    });
-
-    // 🔹 FILTRAR SOLO LOS CONFLICTOS REALES GLOBALES
     const conflictosReales = conflictos.recordset.filter(reserva => {
       const inicioNueva = new Date(inicioStr);
       const finNueva = new Date(finStr);
       const inicioExistente = new Date(reserva.inicioReservacion);
       const finExistente = new Date(reserva.finReservacion);
-
-      // Lógica de superposición: Si hay ANY overlap, es conflicto
-      const haySupersposicion = (inicioNueva < finExistente) && (finNueva > inicioExistente);
-
-      console.log(`🔍 Validando conflicto GLOBAL con ${reserva.usuario} (${reserva.dependencia_nombre}):`, {
-        nuevaSolicitud: `${data.usuario} en ${dependenciaId}: ${inicioStr} - ${finStr}`,
-        existente: `${reserva.usuario} en ${reserva.dependencia_nombre}: ${reserva.inicio_formateado} - ${reserva.fin_formateado}`,
-        inicioNuevaAntesDeFin: inicioNueva < finExistente,
-        finNuevaDespuesDeInicio: finNueva > inicioExistente,
-        hayConflicto: haySupersposicion
-      });
-
-      return haySupersposicion;
-    });
-
-    console.log(`🎯 RESULTADO FINAL: ${conflictosReales.length} conflictos GLOBALES encontrados de ${conflictos.recordset.length} reservaciones totales`);
-
-    // 🔹 MOSTRAR DETALLES DE CONFLICTOS PARA DEBUG
-    conflictosReales.forEach((conflicto, index) => {
-      console.log(`❌ Conflicto GLOBAL ${index + 1}:`, {
-        id: conflicto.id,
-        usuario: conflicto.usuario,
-        dependencia: conflicto.dependencia_nombre,
-        inicio: conflicto.inicio_formateado,
-        fin: conflicto.fin_formateado,
-        detalles: conflicto.detallesReservacion
-      });
+      return (inicioNueva < finExistente) && (finNueva > inicioExistente);
     });
 
     if (conflictosReales.length > 0) {
-      const conflicto = conflictosReales[0];
-      const mensajeError = `🚨 CONFLICTO DE HORARIOS GLOBAL DETECTADO:
-      
-🔴 Reservación existente que bloquea el horario:
-   • Usuario: ${conflicto.usuario}
-   • Dependencia: ${conflicto.dependencia_nombre}
-   • Horario: ${conflicto.inicio_formateado} - ${conflicto.fin_formateado}
-   • Detalles: ${conflicto.detallesReservacion || 'Sin detalles'}
-
-🔴 Nueva reservación solicitada (BLOQUEADA):
-   • Usuario: ${data.usuario}
-   • Dependencia solicitada: ID ${dependenciaId}
-   • Horario solicitado: ${inicioStr} - ${finStr}
-
-💡 POLÍTICA: No se pueden crear reservaciones en horarios que se superpongan con otras existentes, 
-   sin importar la dependencia. El horario ya está ocupado.`;
-
-      console.error('🚨 BLOQUEANDO CREACIÓN POR CONFLICTO GLOBAL:', mensajeError);
-      throw new Error(`Conflicto de horarios: El horario ${inicioStr} - ${finStr} ya está ocupado por "${conflicto.usuario}" en ${conflicto.dependencia_nombre}. No se pueden crear reservaciones en horarios superpuestos.`);
+      return res.status(400).json({ error: 'Conflicto de horarios: Ya existe una reservación en este rango de tiempo.' });
     }
 
-    console.log('✅ No hay conflictos de horario');
-
-    // 🔹 INSERTAR NUEVA RESERVACIÓN - COMPATIBLE CON TRIGGERS
+    // 🔹 Insertar reservación
     const requestInsert = new sql.Request(transaction);
     await requestInsert
       .input('usuario', sql.NVarChar(100), data.usuario.trim())
@@ -199,7 +93,7 @@ const crearReservacion = async (req, res) => {
         );
       `);
 
-    // 🔹 OBTENER EL ID Y DATOS DE LA RESERVACIÓN RECIÉN INSERTADA
+    // 🔹 Obtener reservación recién creada
     const requestGetData = new sql.Request(transaction);
     const result = await requestGetData
       .input('usuario', sql.NVarChar(100), data.usuario.trim())
@@ -217,53 +111,29 @@ const crearReservacion = async (req, res) => {
       `);
 
     if (result.recordset.length === 0) {
-      throw new Error('No se pudo recuperar la reservación recién creada');
+      return res.status(500).json({ error: 'No se pudo recuperar la reservación recién creada' });
     }
 
-    const nuevaReservacion = result.recordset[0];
-    const nuevaReservacionId = nuevaReservacion.id;
-    const inicioReservacionCompleto = nuevaReservacion.inicioReservacion;
-    const finReservacionCompleto = nuevaReservacion.finReservacion;
+    await transaction.commit();
 
-    console.log('✅ Nueva reservación insertada:', {
-      id: nuevaReservacionId,
-      inicio: inicioReservacionCompleto,
-      fin: finReservacionCompleto
+    return res.json({
+      success: true,
+      message: 'Reservación creada correctamente',
+      reservacion: result.recordset[0]
     });
 
-    await transaction.commit();
-    console.log('✅ Transacción confirmada exitosamente');
-
-    return {
-      success: true,
-      message: 'Reservacion creada correctamente',
-      reservacionId: nuevaReservacionId,
-      datos: {
-        id: nuevaReservacionId,
-        usuario: data.usuario,
-        correo: data.correo,
-        dependencia: dependenciaId,
-        inicioReservacion: inicioReservacionCompleto,
-        finReservacion: finReservacionCompleto,
-        detalles: data.detallesReservacion
-      }
-    };
-
   } catch (error) {
-    // ✅ VERIFICAR SI LA TRANSACCIÓN ESTÁ ACTIVA ANTES DE HACER ROLLBACK
     try {
       if (transaction && transaction.isolationLevel) {
         await transaction.rollback();
-        console.log('✅ Rollback ejecutado correctamente');
       }
-    } catch (rollbackError) {
-      console.error('❌ Error durante rollback:', rollbackError.message);
-    }
+    } catch (_) {}
 
-    console.error('❌ Error creando reservación:', error.message);
-    console.error('Stack trace:', error.stack);
-    throw error;
+    return res.status(500).json({
+      error: 'Error creando reservación',
+      details: error.message
+    });
   }
-}
+};
 
 module.exports = { crearReservacion };

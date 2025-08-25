@@ -1,11 +1,11 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const manejarPedido = async (req, res) => {
     try {
         const { idusuario, items, estado, idaprueba } = req.body; // 👈 incluir idaprueba
         let idpedido = req.body.idpedido;
         console.log(idaprueba)
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         if (idpedido) {
             // Eliminar ítems existentes del pedido

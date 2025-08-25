@@ -1,8 +1,8 @@
-const { poolPromise } = require('../../models/conexion');
+const { poolPromiseGestiones } = require('../../models/conexion');
 
 const obtenerItemsPedido = async (req, res) => {
     try {
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
         const request = pool.request();
 
         // Consulta 1: Totales por item

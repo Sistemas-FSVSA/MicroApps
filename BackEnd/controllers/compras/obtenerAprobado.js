@@ -1,8 +1,8 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const obtenerAprobado = async (req, res) => {
   try {
-    const pool = await poolPromise;
+    const pool = await poolPromiseGestiones;
     const result = await pool.request()
       .query('SELECT idaprueba, nombres, estado FROM usuariosaprueban');
 

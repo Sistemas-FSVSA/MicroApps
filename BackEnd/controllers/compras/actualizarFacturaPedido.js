@@ -1,15 +1,11 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const actualizarFacturaPedido = async (req, res) => {
     const { idorden, factura, items, fechaEntrega } = req.body;
 
-    if (!idorden || !factura) {
-        return res.status(400).json({ error: 'Faltan datos requeridos para la actualización' });
-    }
-
     let pool;
     try {
-        pool = await poolPromise;
+        pool = await poolPromiseGestiones;
         const transaction = new sql.Transaction(pool);
 
         await transaction.begin();
@@ -36,9 +32,10 @@ const actualizarFacturaPedido = async (req, res) => {
                     .input('iditem', sql.Int, item.iditem)
                     .input('valor', sql.Decimal(18, 2), item.valor)
                     .input('cantidad', sql.Int, item.cantidad || 0) // Asignar cantidad por defecto si no se proporciona
+                    .input('observacion', sql.VarChar, item.observacion || '')
                     .query(`
                         UPDATE detalleorden
-                        SET valor = @valor, cantidad = @cantidad
+                        SET valor = @valor, cantidad = @cantidad, observacion = @observacion
                         WHERE idorden = @idorden AND iditem = @iditem
                     `);
 

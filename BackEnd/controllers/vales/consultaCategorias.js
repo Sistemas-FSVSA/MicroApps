@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const consultaCategorias = async (req, res) => {
     try {
@@ -7,7 +7,7 @@ const consultaCategorias = async (req, res) => {
             return res.status(400).json({ error: 'idusuario es requerido' });
         }
 
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         // Obtener idcategoria de la tabla categoriasusuario
         const categoriasUsuarioResult = await pool.request()

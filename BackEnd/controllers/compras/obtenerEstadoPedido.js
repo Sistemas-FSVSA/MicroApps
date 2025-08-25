@@ -1,10 +1,10 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const obtenerEstadoPedido = async (req, res) => {
     const { idpedido } = req.params;
 
     try {
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         const result = await pool.request()
             .input('idpedido', sql.Int, idpedido)

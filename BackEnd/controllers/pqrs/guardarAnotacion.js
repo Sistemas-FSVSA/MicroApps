@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const guardarAnotacion = async (req, res) => {
     const { usuario, anotacion, idpqrs } = req.body;
@@ -6,7 +6,7 @@ const guardarAnotacion = async (req, res) => {
     let transaction;
 
     try {
-        pool = await poolPromise;
+        pool = await poolPromiseGestiones;
         transaction = new sql.Transaction(pool);
         await transaction.begin();
 

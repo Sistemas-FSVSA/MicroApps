@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const manejarOrden = async (req, res) => {
     try {
@@ -14,7 +14,7 @@ const manejarOrden = async (req, res) => {
         }
 
 
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
         const transaction = new sql.Transaction(pool);
 
         await transaction.begin();
@@ -36,14 +36,15 @@ const manejarOrden = async (req, res) => {
         // Insertar en tabla detalleorden
         const detalleRequest = new sql.Request(transaction);
         const insertDetalleQuery = `
-            INSERT INTO detalleorden (idorden, iditem, cantidad, valor)
-            VALUES (@idorden, @iditem, @cantidad, @valor)
+            INSERT INTO detalleorden (idorden, iditem, cantidad, observacion, valor)
+            VALUES (@idorden, @iditem, @cantidad, @observacion, @valor)
         `;
 
         for (const item of items) {
             detalleRequest.input('idorden', sql.Int, idorden);
             detalleRequest.input('iditem', sql.Int, item.iditem);
             detalleRequest.input('cantidad', sql.Int, item.total);
+            detalleRequest.input('observacion', sql.VarChar, item.observacion || ''); // Agregar observación si existe
             detalleRequest.input('valor', sql.Decimal(18, 2), item.valor || 0); // o ajusta tipo según DB
             await detalleRequest.query(insertDetalleQuery);
             detalleRequest.parameters = {};

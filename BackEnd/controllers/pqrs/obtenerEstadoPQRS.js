@@ -1,10 +1,10 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const obtenerEstadoPQRS = async (req, res) => {
     const { idpqrs } = req.params; // Suponiendo que lo recibes como /api/pqrs/estado/:idpqrs
 
     try {
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
         const result = await pool.request()
             .input('idpqrs', sql.Int, idpqrs)

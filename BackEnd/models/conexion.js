@@ -1,11 +1,11 @@
 const sql = require("mssql");
 
 // Configuración para la primera base de datos
-const config1 = {
-  user: process.env.DB1_USER,
-  password: process.env.DB1_PASSWORD,
-  server: process.env.DB1_SERVER,
-  database: process.env.DB1_DATABASE,
+const DBGESTIONES = {
+  user: process.env.DBGESTIONES_USER,
+  password: process.env.DBGESTIONES_PASSWORD,
+  server: process.env.DBGESTIONES_SERVER,
+  database: process.env.DBGESTIONES_DATABASE,
   options: {
     encrypt: false,
     enableArithAbort: true
@@ -13,12 +13,12 @@ const config1 = {
 };
 
 // Configuración para la segunda base de datos
-const config2 = {
-  user: process.env.DB2_USER,
-  password: process.env.DB2_PASSWORD,
-  server: process.env.DB2_SERVER,
-  port: parseInt(process.env.DB2_PORT),
-  database: process.env.DB2_DATABASE,
+const DBMAESTROS = {
+  user: process.env.DBMAESTROS_USER,
+  password: process.env.DBMAESTROS_PASSWORD,
+  server: process.env.DBMAESTROS_SERVER,
+  port: parseInt(process.env.DBMAESTROS_PORT),
+  database: process.env.DBMAESTROS_DATABASE,
   options: {
     encrypt: false,
     enableArithAbort: true
@@ -26,11 +26,24 @@ const config2 = {
 };
 
 // Configuración para la segunda base de datos
-const config3 = {
-  user: process.env.DB3_USER,
-  password: process.env.DB3_PASSWORD,
-  server: process.env.DB3_SERVER,
-  database: process.env.DB3_DATABASE,
+const DBRECAUDO = {
+  user: process.env.DBRECAUDO_USER,
+  password: process.env.DBRECAUDO_PASSWORD,
+  server: process.env.DBRECAUDO_SERVER,
+  database: process.env.DBRECAUDO_DATABASE,
+  options: {
+    encrypt: false,
+    enableArithAbort: true
+  }
+};
+
+// Configuración para la segunda base de datos
+const DBPREVISION = {
+  user: process.env.DBPREVISION_USER,
+  password: process.env.DBPREVISION_PASSWORD,
+  server: process.env.DBPREVISION_SERVER,
+  port: parseInt(process.env.DBPREVISION_PORT),
+  database: process.env.DBPREVISION_DATABASE,
   options: {
     encrypt: false,
     enableArithAbort: true
@@ -38,9 +51,10 @@ const config3 = {
 };
 
 // Crear las conexiones
-let poolPromise = null;
-let poolPromise2 = null;
-let poolPromise3 = null;
+let poolPromiseGestiones = null;
+let poolPromiseMaestros = null;
+let poolPromiseRecaudo = null;
+let poolPromisePrevision = null;
 
 const connectWithRetry = async (config, retryInterval = 5000) => {
   while (true) {
@@ -56,17 +70,21 @@ const connectWithRetry = async (config, retryInterval = 5000) => {
 };
 
 // Conexión a la primera base de datos
-poolPromise = connectWithRetry(config1);
+poolPromiseGestiones = connectWithRetry(DBGESTIONES);
 
 // Conexión a la segunda base de datos
-poolPromise2 = connectWithRetry(config2);
+poolPromiseMaestros = connectWithRetry(DBMAESTROS);
 
 // Conexión a la segunda base de datos
-poolPromise3 = connectWithRetry(config3);
+poolPromiseRecaudo = connectWithRetry(DBRECAUDO);
+
+// Conexión a la segunda base de datos
+poolPromisePrevision = connectWithRetry(DBPREVISION);
 
 module.exports = {
   sql,
-  poolPromise,
-  poolPromise2,
-  poolPromise3
+  poolPromiseGestiones,
+  poolPromiseMaestros,
+  poolPromiseRecaudo, 
+  poolPromisePrevision
 };

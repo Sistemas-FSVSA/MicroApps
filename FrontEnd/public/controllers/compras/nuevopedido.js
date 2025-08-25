@@ -118,6 +118,95 @@ function añadirItems() {
     });
 }
 
+function renderizarItemsEncargo(paginaDeseada = null) {
+    const dataTable = $('#tablaItemsSeleccionados').DataTable();
+
+    // Guardar la página actual solo si no se pasa una página deseada
+    const paginaActual = paginaDeseada !== null ? paginaDeseada : dataTable.page();
+
+    dataTable.clear();
+
+    const items = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
+
+    items.forEach((item, index) => {
+        const btnEliminar = permisos.tienePermisoEliminarItem
+            ? `<button class="btn btn-danger btn-eliminar-item" data-index="${index}">
+                    <i class="fas fa-trash"></i>
+               </button>` : '';
+
+        const btnNota = `
+            <div class="position-relative d-inline-block">
+                <button class="btn btn-warning btn-nota-item" data-index="${index}" title="Agregar nota">
+                    <i class="fas fa-sticky-note"></i>
+                </button>
+                ${item.notas && item.notas.trim() !== '' ? `
+                    <span class="campanita-badge">
+                        <i class="fas fa-bell fa-xs text-white"></i>
+                    </span>` : ''}
+            </div>`;
+
+        const rowData = [
+            item.id,
+            item.nombre,
+            item.categoria,
+            `<input type="number" class="form-control input-cantidad" value="${item.cantidad}" min="1" data-index="${index}">`,
+            item.nombreCompleto,
+            btnEliminar + ' ' + btnNota
+        ];
+
+        dataTable.row.add(rowData);
+    });
+
+    // Volver a la página deseada sin reiniciar
+    dataTable.draw(false).page(paginaActual).draw(false);
+
+    const $tabla = $('#tablaItemsSeleccionados tbody');
+
+    // Delegación de eventos
+    $tabla.off('click', '.btn-eliminar-item').on('click', '.btn-eliminar-item', function () {
+        const index = $(this).data('index');
+        eliminarItemDeSessionStorage(index);
+    });
+
+    $tabla.off('input', '.input-cantidad').on('input', '.input-cantidad', function () {
+        const index = $(this).data('index');
+        const valor = $(this).val();
+        actualizarCantidadEnSessionStorage(index, valor);
+    });
+
+    $tabla.off('click', '.btn-nota-item').on('click', '.btn-nota-item', async function () {
+        const index = $(this).data('index');
+        const items = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
+        const notaActual = items[index]?.notas || '';
+
+        const { value: nuevaNota } = await Swal.fire({
+            input: 'textarea',
+            inputLabel: 'Nota para el item',
+            inputValue: notaActual,
+            inputPlaceholder: 'Escribe una nota aquí...',
+            inputAttributes: {
+                'aria-label': 'Escribe una nota para este item'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Guardar',
+            cancelButtonText: 'Cancelar',
+            customClass: {
+                confirmButton: 'swal-confirm-button',
+                cancelButton: 'swal-cancel-button'
+            }
+        });
+
+        if (nuevaNota !== undefined) {
+            items[index].notas = nuevaNota;
+            sessionStorage.setItem('itemsSeleccionados', JSON.stringify(items));
+
+            // Mantener la página actual al recargar
+            const page = $('#tablaItemsSeleccionados').DataTable().page();
+            renderizarItemsEncargo(page);
+        }
+    });
+}
+
 function actualizarTabla(data) {
     const tbody = document.getElementById('tbodyNuevoItem');
     tbody.innerHTML = '';
@@ -188,97 +277,12 @@ function agregarItemASessionStorage(nuevoItem) {
     items.push(nuevoItem);
     sessionStorage.setItem('itemsSeleccionados', JSON.stringify(items));
 
-    // Actualizar la tabla principal
-    renderizarItemsEncargo();
+    const page = $('#tablaItemsSeleccionados').DataTable().page();
+    renderizarItemsEncargo(page);
 
     // Mostrar mensaje de éxito
     Mensaje('success', 'Éxito!', 'Item agregado exitosamente.', true, false);
 }
-
-function renderizarItemsEncargo() {
-    const dataTable = $('#tablaItemsSeleccionados').DataTable();
-
-    dataTable.clear().draw();
-
-    const items = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
-
-    items.forEach((item, index) => {
-        // Botón de eliminar
-        const btnEliminar = permisos.tienePermisoEliminarItem
-            ? `<button class="btn btn-danger btn-eliminar-item" data-index="${index}">
-                    <i class="fas fa-trash"></i>
-               </button>`
-            : '';
-
-
-
-        // Botón de nota con campanita si aplica
-        const btnNota = `
-    <div class="position-relative d-inline-block">
-        <button class="btn btn-warning btn-nota-item" data-index="${index}" title="Agregar nota">
-            <i class="fas fa-sticky-note"></i>
-        </button>
-        ${item.notas && item.notas.trim() !== '' ? `
-            <span class="campanita-badge">
-                <i class="fas fa-bell fa-xs text-white"></i>
-            </span>` : ''}
-    </div>`;
-
-        const rowData = [
-            item.id,
-            item.nombre,
-            item.categoria,
-            `<input type="number" class="form-control input-cantidad" value="${item.cantidad}" min="1" data-index="${index}">`,
-            item.nombreCompleto,
-            btnEliminar + ' ' + btnNota
-        ];
-
-        dataTable.row.add(rowData).draw();
-    });
-
-    // Eventos
-    document.querySelectorAll('.btn-eliminar-item').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const index = btn.getAttribute('data-index');
-            eliminarItemDeSessionStorage(index);
-        });
-    });
-
-    document.querySelectorAll('.input-cantidad').forEach(input => {
-        input.addEventListener('input', () => {
-            const index = input.getAttribute('data-index');
-            actualizarCantidadEnSessionStorage(index, input.value);
-        });
-    });
-
-    document.querySelectorAll('.btn-nota-item').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const index = btn.getAttribute('data-index');
-            const items = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
-            const notaActual = items[index]?.notas || '';
-
-            const { value: nuevaNota } = await Swal.fire({
-                input: 'textarea',
-                inputLabel: 'Nota para el item',
-                inputValue: notaActual,
-                showCancelButton: true,
-                confirmButtonText: 'Guardar',
-                cancelButtonText: 'Cancelar',
-                inputPlaceholder: 'Escribe una nota aquí...',
-                inputAttributes: {
-                    'aria-label': 'Escribe una nota para este item'
-                }
-            });
-
-            if (nuevaNota !== undefined) {
-                items[index].notas = nuevaNota;
-                sessionStorage.setItem('itemsSeleccionados', JSON.stringify(items));
-                renderizarItemsEncargo(); // Recargar para actualizar campanita
-            }
-        });
-    });
-}
-
 
 function eliminarItemDeSessionStorage(index) {
     let items = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
@@ -289,8 +293,8 @@ function eliminarItemDeSessionStorage(index) {
     // Guardar la nueva lista
     sessionStorage.setItem('itemsSeleccionados', JSON.stringify(items));
 
-    // Volver a renderizar la tabla
-    renderizarItemsEncargo();
+    const page = $('#tablaItemsSeleccionados').DataTable().page();
+    renderizarItemsEncargo(page);
 }
 
 function actualizarCantidadEnSessionStorage(index, nuevaCantidad) {
@@ -312,8 +316,6 @@ async function manejarPedido(estado) {
     const itemsSeleccionados = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
     const idaprueba = document.getElementById('aprobadoPor')?.value || null;
     const idproveedor = document.getElementById('proveedor')?.value || null;
-
-    console.log(idaprueba);
 
     if (itemsSeleccionados.length === 0) {
         Mensaje('warning', 'Espera!', 'No hay items para guardar.', false, false);
@@ -408,7 +410,8 @@ async function generarOrdenDesdePedido(items, idusuario, idproveedor) {
     const ordenItems = items.map(item => ({
         iditem: parseInt(item.id),
         total: parseInt(item.cantidad),
-        valor: 0
+        valor: 0,
+        observacion: item.notas || "",
     }));
 
     const orden = {
@@ -417,6 +420,8 @@ async function generarOrdenDesdePedido(items, idusuario, idproveedor) {
         idproveedor: idproveedor,
         items: ordenItems
     };
+
+    console.log(orden)
 
     return fetch(`${url}/api/compras/manejarOrden`, {
         method: 'POST',

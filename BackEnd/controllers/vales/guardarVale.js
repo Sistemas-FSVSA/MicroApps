@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const guardarVale = async (req, res) => {
     const { encargado, valor, motivo, fecha, idusuario, placa, permiso } = req.body;
@@ -7,7 +7,7 @@ const guardarVale = async (req, res) => {
         return res.status(400).json({ error: 'Todos los campos son obligatorios' });
     }
 
-    const pool = await poolPromise;
+    const pool = await poolPromiseGestiones;
     const transaction = new sql.Transaction(pool);
 
     try {

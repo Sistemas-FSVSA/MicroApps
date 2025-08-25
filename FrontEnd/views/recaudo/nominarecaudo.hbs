@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="/css/recaudo/nominarecaudo.css">
+
 <div class="content-header">
     <div class="container-fluid">
         <div class="row mb-2 align-items-center d-flex justify-content-between">
@@ -18,8 +20,25 @@
 <div class="content">
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <button class="btn btn-fsvsaoff" id="registrarTramiteRecaudo" data-toggle="modal"
+            <button class="btn btn-fsvsaoff mr-2" id="registrarTramiteRecaudo" data-toggle="modal"
                 data-target="#tramiteRecaudoModal">Registrar Gestion</button>
+            <button class="btn btn-fsvsaon position-relative" id="recaudadoresFaltantes" data-toggle="modal"
+                data-target="#modalRecaudadoresFaltantes" title="Recaudadores Faltantes">
+                <i class="fas fa-bell"></i>
+                <span id="badgeFaltantes"
+                    class="badge badge-danger position-absolute top-0 start-100 translate-middle rounded-pill"
+                    style="display: none;">
+                    0
+                </span>
+            </button>
+
+            <button class="btn btn-fsvsaon ml-auto" id="generarNomina" data-toggle="modal"
+                data-target="#generarNominaRecaudo">Generar Nomina</button>
+        </div>
+        <div class="form-group ml-3">
+            <select class="form-control" id="filtroRecaudador" onchange="filtrarGestionesPorRecaudador()">
+                <option value="">-- Selecciona un recaudador --</option>
+            </select>
         </div>
         <div id="gestiones-container" class="mt-4 table-responsive">
             <table id="gestiones" class="table table-striped table-bordered nowrap" style="width:100%">
@@ -30,6 +49,7 @@
                         <th>Cedula</th>
                         <th>Fecha</th>
                         <th>Gestion</th>
+                        <th>Estado</th>
                         <th>Accion</th>
                     </tr>
                 </thead>
@@ -47,7 +67,7 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="tramiteRecaudoModalLabel">Registrar Gestion</h5>
+                <h5 class="modal-title" id="tramiteRecaudoModalLabel">Registrar Gestión</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -62,14 +82,18 @@
                         </select>
                     </div>
                     <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label for="tipoTramite">Tipo de Gestion</label>
+                        <div class="form-group col-md-4">
+                            <label for="tipoTramite">Tipo de Gestión</label>
                             <select class="form-control" id="tipoTramite" name="tipoTramite">
                                 <option value="">Seleccione...</option>
                                 <!-- Opciones dinámicas aquí -->
                             </select>
                         </div>
-                        <div class="form-group col-md-6">
+                        <div class="form-group col-md-4">
+                            <label for="cantidad">Cantidad</label>
+                            <input type="number" class="form-control" id="cantidad" name="cantidad">
+                        </div>
+                        <div class="form-group col-md-4">
                             <label for="fechaHora">Fecha</label>
                             <input type="date" class="form-control" id="fechaHora" name="fechaHora" disabled>
                         </div>
@@ -84,6 +108,68 @@
         </div>
     </div>
 </div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="generarNominaRecaudo" tabindex="-1" role="dialog"
+    aria-labelledby="generarNominaRecaudoLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="generarNominaRecaudoLabel">Generar Nomina Recaudo</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form id="generarNominaRecaudoForm">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="fechaDesde">Fecha Desde</label>
+                            <input type="date" class="form-control" id="fechaDesde" name="fechaDesde">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="fechaHasta">Fecha Hasta</label>
+                            <input type="date" class="form-control" id="fechaHasta" name="fechaHasta">
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-fsvsaoff" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-fsvsaon" id="generarNominaRecaudo"
+                    onclick="generarNomina()">Generar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal Recaudadores Faltantes -->
+<div class="modal fade" id="modalRecaudadoresFaltantes" tabindex="-1" role="dialog"
+    aria-labelledby="modalRecaudadoresFaltantesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document"> <!-- Ancho grande -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalRecaudadoresFaltantesLabel">Recaudadores sin gestion</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body overflow-auto" style="max-height: 70vh;"> <!-- Alto aumentado -->
+                <ul id="listaRecaudadoresFaltantes" class="list-group">
+                    <!-- Lista generada dinámicamente -->
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
 
 <script src="/controllers/recaudo/nominarecaudo.js"></script>

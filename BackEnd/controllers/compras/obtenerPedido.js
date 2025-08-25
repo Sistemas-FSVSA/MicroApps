@@ -1,9 +1,9 @@
-const { poolPromise, sql } = require('../../models/conexion');
+const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const obtenerPedido = async (req, res) => {
     try {
         const { idusuario, idpedido, estado } = req.body;
-        const pool = await poolPromise;
+        const pool = await poolPromiseGestiones;
 
 
         // Escenario 1: Solo idusuario

@@ -29,7 +29,7 @@ app.use(express.json());
 const secretKey = process.env.JWT_SECRET;
 
 // Define las rutas públicas (sin protección)
-const publicRoutes = [ '/', '/config.js', '/generarnovedad' ];
+const publicRoutes = [ '/', '/config.js', '/generarnovedad', '/agenda' ];
 
 // Middleware global para proteger rutas privadas
 app.use((req, res, next) => {
@@ -69,6 +69,9 @@ app.get('/', (req, res) => { res.render('index', { layout: false }); });
 
 // Rutas Publicas
 app.get('/generarnovedad', (req, res) => { res.render('recaudo/generarnovedad', { layout: false }); });
+
+// Rutas Publicas
+app.get('/agenda', (req, res) => { res.render('agenda/agendasala', { layout: false }); });
 
 //Rutas Privadas
 app.get("/inicio", (req, res) => {

@@ -1,6 +1,6 @@
 const sql = require("mssql");
 
-// Configuración para la primera base de datos
+// Configuración para la base de datos de gestiones
 const DBGESTIONES = {
   user: process.env.DBGESTIONES_USER,
   password: process.env.DBGESTIONES_PASSWORD,
@@ -12,7 +12,7 @@ const DBGESTIONES = {
   }
 };
 
-// Configuración para la segunda base de datos
+// Configuración para la base de datos de maestros
 const DBMAESTROS = {
   user: process.env.DBMAESTROS_USER,
   password: process.env.DBMAESTROS_PASSWORD,
@@ -25,7 +25,7 @@ const DBMAESTROS = {
   }
 };
 
-// Configuración para la segunda base de datos
+// Configuración para la base de datos de recaudo
 const DBRECAUDO = {
   user: process.env.DBRECAUDO_USER,
   password: process.env.DBRECAUDO_PASSWORD,
@@ -37,7 +37,7 @@ const DBRECAUDO = {
   }
 };
 
-// Configuración para la segunda base de datos
+// Configuración para la base de datos de previsión
 const DBPREVISION = {
   user: process.env.DBPREVISION_USER,
   password: process.env.DBPREVISION_PASSWORD,
@@ -50,41 +50,52 @@ const DBPREVISION = {
   }
 };
 
+// Configuración para la base de datos de agenda
+const DBAGENDA = {
+  user: process.env.DBAGENDA_USER,
+  password: process.env.DBAGENDA_PASSWORD,
+  server: process.env.DBAGENDA_SERVER,
+  database: process.env.DBAGENDA_DATABASE,
+  options: {
+    encrypt: false,
+    trustServerCertificate: true,
+    enableArithAbort: true
+  }
+};
+
 // Crear las conexiones
 let poolPromiseGestiones = null;
 let poolPromiseMaestros = null;
 let poolPromiseRecaudo = null;
 let poolPromisePrevision = null;
+let poolPromiseAgenda = null;
 
 const connectWithRetry = async (config, retryInterval = 5000) => {
   while (true) {
     try {
       const pool = await new sql.ConnectionPool(config).connect();
-      console.log(`Conectado a la base de datos: ${config.database}`);
+      console.log(`Conexión exitosa a la base de datos: ${config.database} en ${config.server}`);
       return pool;
     } catch (err) {
-      console.log(`Error de conexión a la base de datos: ${err}. Reintentando en ${retryInterval / 1000} segundos...`);
+      console.error(`Error de conexión a la base de datos ${config.database} en ${config.server}:`, err.message);
+      console.log(`Reintentando en ${retryInterval / 1000} segundos...`);
       await new Promise(resolve => setTimeout(resolve, retryInterval));
     }
   }
 };
 
-// Conexión a la primera base de datos
-poolPromiseGestiones = connectWithRetry(DBGESTIONES);
-
-// Conexión a la segunda base de datos
-poolPromiseMaestros = connectWithRetry(DBMAESTROS);
-
-// Conexión a la segunda base de datos
-poolPromiseRecaudo = connectWithRetry(DBRECAUDO);
-
-// Conexión a la segunda base de datos
-poolPromisePrevision = connectWithRetry(DBPREVISION);
+// Conexión a las bases de datos con manejo de promesas
+poolPromiseGestiones = connectWithRetry(DBGESTIONES).catch(err => console.error('Fallo permanente en DBGESTIONES:', err));
+poolPromiseMaestros = connectWithRetry(DBMAESTROS).catch(err => console.error('Fallo permanente en DBMAESTROS:', err));
+poolPromiseRecaudo = connectWithRetry(DBRECAUDO).catch(err => console.error('Fallo permanente en DBRECAUDO:', err));
+poolPromisePrevision = connectWithRetry(DBPREVISION).catch(err => console.error('Fallo permanente en DBPREVISION:', err));
+poolPromiseAgenda = connectWithRetry(DBAGENDA).catch(err => console.error('Fallo permanente en DBAGENDA:', err));
 
 module.exports = {
   sql,
   poolPromiseGestiones,
   poolPromiseMaestros,
-  poolPromiseRecaudo, 
-  poolPromisePrevision
+  poolPromiseRecaudo,
+  poolPromisePrevision,
+  poolPromiseAgenda
 };

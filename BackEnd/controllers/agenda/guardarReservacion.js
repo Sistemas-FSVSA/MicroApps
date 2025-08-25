@@ -43,33 +43,58 @@ const guardarReservacion = async (req, res) => {
             return res.status(400).json({ error: 'No se pueden crear reservaciones en fechas pasadas' });
         }
 
-        // 🔹 Construir fechas
+        // 🔹 Validar que hora fin sea mayor que hora inicio
+        const [horaI, minI] = data.horaInicio.split(':');
+        const [horaF, minF] = data.horaFin.split(':');
+        const inicioMinutos = parseInt(horaI) * 60 + parseInt(minI);
+        const finMinutos = parseInt(horaF) * 60 + parseInt(minF);
+
+        if (finMinutos <= inicioMinutos) {
+            return res.status(400).json({ error: 'La hora de finalización debe ser mayor que la hora de inicio' });
+        }
+
+        // 🔹 Construir fechas completas para comparación
         const inicioStr = `${data.fechaReservacion} ${data.horaInicio}`;
         const finStr = `${data.fechaReservacion} ${data.horaFin}`;
 
-        // 🔹 Verificar conflictos globales
+        // 🔹 ✅ VALIDACIÓN DE CONFLICTOS MEJORADA - EVITA SOLAPAMIENTOS
         const requestConflicto = new sql.Request(transaction);
         const conflictos = await requestConflicto
+            .input('fechaReservacion', sql.Date, data.fechaReservacion)
             .input('inicioStr', sql.NVarChar(19), inicioStr)
             .input('finStr', sql.NVarChar(19), finStr)
             .query(`
-        SELECT dr.inicioReservacion, dr.finReservacion
-        FROM datosreservacion dr
-        INNER JOIN dependencias d ON dr.iddependencia = d.iddependencia
-        WHERE dr.finReservacion > GETDATE()
-          AND d.estado = 1
-      `);
+                SELECT 
+                    dr.inicioReservacion, 
+                    dr.finReservacion,
+                    dr.usuario,
+                    FORMAT(dr.inicioReservacion, 'HH:mm') as horaInicio,
+                    FORMAT(dr.finReservacion, 'HH:mm') as horaFin
+                FROM datosreservacion dr
+                INNER JOIN dependencias d ON dr.iddependencia = d.iddependencia
+                WHERE CAST(dr.inicioReservacion AS DATE) = @fechaReservacion
+                  AND dr.finReservacion > GETDATE()
+                  AND d.estado = 1
+                  AND (
+                    -- Verificar solapamiento de horarios: nueva reservación se solapa con existente
+                    (CONVERT(datetime2, @inicioStr, 120) < dr.finReservacion) 
+                    AND 
+                    (CONVERT(datetime2, @finStr, 120) > dr.inicioReservacion)
+                  )
+            `);
 
-        const conflictosReales = conflictos.recordset.filter(reserva => {
-            const inicioNueva = new Date(inicioStr);
-            const finNueva = new Date(finStr);
-            const inicioExistente = new Date(reserva.inicioReservacion);
-            const finExistente = new Date(reserva.finReservacion);
-            return (inicioNueva < finExistente) && (finNueva > inicioExistente);
-        });
-
-        if (conflictosReales.length > 0) {
-            return res.status(400).json({ error: 'Conflicto de horarios: Ya existe una reservación en este rango de tiempo.' });
+        if (conflictos.recordset.length > 0) {
+            const reservacionEnConflicto = conflictos.recordset[0];
+            return res.status(400).json({ 
+                error: 'HORARIO_NO_DISPONIBLE',
+                message: `El horario de ${data.horaInicio} a ${data.horaFin} se solapa con una reservación existente.`,
+                conflicto: {
+                    usuario: reservacionEnConflicto.usuario,
+                    horaInicio: reservacionEnConflicto.horaInicio,
+                    horaFin: reservacionEnConflicto.horaFin,
+                    fechaCompleta: reservacionEnConflicto.inicioReservacion
+                }
+            });
         }
 
         // 🔹 Insertar reservación
@@ -82,16 +107,16 @@ const guardarReservacion = async (req, res) => {
             .input('finStr', sql.NVarChar(19), finStr)
             .input('detallesReservacion', sql.NVarChar(sql.MAX), data.detallesReservacion || null)
             .query(`
-        INSERT INTO datosreservacion (usuario, correo, iddependencia, inicioReservacion, finReservacion, detallesReservacion)
-        VALUES (
-          @usuario, 
-          @correo, 
-          @iddependencia, 
-          CONVERT(datetime2, @inicioStr, 120), 
-          CONVERT(datetime2, @finStr, 120), 
-          @detallesReservacion
-        );
-      `);
+                INSERT INTO datosreservacion (usuario, correo, iddependencia, inicioReservacion, finReservacion, detallesReservacion)
+                VALUES (
+                  @usuario, 
+                  @correo, 
+                  @iddependencia, 
+                  CONVERT(datetime2, @inicioStr, 120), 
+                  CONVERT(datetime2, @finStr, 120), 
+                  @detallesReservacion
+                );
+            `);
 
         // 🔹 Obtener reservación recién creada
         const requestGetData = new sql.Request(transaction);
@@ -101,14 +126,14 @@ const guardarReservacion = async (req, res) => {
             .input('iddependencia', sql.Int, dependenciaId)
             .input('inicioStr', sql.NVarChar(19), inicioStr)
             .query(`
-        SELECT TOP 1 id, inicioReservacion, finReservacion
-        FROM datosreservacion 
-        WHERE usuario = @usuario 
-          AND correo = @correo 
-          AND iddependencia = @iddependencia
-          AND FORMAT(inicioReservacion, 'yyyy-MM-dd HH:mm:ss') = @inicioStr
-        ORDER BY id DESC
-      `);
+                SELECT TOP 1 id, inicioReservacion, finReservacion
+                FROM datosreservacion 
+                WHERE usuario = @usuario 
+                  AND correo = @correo 
+                  AND iddependencia = @iddependencia
+                  AND FORMAT(inicioReservacion, 'yyyy-MM-dd HH:mm:ss') = @inicioStr
+                ORDER BY id DESC
+            `);
 
         if (result.recordset.length === 0) {
             return res.status(500).json({ error: 'No se pudo recuperar la reservación recién creada' });

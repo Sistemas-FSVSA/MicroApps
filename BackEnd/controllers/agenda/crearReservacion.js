@@ -1,62 +1,6 @@
-const { sql, poolPromiseAgenda } = require('./conexion');
+const { poolPromiseAgenda, sql } = require('../../models/conexion');
 
-//
-// 🔹 Consultar Reservaciones con manejo de errores mejorado
-//
-async function getReservaciones() {
-  try {
-    const pool = await poolPromiseAgenda;
-    const result = await pool.request()
-      .query(`
-        SELECT DISTINCT
-          dr.id AS reservacionId,
-          dr.usuario,
-          dr.correo,
-          d.nombre AS dependencia,
-          dr.iddependencia,
-          CAST(dr.inicioReservacion AS DATE) AS fechaReservacion,
-          FORMAT(dr.inicioReservacion, 'HH:mm:ss') AS horaInicio,
-          FORMAT(dr.finReservacion, 'HH:mm:ss') AS horaFin,
-          dr.detallesReservacion,
-          dr.inicioReservacion,
-          dr.finReservacion
-        FROM datosreservacion dr
-        INNER JOIN dependencias d ON dr.iddependencia = d.iddependencia
-        WHERE dr.finReservacion > GETDATE() -- Solo reservaciones futuras
-          AND d.estado = 1 -- Solo dependencias activas
-        ORDER BY dr.inicioReservacion ASC
-      `);
-
-    console.log('=== DEPURACIÓN DE RESERVACIONES ===');
-    console.log('Total registros obtenidos:', result.recordset.length);
-
-    result.recordset.forEach((record, index) => {
-      console.log(`Registro ${index + 1}:`, {
-        id: record.reservacionId,
-        usuario: record.usuario,
-        dependencia: record.dependencia,
-        iddependencia: record.iddependencia,
-        fechaReservacion: record.fechaReservacion,
-        horaInicio: record.horaInicio,
-        horaFin: record.horaFin,
-        inicioCompleto: record.inicioReservacion,
-        finCompleto: record.finReservacion
-      });
-    });
-
-    console.log('=== FIN DEPURACIÓN ===');
-    return result.recordset;
-
-  } catch (error) {
-    console.error('Error en getReservaciones:', error);
-    throw error;
-  }
-}
-
-//
-// 🔹 Crear Reservación CORREGIDA - Sin tabla reservacion duplicada
-//
-async function crearReservacion(data) {
+const crearReservacion = async (req, res) => {
   const pool = await poolPromiseAgenda;
   const transaction = new sql.Transaction(pool);
 
@@ -121,8 +65,8 @@ async function crearReservacion(data) {
     }
 
     // 🔹 CONSTRUIR FECHAS DATETIME CORRECTAMENTE - SIN CONVERSIÓN DE ZONA HORARIA
-    const inicioStr = `${data.fechaReservacion} ${data.horaInicio}`; 
-    const finStr = `${data.fechaReservacion} ${data.horaFin}`;    
+    const inicioStr = `${data.fechaReservacion} ${data.horaInicio}`;
+    const finStr = `${data.fechaReservacion} ${data.horaFin}`;
 
     console.log('🕒 Fechas construidas (formato ISO):', {
       inicioStr,
@@ -184,7 +128,7 @@ async function crearReservacion(data) {
 
       // Lógica de superposición: Si hay ANY overlap, es conflicto
       const haySupersposicion = (inicioNueva < finExistente) && (finNueva > inicioExistente);
-      
+
       console.log(`🔍 Validando conflicto GLOBAL con ${reserva.usuario} (${reserva.dependencia_nombre}):`, {
         nuevaSolicitud: `${data.usuario} en ${dependenciaId}: ${inicioStr} - ${finStr}`,
         existente: `${reserva.usuario} en ${reserva.dependencia_nombre}: ${reserva.inicio_formateado} - ${reserva.fin_formateado}`,
@@ -322,47 +266,4 @@ async function crearReservacion(data) {
   }
 }
 
-//
-// 🔹 Función para limpiar reservaciones expiradas (opcional)
-//
-async function limpiarReservacionesExpiradas() {
-  try {
-    const pool = await poolPromiseAgenda;
-    const result = await pool.request()
-      .query(`
-        DELETE FROM datosreservacion 
-        WHERE finReservacion < DATEADD(day, -7, GETDATE());
-      `);
-
-    console.log('Reservaciones expiradas limpiadas:', result.rowsAffected);
-    return result.rowsAffected;
-  } catch (error) {
-    console.error('Error limpiando reservaciones expiradas:', error);
-    throw error;
-  }
-}
-
-//
-// 🔹 Función de prueba de conexión
-//
-async function testConnection() {
-  try {
-    const pool = await poolPromiseAgenda;
-    const result = await pool.request().query('SELECT 1 as test');
-    console.log('✅ Conexión a la base de datos exitosa');
-    return { success: true, message: 'Conexión exitosa' };
-  } catch (error) {
-    console.error('❌ Error de conexión:', error);
-    throw error;
-  }
-}
-
-//
-// 🔹 Exportar funciones
-//
-module.exports = {
-  getReservaciones,
-  crearReservacion,
-  limpiarReservacionesExpiradas,
-  testConnection
-};
+module.exports = { crearReservacion };

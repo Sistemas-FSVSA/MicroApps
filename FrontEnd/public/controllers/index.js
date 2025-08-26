@@ -100,6 +100,11 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   });
 
+  document.getElementById('btnReservar').addEventListener('click', () => {
+    window.location.href = '/agenda';
+  });
+
+
   // Consultar usuarios activos y mostrarlos debajo del botón
   fetch(`${url}/api/online`) // Ajusta la ruta si usás un prefijo diferente
     .then((res) => res.json())

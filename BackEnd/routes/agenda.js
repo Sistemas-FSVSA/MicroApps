@@ -1,19 +1,18 @@
-const express = require('express');
-const router = express.Router();
+const { Router } = require('express');
+const router = Router();
+const rateLimiterFast = require('../models/rateLimiterFast'); // 100 solicitudes por segundo
 
-const agendaController = require('../controllers/agenda/agenda');
-const dependenciaController = require('../controllers/agenda/dependencia');
 
-// Rutas de agenda
-router.get('/eventos', agendaController.getEventos);
-router.post('/', agendaController.nuevaReservacion);
+const { obtenerReservaciones } = require('../controllers/agenda/obtenerReservaciones');
+const { guardarReservacion } = require('../controllers/agenda/guardarReservacion');
+const { obtenerDependencias } = require('../controllers/agenda/obtenerDependencias');
+const { obtenerReservacionPorId } = require('../controllers/agenda/obtenerReservacion');
 
-// Rutas de dependencias
-router.get('/dependencias', dependenciaController.listarDependencias);
+router.get('/obtenerReservaciones/:mes', rateLimiterFast, obtenerReservaciones);
+router.post('/guardarReservacion', rateLimiterFast, guardarReservacion);
+router.get('/obtenerDependencias', rateLimiterFast, obtenerDependencias);
+router.get('/obtenerDependencias/:id', rateLimiterFast, obtenerDependencias);
+router.get('/obtenerReservacion/:idreservacion', rateLimiterFast, obtenerReservacionPorId);
+
 
 module.exports = router;
-
-
-// const rateLimiterStrict = require('../models/rateLimiterStrict'); // 1 solicitud por minuto
-// const rateLimiterFast = require('../models/rateLimiterFast'); // 100 solicitudes por segundo
-// const authenticateToken = require('../models/authMiddleware');

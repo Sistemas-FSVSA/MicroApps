@@ -50,7 +50,7 @@ const DBPREVISION = {
   }
 };
 
-// Configuración para la base de datos de agenda
+
 const DBAGENDA = {
   user: process.env.DBAGENDA_USER,
   password: process.env.DBAGENDA_PASSWORD,
@@ -58,7 +58,6 @@ const DBAGENDA = {
   database: process.env.DBAGENDA_DATABASE,
   options: {
     encrypt: false,
-    trustServerCertificate: true,
     enableArithAbort: true
   }
 };
@@ -74,28 +73,35 @@ const connectWithRetry = async (config, retryInterval = 5000) => {
   while (true) {
     try {
       const pool = await new sql.ConnectionPool(config).connect();
-      console.log(`Conexión exitosa a la base de datos: ${config.database} en ${config.server}`);
+      console.log(`Conectado a la base de datos: ${config.database}`);
       return pool;
     } catch (err) {
-      console.error(`Error de conexión a la base de datos ${config.database} en ${config.server}:`, err.message);
-      console.log(`Reintentando en ${retryInterval / 1000} segundos...`);
+      console.log(`Error de conexión a la base de datos: ${err}. Reintentando en ${retryInterval / 1000} segundos...`);
       await new Promise(resolve => setTimeout(resolve, retryInterval));
     }
   }
 };
 
-// Conexión a las bases de datos con manejo de promesas
-poolPromiseGestiones = connectWithRetry(DBGESTIONES).catch(err => console.error('Fallo permanente en DBGESTIONES:', err));
-poolPromiseMaestros = connectWithRetry(DBMAESTROS).catch(err => console.error('Fallo permanente en DBMAESTROS:', err));
-poolPromiseRecaudo = connectWithRetry(DBRECAUDO).catch(err => console.error('Fallo permanente en DBRECAUDO:', err));
-poolPromisePrevision = connectWithRetry(DBPREVISION).catch(err => console.error('Fallo permanente en DBPREVISION:', err));
-poolPromiseAgenda = connectWithRetry(DBAGENDA).catch(err => console.error('Fallo permanente en DBAGENDA:', err));
+// Conexión a la primera base de datos
+poolPromiseGestiones = connectWithRetry(DBGESTIONES);
+
+// Conexión a la segunda base de datos
+poolPromiseMaestros = connectWithRetry(DBMAESTROS);
+
+// Conexión a la segunda base de datos
+poolPromiseRecaudo = connectWithRetry(DBRECAUDO);
+
+// Conexión a la segunda base de datos
+poolPromisePrevision = connectWithRetry(DBPREVISION);
+
+poolPromiseAgenda = connectWithRetry(DBAGENDA);
 
 module.exports = {
   sql,
   poolPromiseGestiones,
   poolPromiseMaestros,
-  poolPromiseRecaudo,
+  poolPromiseRecaudo, 
   poolPromisePrevision,
-  poolPromiseAgenda
+  poolPromiseAgenda,
 };
+

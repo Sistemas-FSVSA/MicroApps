@@ -2,7 +2,7 @@ const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const manejarPedido = async (req, res) => {
     try {
-        const { idusuario, items, estado, idaprueba } = req.body; // 👈 incluir idaprueba
+        const { idusuario, items, estado, idaprueba, iddependencia, idsubdependencia } = req.body; // 👈 incluir idaprueba
         let idpedido = req.body.idpedido;
         console.log(idaprueba)
         const pool = await poolPromiseGestiones;
@@ -38,22 +38,12 @@ const manejarPedido = async (req, res) => {
                     `);
             }
         } else {
-            // Crear nuevo pedido
-            const result = await pool.request()
-                .input('idusuario', sql.Int, idusuario)
-                .query('SELECT iddependencia FROM usuariocompras WHERE idusuario = @idusuario');
-
-            if (result.recordset.length === 0) {
-                return res.status(404).send('No se encontró el iddependencia para el idusuario proporcionado.');
-            }
-
-            const iddependencia = result.recordset[0].iddependencia;
-
             const pedidoResult = await pool.request()
                 .input('iddependencia', sql.Int, iddependencia)
                 .input('estado', sql.VarChar, estado || 'INICIADO')
                 .input('idaprueba', sql.Int, idaprueba || null)
-                .query('INSERT INTO pedidos (iddependencia, estado, idaprueba) OUTPUT INSERTED.idpedido VALUES (@iddependencia, @estado, @idaprueba)');
+                .input('idsubdependencia', sql.Int, idsubdependencia || null)
+                .query('INSERT INTO pedidos (iddependencia, estado, idaprueba, idsubdependencia) OUTPUT INSERTED.idpedido VALUES (@iddependencia, @estado, @idaprueba, @idsubdependencia)');
 
             idpedido = pedidoResult.recordset[0].idpedido;
 

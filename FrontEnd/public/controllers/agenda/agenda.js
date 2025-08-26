@@ -4,6 +4,25 @@ document.addEventListener('DOMContentLoaded', function () {
   initAgenda();
 });
 
+document.getElementById('btnRegresar').addEventListener('click', () => {
+    window.location.href = '/';
+});
+
+
+document.getElementById("horaInicio").addEventListener("change", function () {
+  let [h, m] = this.value.split(":").map(Number);
+  let redondeo = Math.round(m / 15) * 15;
+  if (redondeo === 60) { h = (h + 1) % 24; redondeo = 0; }
+  this.value = String(h).padStart(2, "0") + ":" + String(redondeo).padStart(2, "0");
+});
+
+document.getElementById("horaFin").addEventListener("change", function () {
+  let [h, m] = this.value.split(":").map(Number);
+  let redondeo = Math.round(m / 15) * 15;
+  if (redondeo === 60) { h = (h + 1) % 24; redondeo = 0; }
+  this.value = String(h).padStart(2, "0") + ":" + String(redondeo).padStart(2, "0");
+});
+
 function initAgenda() {
 
   const calendarEl = document.getElementById('calendar');
@@ -231,6 +250,23 @@ function initAgenda() {
   // Cargar dependencias al inicializar
   cargarDependencias();
 
+  // ✅ AGREGAR EVENT LISTENERS PARA LIMPIAR EL FORMULARIO AL CERRAR EL MODAL
+  const reservaModal = document.getElementById('reservaModal');
+  if (reservaModal) {
+    // Evento cuando el modal se oculta completamente
+    reservaModal.addEventListener('hidden.bs.modal', function () {
+      console.log('🧹 Modal cerrado - Limpiando formulario automáticamente');
+      limpiarFormularioCompleto();
+    });
+
+    // Evento adicional para cuando se inicia el proceso de cerrado
+    reservaModal.addEventListener('hide.bs.modal', function () {
+      console.log('🚪 Cerrando modal de reservación...');
+    });
+  } else {
+    console.error('❌ No se encontró el modal #reservaModal');
+  }
+
   // Actualización automática cada 5 minutos
   setInterval(() => {
     console.log('Actualizando eventos automáticamente...');
@@ -372,8 +408,8 @@ function initAgenda() {
             modal.hide();
           }
 
-          // Limpiar formulario
-          form.reset();
+          // El formulario se limpiará automáticamente al cerrar el modal
+          // form.reset(); // Ya no es necesario aquí
 
           // Refrescar calendario
           setTimeout(() => {
@@ -389,12 +425,12 @@ function initAgenda() {
             confirmButtonColor: '#28a745'
           });
         }
-        
+
       } catch (error) {
         console.error('Error en la solicitud:', error);
         // El error específico ya se maneja en crearReservacion()
         // Solo logeamos aquí para debugging
-        
+
       } finally {
         setTimeout(() => {
           enviandoFormulario = false;
@@ -470,7 +506,7 @@ async function crearReservacion(reservacionData) {
               <p class="mb-3">El horario seleccionado se solapa con otra reservación existente.</p>
               <div class="mb-2">
                 <strong>Horario solicitado:</strong><br>
-                ${convertirA12Horas(reservacionData.horaInicio.substring(0,5))} - ${convertirA12Horas(reservacionData.horaFin.substring(0,5))}
+                ${convertirA12Horas(reservacionData.horaInicio.substring(0, 5))} - ${convertirA12Horas(reservacionData.horaFin.substring(0, 5))}
               </div>
               <div class="mb-2">
                 <strong>Horario ocupado:</strong><br>
@@ -485,7 +521,7 @@ async function crearReservacion(reservacionData) {
           confirmButtonColor: '#6c757d',
           confirmButtonText: 'Entendido'
         });
-        
+
         // Lanzar error específico para que el formulario no se procese
         throw new Error('CONFLICTO_HORARIO');
       }
@@ -497,10 +533,10 @@ async function crearReservacion(reservacionData) {
     // ✅ Respuesta exitosa
     const result = await response.json();
     return result;
-    
+
   } catch (error) {
     console.error('❌ Error al crear reservación:', error.message);
-    
+
     // No mostrar SweetAlert si ya se mostró el conflicto específico
     if (error.message !== 'CONFLICTO_HORARIO') {
       await Swal.fire({
@@ -510,7 +546,7 @@ async function crearReservacion(reservacionData) {
         confirmButtonColor: '#d33'
       });
     }
-    
+
     throw error;
   }
 }
@@ -536,11 +572,53 @@ async function getDependencias() {
 
 function convertirA12Horas(hora24) {
   if (!hora24) return '';
-  
+
   const [horas, minutos] = hora24.split(':');
   const horasNum = parseInt(horas);
   const periodo = horasNum >= 12 ? 'PM' : 'AM';
   const horas12 = horasNum === 0 ? 12 : horasNum > 12 ? horasNum - 12 : horasNum;
-  
+
   return `${horas12}:${minutos} ${periodo}`;
+}
+
+
+function limpiarFormularioCompleto() {
+  const form = document.getElementById('reservaForm');
+  if (form) {
+    // Resetear el formulario
+    form.reset();
+
+    // Limpiar específicamente cada campo por si el reset no funciona completamente
+    const campos = [
+      'usuario',
+      'correo',
+      'dependencia',
+      'horaInicio',
+      'horaFin',
+      'detallesReservacion',
+      'fechaSeleccionada'
+    ];
+
+    campos.forEach(campo => {
+      const elemento = document.getElementById(campo);
+      if (elemento) {
+        if (elemento.type === 'select-one') {
+          elemento.selectedIndex = 0; // Seleccionar la primera opción
+        } else {
+          elemento.value = '';
+        }
+
+        // Remover clases de validación
+        elemento.classList.remove('is-valid', 'is-invalid');
+      }
+    });
+
+    // Limpiar cualquier mensaje de validación personalizado
+    const invalidFeedbacks = form.querySelectorAll('.invalid-feedback');
+    invalidFeedbacks.forEach(feedback => {
+      feedback.style.display = 'none';
+    });
+
+    console.log('✅ Formulario limpiado completamente');
+  }
 }

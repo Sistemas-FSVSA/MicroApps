@@ -50,6 +50,7 @@ router.post('/obtenerCategoria', authenticateToken, rateLimiterFast, obtenerCate
 router.post('/actualizarItems', authenticateToken, rateLimiterFast, actualizarItems);
 router.post('/obtenerUsuario', authenticateToken, rateLimiterFast, obtenerUsuario);
 router.get('/obtenerDependencias', authenticateToken, rateLimiterFast, obtenerDependencias);
+router.get('/obtenerDependencias/:idusuario', authenticateToken, rateLimiterFast, obtenerDependencias);
 router.post('/actualizarUsuario', authenticateToken, rateLimiterFast, actualizarUsuario);
 router.post('/guardarProveedor', authenticateToken, rateLimiterFast, guardarProveedor);
 router.post('/generarOrdenCompra', authenticateToken, rateLimiterFast, generarOrdenCompra);

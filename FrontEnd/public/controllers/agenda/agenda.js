@@ -255,13 +255,11 @@ function initAgenda() {
   if (reservaModal) {
     // Evento cuando el modal se oculta completamente
     reservaModal.addEventListener('hidden.bs.modal', function () {
-      console.log('🧹 Modal cerrado - Limpiando formulario automáticamente');
       limpiarFormularioCompleto();
     });
 
     // Evento adicional para cuando se inicia el proceso de cerrado
     reservaModal.addEventListener('hide.bs.modal', function () {
-      console.log('🚪 Cerrando modal de reservación...');
     });
   } else {
     console.error('❌ No se encontró el modal #reservaModal');
@@ -269,7 +267,6 @@ function initAgenda() {
 
   // Actualización automática cada 5 minutos
   setInterval(() => {
-    console.log('Actualizando eventos automáticamente...');
     calendar.refetchEvents();
   }, 5 * 60 * 1000);
 
@@ -283,10 +280,6 @@ function initAgenda() {
     form.addEventListener('submit', async function (e) {
       e.preventDefault();
 
-      if (enviandoFormulario) {
-        console.log('Ya se está procesando una reservación, ignorando...');
-        return;
-      }
 
       try {
         const fd = new FormData(form);
@@ -390,13 +383,13 @@ function initAgenda() {
           usuario: fd.get('usuario'),
           correo: fd.get('correo'),
           dependencia: parseInt(dependenciaId),
+          nombreDependencia: document.getElementById('dependencia').selectedOptions[0]?.text || '',
           fechaReservacion: fechaSeleccionada,
           horaInicio: horaInicioStr,
           horaFin: horaFinStr,
           detallesReservacion: fd.get('detallesReservacion') || ''
         };
 
-        console.log('Datos enviados:', reservacionData);
 
         // ✅ Crear reservación con manejo mejorado de conflictos
         const result = await crearReservacion(reservacionData);
@@ -413,7 +406,6 @@ function initAgenda() {
 
           // Refrescar calendario
           setTimeout(() => {
-            console.log('Refrescando eventos después de crear reservación...');
             calendar.refetchEvents();
           }, 500);
 
@@ -618,7 +610,5 @@ function limpiarFormularioCompleto() {
     invalidFeedbacks.forEach(feedback => {
       feedback.style.display = 'none';
     });
-
-    console.log('✅ Formulario limpiado completamente');
   }
 }

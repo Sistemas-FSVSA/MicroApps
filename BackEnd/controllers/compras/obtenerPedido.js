@@ -30,25 +30,48 @@ const obtenerPedido = async (req, res) => {
             const dependencias = [];
 
             for (const dependencia of dependenciasResult.recordset) {
+                // Traer pedidos con nombre de la subdependencia
                 const pedidosResult = await pool.request()
                     .input('iddependencia', sql.Int, dependencia.iddependencia)
-                    .query('SELECT idpedido, estado FROM pedidos WHERE iddependencia = @iddependencia');
+                    .query(`
+                            SELECT 
+                                p.idpedido,
+                                p.estado,
+                                p.idsubdependencia,
+                                s.nombre AS nombreSubdependencia
+                            FROM pedidos p
+                            LEFT JOIN subdependencias s 
+                                ON p.idsubdependencia = s.idsubdependencia
+                            WHERE p.iddependencia = @iddependencia
+                        `);
 
+                // Traer nombre dependencia
                 const dependenciaNombreResult = await pool.request()
                     .input('iddependencia', sql.Int, dependencia.iddependencia)
                     .query('SELECT nombre FROM dependencias WHERE iddependencia = @iddependencia');
+
+                // Traer subdependencias
+                const subdependenciasResult = await pool.request()
+                    .input('iddependencia', sql.Int, dependencia.iddependencia)
+                    .query(`
+                SELECT idsubdependencia, nombre, estado 
+                FROM subdependencias 
+                WHERE iddependencia = @iddependencia
+            `);
 
                 dependencias.push({
                     iddependencia: dependencia.iddependencia,
                     tipo: dependencia.tipo,
                     nombreDependencia: dependenciaNombreResult.recordset[0]?.nombre || null,
-                    pedidos: pedidosResult.recordset
+                    pedidos: pedidosResult.recordset,
+                    subdependencias: subdependenciasResult.recordset // 👈 agregado aquí
                 });
             }
 
-            // Retornar todas las dependencias con sus pedidos y nombres
+            // Retornar todas las dependencias con sus pedidos y nombres y subdependencias
             return res.json({ dependencias });
         }
+
 
         // Escenario 2: idusuario + estado
         if (idusuario && estado && !idpedido) {
@@ -81,7 +104,12 @@ const obtenerPedido = async (req, res) => {
         if (idpedido && !idusuario) {
             const pedidoResult = await pool.request()
                 .input('idpedido', sql.Int, idpedido)
-                .query('SELECT p.*, u.nombres FROM pedidos p LEFT JOIN usuariosaprueban u ON p.idaprueba = u.idaprueba WHERE p.idpedido = @idpedido;');
+                .query(`
+            SELECT p.*, u.nombres 
+            FROM pedidos p 
+            LEFT JOIN usuariosaprueban u ON p.idaprueba = u.idaprueba 
+            WHERE p.idpedido = @idpedido;
+        `);
 
             if (pedidoResult.recordset.length === 0) {
                 return res.status(404).send('No se encontró el pedido para el idpedido proporcionado.');
@@ -121,35 +149,63 @@ const obtenerPedido = async (req, res) => {
 
             pedido.detalle = detalles;
 
+            // 🔹 Obtener nombre de la dependencia
             const dependenciaNombreResult = await pool.request()
                 .input('iddependencia', sql.Int, pedido.iddependencia)
                 .query('SELECT nombre FROM dependencias WHERE iddependencia = @iddependencia');
 
             pedido.nombreDependencia = dependenciaNombreResult.recordset[0].nombre;
 
+            // 🔹 Obtener nombre de la subdependencia (si existe)
+            if (pedido.idsubdependencia) {
+                const subdependenciaNombreResult = await pool.request()
+                    .input('idsubdependencia', sql.Int, pedido.idsubdependencia)
+                    .query('SELECT nombre FROM subdependencias WHERE idsubdependencia = @idsubdependencia');
+
+                pedido.nombreSubdependencia = subdependenciaNombreResult.recordset[0]?.nombre || null;
+            } else {
+                pedido.nombreSubdependencia = null;
+            }
+
             return res.json(pedido);
         }
+
 
         // Escenario 4: Solo estado (obtener todos los pedidos con ese estado)
         if (estado && !idusuario && !idpedido) {
             const pedidosResult = await pool.request()
                 .input('estado', sql.VarChar, estado)
-                .query('SELECT p.*, u.nombres FROM pedidos p LEFT JOIN usuariosaprueban u ON p.idaprueba = u.idaprueba WHERE p.estado = @estado;');
+                .query(`
+            SELECT p.*, u.nombres 
+            FROM pedidos p 
+            LEFT JOIN usuariosaprueban u ON p.idaprueba = u.idaprueba 
+            WHERE p.estado = @estado;
+        `);
 
             const pedidos = [];
 
             for (const pedido of pedidosResult.recordset) {
-                // Obtener nombre de dependencia
+                // 🔹 Obtener nombre de dependencia
                 const dependenciaNombreResult = await pool.request()
                     .input('iddependencia', sql.Int, pedido.iddependencia)
                     .query('SELECT nombre FROM dependencias WHERE iddependencia = @iddependencia');
 
-                // Obtener total de ítems del pedido
+                // 🔹 Obtener nombre de subdependencia (si existe)
+                let nombreSubdependencia = null;
+                if (pedido.idsubdependencia) {
+                    const subdependenciaNombreResult = await pool.request()
+                        .input('idsubdependencia', sql.Int, pedido.idsubdependencia)
+                        .query('SELECT nombre FROM subdependencias WHERE idsubdependencia = @idsubdependencia');
+
+                    nombreSubdependencia = subdependenciaNombreResult.recordset[0]?.nombre || null;
+                }
+
+                // 🔹 Obtener total de ítems del pedido
                 const totalItemsResult = await pool.request()
                     .input('idpedido', sql.Int, pedido.idpedido)
                     .query('SELECT SUM(cantidad) AS totalItems FROM detallepedido WHERE idpedido = @idpedido');
 
-                // Obtener idorden relacionados desde ordenpedido
+                // 🔹 Obtener idorden relacionados desde ordenpedido
                 const ordenesRelacionadasResult = await pool.request()
                     .input('idpedido', sql.Int, pedido.idpedido)
                     .query('SELECT idorden FROM ordenpedido WHERE idpedido = @idpedido');
@@ -159,13 +215,15 @@ const obtenerPedido = async (req, res) => {
                 pedidos.push({
                     ...pedido,
                     nombreDependencia: dependenciaNombreResult.recordset[0]?.nombre || null,
+                    nombreSubdependencia, // << añadido aquí
                     totalItems: totalItemsResult.recordset[0]?.totalItems || 0,
-                    ordenesRelacionadas: ordenesRelacionadas // << Aquí está el nuevo campo
+                    ordenesRelacionadas
                 });
             }
 
             return res.json({ pedidos });
         }
+
 
         // Si no se cumple ninguno de los 3 escenarios
         return res.status(400).send('Debe proporcionar una combinación válida de parámetros.');

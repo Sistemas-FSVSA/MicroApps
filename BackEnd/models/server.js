@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const path = require("path");
+const cron = require("node-cron");
 
 const {
   sessionMiddleware,
@@ -28,6 +29,9 @@ class Server {
     // Middlewares y rutas
     this.middlewares();
     this.routes();
+
+    // Importa los cron jobs
+    require("../models/cron.js");
 
     // Ruta especial para ver usuarios conectados
     this.app.get("/api/online", getSessionCount); // 👈 Añádela aquí si quieres
@@ -70,7 +74,7 @@ class Server {
   routes() {
     this.app.use(this.indexPath, require("../routes/index"));
     this.app.use(this.planillaPath, require("../routes/planilla"));
-    this.app.use(this.gestionplanillaPath,require("../routes/gestionplanilla"));
+    this.app.use(this.gestionplanillaPath, require("../routes/gestionplanilla"));
     this.app.use(this.gestionUsuarioPath, require("../routes/gestionusuario"));
     this.app.use(this.pqrsPath, require("../routes/pqrs"));
     this.app.use(this.valesPath, require("../routes/vales"));

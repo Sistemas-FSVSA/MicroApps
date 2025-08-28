@@ -164,6 +164,13 @@ const guardarReservacion = async (req, res) => {
 
         (async () => {
             const emailConfig = await getEmailConfig();
+
+            // 🚫 Si no hay configuración activa, simplemente no enviar correo
+            if (!emailConfig) {
+                console.log("📭 No se envió correo: no hay configuración de email activa.");
+                return;
+            }
+
             const { transporter, correo } = emailConfig;
 
             const templateSource = fs.readFileSync(templateConfirmacionPath, 'utf-8');
@@ -187,6 +194,7 @@ const guardarReservacion = async (req, res) => {
                     html: htmlContent
                 });
 
+                console.log("✅ Correo de confirmación enviado.");
             } catch (err) {
                 console.error("❌ Error al enviar correo de confirmación:", err);
             }

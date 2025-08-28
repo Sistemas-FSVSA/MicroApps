@@ -3,8 +3,6 @@ const { poolPromiseAgenda, sql } = require('../../models/conexion');
 const obtenerReservaciones = async (req, res) => {
   try {
     const { mes } = req.params;
-
-    // Validar parámetro de mes (1 a 12)
     const mesNum = parseInt(mes, 10);
     if (isNaN(mesNum) || mesNum < 1 || mesNum > 12) {
       return res.status(400).json({ error: 'Mes inválido, debe ser un número entre 1 y 12' });
@@ -21,16 +19,15 @@ const obtenerReservaciones = async (req, res) => {
           d.nombre AS dependencia,
           dr.iddependencia,
           CAST(dr.inicioReservacion AS DATE) AS fechaReservacion,
-          FORMAT(dr.inicioReservacion, 'HH:mm:ss') AS horaInicio,
-          FORMAT(dr.finReservacion, 'HH:mm:ss') AS horaFin,
+          FORMAT(dr.inicioReservacion, 'hh:mm tt', 'es-CO') AS horaInicio, -- <--- formato 12h
+          FORMAT(dr.finReservacion, 'hh:mm tt', 'es-CO') AS horaFin,       -- <--- formato 12h
           dr.detallesReservacion,
           dr.inicioReservacion,
           dr.finReservacion
         FROM datosreservacion dr
         INNER JOIN dependencias d ON dr.iddependencia = d.iddependencia
-        WHERE dr.finReservacion > GETDATE()      -- Solo reservaciones futuras
-          AND d.estado = 1                      -- Solo dependencias activas
-          AND MONTH(dr.inicioReservacion) = @mes -- Filtrar por mes
+        WHERE d.estado = 1
+          AND MONTH(dr.inicioReservacion) = @mes
         ORDER BY dr.inicioReservacion ASC
       `);
 

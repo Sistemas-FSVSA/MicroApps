@@ -68,6 +68,10 @@ const envioRecordatorios = async () => {
 
 
     const emailConfig = await getEmailConfig();
+    if (!emailConfig) {
+      return;
+    }
+
     const { transporter, correo } = emailConfig;
 
     const templateSource = fs.readFileSync(templateRecordatorioPath, 'utf-8');
@@ -77,12 +81,9 @@ const envioRecordatorios = async () => {
       const inicio = DateTime.fromFormat(reserva.inicioStr, 'yyyy-LL-dd HH:mm:ss', { zone: 'UTC-5' });
       const fin = DateTime.fromFormat(reserva.finStr, 'yyyy-LL-dd HH:mm:ss', { zone: 'UTC-5' });
 
-
-      // Diferencia respecto a NOW (ambos en UTC-5)
       const diffMinRaw = inicio.diff(now, 'minutes').toObject().minutes;
       const diffMin = Math.round(diffMinRaw);
 
-      // Enviar solo si faltan entre 0 y 15 minutos
       if (diffMin >= 0 && diffMin <= 15) {
         const htmlContent = template({
           usuario: reserva.usuario,
@@ -101,7 +102,6 @@ const envioRecordatorios = async () => {
             html: htmlContent
           });
 
-          // Marcar como recordado (1)
           await pool.request()
             .input("id", sql.Int, reserva.id)
             .query("UPDATE datosreservacion SET recordado = 1 WHERE id = @id");
@@ -109,7 +109,6 @@ const envioRecordatorios = async () => {
         } catch (err) {
           console.error(`❌ Error enviando o actualizando recordatorio (id=${reserva.id}):`, err);
         }
-      } else {
       }
     }
 

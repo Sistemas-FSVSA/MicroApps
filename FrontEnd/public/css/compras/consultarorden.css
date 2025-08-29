@@ -100,3 +100,49 @@
     display: inline-block;
     vertical-align: middle;
 }
+
+
+/* Colores institucionales */
+.fsvsa-header {
+    background-color: #8B1538 !important; /* Rojo institucional */
+    color: #fff !important;
+}
+
+.fsvsa-card {
+    border: 1px solid #8B1538 !important;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.fsvsa-card .card-title {
+    color: #8B1538 !important;
+    font-weight: bold;
+}
+
+.fsvsa-btn {
+    background-color: #8B1538 !important;
+    color: #fff !important;
+    border: none;
+}
+
+.fsvsa-btn:hover {
+    background-color: #a51e4c !important;
+}
+
+.fsvsa-table-header {
+    background-color: #163b63 !important; /* Azul institucional */
+    color: #fff !important;
+}
+
+.fsvsa-table th {
+    background-color: #163b63 !important;
+    color: #fff !important;
+}
+
+.fsvsa-table tr {
+    background-color: #fff !important;
+}
+
+.fsvsa-table tr.selected {
+    background-color: #e6e6e6 !important;
+}

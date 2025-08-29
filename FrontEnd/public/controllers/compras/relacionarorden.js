@@ -99,12 +99,15 @@ async function renderizarPedidos(pedidos) {
         const info = document.createElement('div');
         info.innerHTML = `
             <div><strong>Pedido:</strong> ${pedido.idpedido}</div>
-            <div><strong>Dependencia:</strong> ${pedido.nombreDependencia}</div>
+            <div><strong>Dependencia:</strong> ${
+            pedido.nombreDependencia +
+            (pedido.nombreSubdependencia ? ' - ' + pedido.nombreSubdependencia : '')
+            }</div>
             <div><strong>Fecha:</strong> ${new Date(pedido.fechapedido).toLocaleDateString()}</div>
             <div><strong>Total Ítems:</strong> ${pedido.totalItems || pedido.detalle?.length || 0}</div>
             <div><strong>Estado:</strong> ${pedido.estado}</div>
-            <button class="btn btn-sm btn-primary mt-2" onclick="mostrarDetallesPedido(${pedido.idpedido})">
-                Ver detalles
+            <button class="btn btn-fsvsaoff mt-2" onclick="mostrarDetallesPedido(${pedido.idpedido})">
+            Ver detalles
             </button>
         `;
 
@@ -173,7 +176,7 @@ function renderizarOrdenes(ordenes) {
             <div><strong>Orden:</strong> ${orden.idorden}</div>
             <div><strong>Fecha:</strong> ${orden.fecha}</div>
             <div><strong>Tipo:</strong> ${orden.tipo}</div>
-            <button class="btn btn-sm btn-info mt-2" onclick="mostrarDetallesOrden(${orden.idorden})">
+            <button class="btn btn-fsvsaon mt-2" onclick="mostrarDetallesOrden(${orden.idorden})">
                 Ver detalles
             </button>
         `;

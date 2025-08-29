@@ -296,6 +296,11 @@ function reinitializeScripts() {
     if (path.includes("/compras/consultarpedidos")) {
         loadAndRunScript("/controllers/compras/consultarpedidos.js", "InicializarConsultarPedidos");;
     }
+
+    if (path.includes("/compras/variospedidos")) {
+        loadAndRunScript("/controllers/compras/variospedidos.js", "InicializarVariosPedidos");
+    }
+
 }
 
 function irAtras() {

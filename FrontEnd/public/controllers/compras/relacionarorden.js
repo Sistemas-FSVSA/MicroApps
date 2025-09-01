@@ -106,7 +106,7 @@ async function renderizarPedidos(pedidos) {
             <div><strong>Fecha:</strong> ${new Date(pedido.fechapedido).toLocaleDateString()}</div>
             <div><strong>Total Ítems:</strong> ${pedido.totalItems || pedido.detalle?.length || 0}</div>
             <div><strong>Estado:</strong> ${pedido.estado}</div>
-            <button class="btn btn-fsvsaoff mt-2" onclick="mostrarDetallesPedido(${pedido.idpedido})">
+            <button class="btn btn-fsvsaon mt-2" onclick="mostrarDetallesPedido(${pedido.idpedido})">
             Ver detalles
             </button>
         `;
@@ -176,7 +176,7 @@ function renderizarOrdenes(ordenes) {
             <div><strong>Orden:</strong> ${orden.idorden}</div>
             <div><strong>Fecha:</strong> ${orden.fecha}</div>
             <div><strong>Tipo:</strong> ${orden.tipo}</div>
-            <button class="btn btn-fsvsaon mt-2" onclick="mostrarDetallesOrden(${orden.idorden})">
+            <button class="btn btn-fsvsaoff mt-2" onclick="mostrarDetallesOrden(${orden.idorden})">
                 Ver detalles
             </button>
         `;

@@ -102,7 +102,7 @@ async function cargarDependencias() {
         if (!response.ok) throw new Error("Error al cargar dependencias");
 
         const data = await response.json();
-     
+        console.log("Dependencias response:", data);
         const dependencias = Array.isArray(data) ? data : (data.dependencias || []);
         // const dependencias = data.dependencias || [];
 
@@ -120,26 +120,6 @@ async function cargarDependencias() {
             option.textContent = dep.nombre || dep.nombreDependencia || dep.dependencia || `Dependencia ${dep.iddependencia}`;
             dependenciaSelect.appendChild(option);
         });
-
-        // Si solo hay una dependencia, seleccionarla automáticamente
-        if (dependencias.length === 1) {
-            const unicaDependencia = dependencias[0];
-            dependenciaSelect.value = unicaDependencia.iddependencia;
-            
-            // También cargar sus subdependencias automáticamente
-            subdependenciaSelect.innerHTML = '<option disabled selected value="">Subdependencia</option>';
-            
-            if (unicaDependencia.subdependencias && unicaDependencia.subdependencias.length > 0) {
-                unicaDependencia.subdependencias.forEach(sub => {
-                    if (sub.estado) {
-                        const option = document.createElement("option");
-                        option.value = sub.idsubdependencia;
-                        option.textContent = sub.nombre;
-                        subdependenciaSelect.appendChild(option);
-                    }
-                });
-            }
-        }
 
         // Evento para cuando se seleccione una dependencia
         dependenciaSelect.addEventListener("change", function () {
@@ -160,6 +140,26 @@ async function cargarDependencias() {
                 });
             }
         });
+
+        // Si solo hay una dependencia, seleccionarla automáticamente DESPUÉS de agregar el event listener
+        if (dependencias.length === 1) {
+            dependenciaSelect.value = dependencias[0].iddependencia;
+            
+            // Cargar subdependencias directamente
+            const unicaDependencia = dependencias[0];
+            subdependenciaSelect.innerHTML = '<option disabled selected value="">Subdependencia</option>';
+            
+            if (unicaDependencia.subdependencias && unicaDependencia.subdependencias.length > 0) {
+                unicaDependencia.subdependencias.forEach(sub => {
+                    if (sub.estado) {
+                        const option = document.createElement("option");
+                        option.value = sub.idsubdependencia;
+                        option.textContent = sub.nombre;
+                        subdependenciaSelect.appendChild(option);
+                    }
+                });
+            }
+        }
 
     } catch (error) {
         console.error("Error cargando dependencias:", error);

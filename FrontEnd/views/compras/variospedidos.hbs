@@ -4,7 +4,6 @@
         display: flex;
         flex-direction: column;
         justify-content: center;
-
     }
 
     .card-body h1 {
@@ -15,7 +14,6 @@
     .no-pedidos-wrapper {
         position: relative;
         min-height: calc(100vh - 180px);
-        /* ajusta según el header */
         display: flex;
         justify-content: center;
         align-items: center;
@@ -29,7 +27,6 @@
         font-weight: 500;
     }
 
-    /* Asegura que las cards se alineen bien */
     .row.g-3>div {
         display: flex;
     }
@@ -40,7 +37,6 @@
         letter-spacing: 1px;
     }
 
-    /* Ajuste del card */
     .card {
         border-radius: 16px;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -59,15 +55,65 @@
         color: white;
     }
 
-    /* Colores según estado */
     .badge-recepcion {
         background-color: #17a2b8;
-        /* Azul tipo info */
     }
 
     .badge-cerrado {
         background-color: #dc3545;
-        /* Rojo tipo danger */
+    }
+
+    /* Estilos para las cards de pedidos */
+    .card-pedido {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 15px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        text-align: center;
+        transition: transform 0.2s ease;
+    }
+
+    .card-pedido:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+
+    .card-pedido .icono {
+        margin-bottom: 15px;
+        color: #007bff;
+    }
+
+    .card-pedido .badge {
+        background-color: #007bff;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+
+    .card-pedido .estado {
+        background-color: #28a745;
+    }
+
+    .btn-detalle {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+
+    .btn-detalle:hover {
+        background-color: #0056b3;
+    }
+
+    #contenedorVariosPedidos {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
     }
 </style>
 
@@ -78,11 +124,11 @@
                 <button class="btn btn-outline-secondary mr-2" onclick="irAtras()">
                     <i class="fas fa-angle-double-left"></i> Regresar
                 </button>
-                <h1 class="m-0" id="title">Gestionar Pedidos</h1>
+                <h1 class="m-0" id="title">Varios Pedidos</h1>
             </div>
             <div class="col-sm-6 text-right">
                 <h3 id="fechaActual" class="m-0"></h3>
-                <span class="text-muted">Administracion</span>
+                <span class="text-muted">Administración</span>
             </div>
         </div>
     </div>
@@ -91,8 +137,15 @@
 
 <div class="content">
     <div class="container-fluid">
-        <div id="cards-container" class="row g-3"></div>
+        <!-- 🔹 Contenedor correcto que busca el JavaScript -->
+        <div id="contenedorVariosPedidos"></div>
     </div>
 </div>
 
-<script src="/controllers/compras/aprobarpedido.js"></script>
+<script src="/controllers/compras/variospedidos.js"></script>
+
+<script>
+
+
+    
+</script>

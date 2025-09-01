@@ -2,9 +2,10 @@ const { poolPromiseGestiones, sql } = require('../../models/conexion');
 
 const manejarPedido = async (req, res) => {
     try {
-        const { idusuario, items, estado, idaprueba, iddependencia, idsubdependencia } = req.body; // 👈 incluir idaprueba
+        const { idusuario, items, estado, idaprueba, iddependencia, idsubdependencia } = req.body;
         let idpedido = req.body.idpedido;
-        console.log(idaprueba)
+        console.log(idaprueba);
+
         const pool = await poolPromiseGestiones;
 
         if (idpedido) {
@@ -26,7 +27,7 @@ const manejarPedido = async (req, res) => {
                 .input('idusuario', sql.Int, idusuario)
                 .query(updateQuery);
 
-            // 🔧 Actualizar el idaprueba en la tabla orden
+            // 🔧 Actualizar el idaprueba en la tabla pedidos
             if (idaprueba) {
                 await pool.request()
                     .input('idpedido', sql.Int, idpedido)
@@ -38,16 +39,38 @@ const manejarPedido = async (req, res) => {
                     `);
             }
         } else {
+            // ⚡ Validación: verificar si ya existe un pedido iniciado en esta área
+            const validarResult = await pool.request()
+                .input('iddependencia', sql.Int, iddependencia)
+                .input('idsubdependencia', sql.Int, idsubdependencia || null)
+                .query(`
+                    SELECT TOP 1 idpedido 
+                    FROM pedidos 
+                    WHERE iddependencia = @iddependencia
+                      AND (@idsubdependencia IS NULL OR idsubdependencia = @idsubdependencia)
+                      AND estado = 'INICIADO'
+                `);
+
+            if (validarResult.recordset.length > 0) {
+                return res.status(400).json({
+                    message: 'Ya existe un pedido INICIADO para esta área',
+                    idpedido: validarResult.recordset[0].idpedido
+                });
+            }
+
+            // Crear nuevo pedido
             const pedidoResult = await pool.request()
                 .input('iddependencia', sql.Int, iddependencia)
                 .input('estado', sql.VarChar, estado || 'INICIADO')
                 .input('idaprueba', sql.Int, idaprueba || null)
                 .input('idsubdependencia', sql.Int, idsubdependencia || null)
-                .query('INSERT INTO pedidos (iddependencia, estado, idaprueba, idsubdependencia) OUTPUT INSERTED.idpedido VALUES (@iddependencia, @estado, @idaprueba, @idsubdependencia)');
+                .query(`
+                    INSERT INTO pedidos (iddependencia, estado, idaprueba, idsubdependencia) 
+                    OUTPUT INSERTED.idpedido 
+                    VALUES (@iddependencia, @estado, @idaprueba, @idsubdependencia)
+                `);
 
             idpedido = pedidoResult.recordset[0].idpedido;
-
-            // 🔧 En este punto no hay orden aún, por lo que no se actualiza idaprueba
         }
 
         // Insertar ítems

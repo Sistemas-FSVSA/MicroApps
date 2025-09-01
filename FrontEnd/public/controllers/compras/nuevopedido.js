@@ -8,6 +8,8 @@ async function InicializarNuevoPedido() {
     renderizarItemsEncargo();
     cargarAprobado();
     cargarProveedores();
+    cargarDependencias(); /* CARGAR LAS DEPENDENCIAS ----------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
     document.getElementById('agregarItem').addEventListener('click', function () {
         let modal = new bootstrap.Modal(document.getElementById('modalAñadirItem'));
@@ -89,6 +91,79 @@ function cargarProveedores() {
         .catch(error => {
             console.error('Error al cargar proveedores:', error);
         });
+}
+
+async function cargarDependencias() {
+    try {
+        const idusuario = localStorage.getItem('idusuario'); /*capturar el idusuario desde el localstorage y enviarlo como parametro*/
+        const response = await fetch(`${url}/api/compras/obtenerDependencias/${idusuario}`, { /* CARGAR LAS DEPENDENCIAS (IdUsuario depende del localStorage) */
+            credentials: "include"
+        });
+        if (!response.ok) throw new Error("Error al cargar dependencias");
+
+        const data = await response.json();
+        console.log("Dependencias response:", data);
+        const dependencias = Array.isArray(data) ? data : (data.dependencias || []);
+        // const dependencias = data.dependencias || [];
+
+        const dependenciaSelect = document.getElementById("IdDependencia");
+        const subdependenciaSelect = document.getElementById("IdSubdependencia");
+
+        // Limpiar selects
+        dependenciaSelect.innerHTML = '<option disabled selected value="">Dependencia</option>';
+        subdependenciaSelect.innerHTML = '<option disabled selected value="">Subdependencia</option>';
+
+        // Llenar dependencias
+        dependencias.forEach(dep => {
+            const option = document.createElement("option");
+            option.value = dep.iddependencia;
+            option.textContent = dep.nombre || dep.nombreDependencia || dep.dependencia || `Dependencia ${dep.iddependencia}`;
+            dependenciaSelect.appendChild(option);
+        });
+
+        // Evento para cuando se seleccione una dependencia
+        dependenciaSelect.addEventListener("change", function () {
+            const idDep = parseInt(this.value);
+            const dependenciaSeleccionada = dependencias.find(d => d.iddependencia === idDep);
+
+            // Limpiar subdependencias
+            subdependenciaSelect.innerHTML = '<option disabled selected value="">Subdependencia</option>';
+
+            if (dependenciaSeleccionada && dependenciaSeleccionada.subdependencias.length > 0) {
+                dependenciaSeleccionada.subdependencias.forEach(sub => {
+                    if (sub.estado) {
+                        const option = document.createElement("option");
+                        option.value = sub.idsubdependencia;
+                        option.textContent = sub.nombre;
+                        subdependenciaSelect.appendChild(option);
+                    }
+                });
+            }
+        });
+
+        // Si solo hay una dependencia, seleccionarla automáticamente DESPUÉS de agregar el event listener
+        if (dependencias.length === 1) {
+            dependenciaSelect.value = dependencias[0].iddependencia;
+            
+            // Cargar subdependencias directamente
+            const unicaDependencia = dependencias[0];
+            subdependenciaSelect.innerHTML = '<option disabled selected value="">Subdependencia</option>';
+            
+            if (unicaDependencia.subdependencias && unicaDependencia.subdependencias.length > 0) {
+                unicaDependencia.subdependencias.forEach(sub => {
+                    if (sub.estado) {
+                        const option = document.createElement("option");
+                        option.value = sub.idsubdependencia;
+                        option.textContent = sub.nombre;
+                        subdependenciaSelect.appendChild(option);
+                    }
+                });
+            }
+        }
+
+    } catch (error) {
+        console.error("Error cargando dependencias:", error);
+    }
 }
 
 function añadirItems() {
@@ -310,12 +385,59 @@ function actualizarCantidadEnSessionStorage(index, nuevaCantidad) {
         Mensaje('warning', '¡Espera!', 'La cantidad debe ser mayor a 0.', true, false);
     }
 }
-
 async function manejarPedido(estado) {
-    // Obtener los ítems del sessionStorage
+    // Obtener valores de la UI
     const itemsSeleccionados = JSON.parse(sessionStorage.getItem('itemsSeleccionados')) || [];
     const idaprueba = document.getElementById('aprobadoPor')?.value || null;
     const idproveedor = document.getElementById('proveedor')?.value || null;
+
+    const depVal = document.getElementById('IdDependencia')?.value ?? '';
+    const subdepVal = document.getElementById('IdSubdependencia')?.value ?? '';
+    const iddependencia = depVal ? parseInt(depVal, 10) : null;
+    const idsubdependencia = subdepVal ? parseInt(subdepVal, 10) : null;
+
+    // --- Validaciones base ---
+    if (!iddependencia) {
+        Mensaje('warning', '¡Espera!', 'Debes seleccionar una dependencia válida.', false, false);
+        return;
+    }
+
+    const tieneSubdependenciasActivas = await (async () => {
+        const isActive = v => v === true || v === 1 || v === '1';
+        let deps = [];
+        const cache = window.__dependenciasCache;
+        if (Array.isArray(cache)) {
+            deps = cache;
+        } else if (cache && Array.isArray(cache.dependencias)) {
+            deps = cache.dependencias;
+        }
+
+        if (!deps.length) {
+            try {
+                const idusuario = localStorage.getItem('idusuario');
+                const resp = await fetch(`${url}/api/compras/obtenerDependencias/${idusuario}`, { credentials: 'include' });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    deps = Array.isArray(data) ? data : (data.dependencias || []);
+                    window.__dependenciasCache = deps;
+                }
+            } catch (e) {
+                console.error('No se pudo consultar dependencias para validar subdependencias:', e);
+            }
+        }
+
+        const dep = deps.find(d => Number(d.iddependencia) === Number(iddependencia));
+        if (!dep) return false;
+        const subdeps = Array.isArray(dep.subdependencias) ? dep.subdependencias
+            : Array.isArray(dep.Subdependencias) ? dep.Subdependencias
+                : [];
+        return subdeps.some(s => isActive(s.estado));
+    })();
+
+    if (tieneSubdependenciasActivas && !idsubdependencia) {
+        Mensaje('warning', '¡Espera!', 'Debes seleccionar una subdependencia válida.', false, false);
+        return;
+    }
 
     if (itemsSeleccionados.length === 0) {
         Mensaje('warning', 'Espera!', 'No hay items para guardar.', false, false);
@@ -332,60 +454,71 @@ async function manejarPedido(estado) {
         return;
     }
 
-    // Crear el objeto JSON con la información necesaria
     const payload = {
         idusuario: localStorage.getItem('idusuario') || null,
         items: itemsSeleccionados,
-        estado: estado, // Agregar el estado al body
-        idaprueba: idaprueba,// Agregar el idaprueba al body si está definido
+        estado: estado,
+        idaprueba: idaprueba,
+        iddependencia: iddependencia,
+        idsubdependencia: idsubdependencia || null
     };
 
-    // Enviar el JSON al endpoint por medio de fetch
     fetch(`${url}/api/compras/manejarPedido`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(payload)
     })
-        .then(response => {
-            // Verificar si la respuesta es exitosa
+        .then(async response => {
             if (!response.ok) {
-                throw new Error('Error al guardar el encargo');
+                // ⚡ Manejar validación del backend
+                const errorData = await response.json().catch(() => ({}));
+
+                if (response.status === 400 && errorData.message?.includes('Ya existe un pedido INICIADO')) {
+                    // Usamos la función Mensaje con confirmación
+                    const result = await Mensaje(
+                        "warning",
+                        "¡Espera!",
+                        "Ya existe un pedido iniciado para esta dependencia.",
+                        true, // autoCerrar
+                        false   // confirmacion
+                    );
+
+                    // Si el mensaje se autocierra, no redirigir ni actualizar vista
+                    return; // Salir de la función
+                }
+
+                // Si no es el error específico, mostramos mensaje genérico
+                await Mensaje("error", "Error", "Error al guardar el encargo", true, false);
+                throw new Error("Error al guardar el encargo");
             }
-            return response.json(); // Cambiar a .json() para obtener el idpedido del backend
+
+            return response.json();
         })
+
         .then(data => {
+            // Si el paso anterior terminó por autocierre, no hacer nada
+            if (!data) return;
+
             if (estado === 'SINREFERENCIA') {
                 console.log('ID del pedido generado:', data.idpedido);
-
                 const idusuario = localStorage.getItem('idusuario');
-
                 generarOrdenDesdePedido(itemsSeleccionados, idusuario, idproveedor)
-                    .then(resp => {
-                        console.log('Orden generada con ID:', resp.idorden);
-                        return relacionarPedidoYOrden(data.idpedido, resp.idorden);
-                    })
-                    .then(() => {
-                        console.log('Pedido y orden relacionados correctamente.');
-                    })
-                    .catch(err => {
-                        console.error('Error al generar orden o relacionar:', err);
-                    });
+                    .then(resp => relacionarPedidoYOrden(data.idpedido, resp.idorden))
+                    .then(() => console.log('Pedido y orden relacionados correctamente.'))
+                    .catch(err => console.error('Error al generar orden o relacionar:', err));
             }
-            // Determinar el mensaje y la acción según el estado
+
             if (estado === 'CERRADO') {
                 Mensaje('success', 'Éxito!', 'El encargo ha sido cerrado con éxito.', true, false);
-                sessionStorage.removeItem('itemsSeleccionados'); // Borrar el sessionStorage
+                sessionStorage.removeItem('itemsSeleccionados');
             } else if (estado === 'SINREFERENCIA') {
                 Mensaje('success', 'Éxito!', 'Orden de compra generada exitosamente.', true, false);
-                sessionStorage.removeItem('itemsSeleccionados'); // Borrar el sessionStorage
+                sessionStorage.removeItem('itemsSeleccionados');
             } else {
                 Mensaje('success', 'Éxito!', 'El encargo se ha guardado correctamente.', true, false);
             }
 
-            // Determinar la URL de redirección según el estado
             let redireccionUrl = '';
             if (estado === 'INICIADO') {
                 redireccionUrl = `/compras/continuarpedido?idpedido=${data.idpedido}`;
@@ -395,14 +528,14 @@ async function manejarPedido(estado) {
                 redireccionUrl = '/compras/ordenes';
             }
 
-            // Redirección inmediata
             window.history.replaceState(null, "", redireccionUrl);
             cargarVista(redireccionUrl, false);
         })
         .catch(error => {
-            // Manejar errores
             console.error('Error al guardar el encargo:', error);
-            Mensaje('error', 'Error!', 'Hubo un problema al guardar el encargo.', false, false);
+            if (!error.message.includes('Ya existe un pedido INICIADO')) {
+                Mensaje('error', 'Error!', 'Hubo un problema al guardar el encargo.', false, false);
+            }
         });
 }
 

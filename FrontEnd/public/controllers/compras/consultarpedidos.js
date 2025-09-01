@@ -49,17 +49,19 @@ function renderizarPedidosBandeja(pedidos) {
         pedidoItem.className = "list-group-item list-group-item-action";
         pedidoItem.dataset.id = pedido.idpedido;
         pedidoItem.innerHTML = `
-    <div class="ticket-content d-flex justify-content-between">
+        <div class="ticket-content d-flex justify-content-between">
         <div class="ticket-main">
             <strong class="font-weight-bold">Pedido #${pedido.idpedido}</strong>
             <p class="mb-0 text-ellipsis">Aprobo: ${pedido.nombres || 'Sin registro'}</p>
             <small class="text-muted">${formatFechaHora(pedido.fechapedido)}</small>
         </div>
         <div class="ticket-side">
-            <span class="badge badge-secondary">${pedido.nombreDependencia}</span>
+            <span class="badge badge-secondary">
+            ${pedido.nombreDependencia}${pedido.nombreSubdependencia && pedido.nombreSubdependencia.trim() !== '' ? ' - ' + pedido.nombreSubdependencia : ''}
+            </span>
         </div>
-    </div>
-`;
+        </div>
+    `;
 
         pedidoItem.addEventListener("click", (e) => {
             e.preventDefault();
@@ -99,7 +101,7 @@ function mostrarDetalleOrden(pedido) {
     const titulo = document.getElementById("pedidoTitle");
     const contenido = document.getElementById("pedidoContent");
 
-    titulo.innerHTML = `<h4 class="font-weight-bold">Pedido #${pedido.idpedido} - ${pedido.nombreDependencia}</h4>`;
+    titulo.innerHTML = `<h4 class="font-weight-bold">Pedido #${pedido.idpedido} - ${pedido.nombreDependencia}${pedido.nombreSubdependencia && pedido.nombreSubdependencia.trim() !== '' ? ' - ' + pedido.nombreSubdependencia : ''}</h4>`;
 
     const detallesHTML = pedido.detalle && pedido.detalle.length > 0
         ? (() => {

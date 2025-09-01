@@ -277,6 +277,14 @@ app.get("/recaudo/nominarecaudo", (req, res) => {
     res.render("recaudo/nominarecaudo");
 });
 
+app.get("/compras/variospedidos", (req, res) => {
+    if (req.xhr) {
+        return res.render("compras/variospedidos", { layout: false }); // Solo la vista
+    }
+    res.render("compras/variospedidos");
+});
+
+
 app.get("/config.js", (req, res) => {
     res.setHeader("Content-Type", "application/javascript");
   

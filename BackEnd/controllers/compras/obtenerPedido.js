@@ -64,7 +64,7 @@ const obtenerPedido = async (req, res) => {
                     tipo: dependencia.tipo,
                     nombreDependencia: dependenciaNombreResult.recordset[0]?.nombre || null,
                     pedidos: pedidosResult.recordset,
-                    subdependencias: subdependenciasResult.recordset // 👈 agregado aquí
+                    subdependencias: subdependenciasResult.recordset 
                 });
             }
 
@@ -75,28 +75,40 @@ const obtenerPedido = async (req, res) => {
 
         // Escenario 2: idusuario + estado
         if (idusuario && estado && !idpedido) {
-            const dependenciaResult = await pool.request()
-                .input('idusuario', sql.Int, idusuario)
-                .query('SELECT iddependencia FROM usuariocompras WHERE idusuario = @idusuario');
+            // Obtener todas las dependencias asociadas al usuario
+            const dependenciasResult = await pool.request()
+            .input('idusuario', sql.Int, idusuario)
+            .query('SELECT iddependencia FROM usuariocompras WHERE idusuario = @idusuario');
 
-            if (dependenciaResult.recordset.length === 0) {
-                return res.status(404).send('No se encontró el iddependencia para el idusuario proporcionado.');
+            if (dependenciasResult.recordset.length === 0) {
+            return res.status(404).send('No se encontraron dependencias para el idusuario proporcionado.');
             }
 
-            const iddependencia = dependenciaResult.recordset[0].iddependencia;
+            const pedidos = [];
 
+            // Buscar pedidos con el estado solicitado en cada dependencia
+            for (const dep of dependenciasResult.recordset) {
             const pedidoResult = await pool.request()
-                .input('iddependencia', sql.Int, iddependencia)
+                .input('iddependencia', sql.Int, dep.iddependencia)
                 .input('estado', sql.VarChar, estado)
                 .query(`
-            SELECT TOP 1 idpedido FROM pedidos 
-            WHERE iddependencia = @iddependencia AND estado = @estado
-        `);
+                SELECT idpedido 
+                FROM pedidos 
+                WHERE iddependencia = @iddependencia AND estado = @estado
+                `);
 
-            if (pedidoResult.recordset.length > 0) {
-                return res.json({ exists: true, idpedido: pedidoResult.recordset[0].idpedido });
+            for (const pedido of pedidoResult.recordset) {
+                pedidos.push({
+                iddependencia: dep.iddependencia,
+                idpedido: pedido.idpedido
+                });
+            }
+            }
+
+            if (pedidos.length > 0) {
+            return res.json({ exists: true, pedidos });
             } else {
-                return res.json({ exists: false });
+            return res.json({ exists: false, pedidos: [] });
             }
         }
 

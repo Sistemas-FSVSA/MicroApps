@@ -65,3 +65,4 @@ const obtenerDependencias = async (req, res) => {
 };
 
 module.exports = { obtenerDependencias };
+

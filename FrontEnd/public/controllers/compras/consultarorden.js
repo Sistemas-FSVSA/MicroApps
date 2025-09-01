@@ -156,7 +156,24 @@ function mostrarDetalleOrden(orden) {
     const titulo = document.getElementById("ordenTitle");
     const contenido = document.getElementById("ordenContent");
 
-    titulo.innerHTML = `<h4 class="font-weight-bold">Orden #${orden.idorden} - ${orden.tipo}</h4>`;
+    // Generar botones de pedidos relacionados
+    const pedidosHTML = (orden.pedidosRelacionados && orden.pedidosRelacionados.length > 0)
+        ? orden.pedidosRelacionados.map(idPedido => `
+            <button type="button" class="btn btn-fsvsaon ml-2" onclick="verPedido(${idPedido})">
+                Pedido N° ${idPedido}
+            </button>
+        `).join('')
+        : '';
+
+    // Renderizar título + botones
+    titulo.innerHTML = `
+        <h4 class="font-weight-bold d-flex align-items-center">
+            Orden #${orden.idorden} - ${orden.tipo}
+            <div class="ml-3 d-flex flex-wrap">
+                ${pedidosHTML}
+            </div>
+        </h4>
+    `;
 
     const detallesHTML = orden.detalles && orden.detalles.length > 0
         ? (() => {
@@ -490,6 +507,8 @@ async function anularOrden(idorden) {
     }
 }
 
+
+
 async function cargarProveedores() {
     try {
         const response = await fetch(`${url}/api/compras/obtenerProveedores`, {
@@ -519,4 +538,93 @@ async function cargarProveedores() {
     } catch (error) {
         console.error("Error cargando proveedores:", error);
     }
+}
+
+function verPedido(idPedido) {
+    console.log(`PEDIDO NÚMERO ${idPedido}`);
+    obtenerPedidoPorId(idPedido).then(() => {
+        $('#pedidoModal').modal('show');
+    });
+}
+async function obtenerPedidoPorId(idpedido) {
+    try {
+        const respuesta = await fetch(`${url}/api/compras/obtenerPedido`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ idpedido })
+        });
+
+        if (!respuesta.ok) throw new Error("Error al obtener el pedido");
+
+        const pedidoDetallada = await respuesta.json();
+        llenarModalPedido(pedidoDetallada);  // 👈 esta función SOLO llena el modal
+    } catch (error) {
+        console.error("Error al obtener detalles del pedido:", error);
+        Swal.fire({
+            title: "Error",
+            text: "No se pudo cargar el pedido seleccionado.",
+            icon: "error",
+            confirmButtonText: "Aceptar"
+        });
+    }
+}
+
+function llenarModalPedido(pedido) {
+    const titulo = document.getElementById("pedidoTitle");
+    const contenido = document.getElementById("pedidoContent");
+
+    // Título
+    titulo.innerHTML = `Pedido #${pedido.idpedido} - ${pedido.nombreDependencia || ""}`;
+
+    // Detalles
+    const detallesHTML = pedido.detalle && pedido.detalle.length > 0
+        ? pedido.detalle.map(detalle => `
+            <div class="form-row mb-2 align-items-center">
+                <div class="col-md-8">
+                    <input type="text" class="form-control" value="${detalle.nombre}" readonly>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control" value="${detalle.cantidad}" readonly>
+                </div>
+                <div class="col-md-1">
+                    ${detalle.notas && detalle.notas.trim() !== '' ? `
+                        <button type="button" class="btn btn-outline-warning" onclick="mostrarNota('${detalle.notas.replace(/'/g, "\\'")}')">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `).join('')
+        : `<p class="text-muted">Sin detalles disponibles</p>`;
+
+    // Contenido
+    contenido.innerHTML = `
+        <form>
+            <div class="form-row">
+                <div class="form-group col-md-8">
+                    <label>Fecha Solicitud</label>
+                    <input type="text" class="form-control" value="${pedido.fechapedido ? formatFechaHora(pedido.fechapedido) : 'Sin fecha'}" readonly>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Estado</label>
+                    <input type="text" class="form-control" value="${pedido.estado}" readonly>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-8">
+                    <label>Aprobado Por:</label>
+                    <input type="text" class="form-control" value="${pedido.nombres || 'Sin registro'}" readonly>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Fecha Entrega</label>
+                    <input type="date" class="form-control" value="${pedido.fechaentrega ? pedido.fechaentrega.split('T')[0] : ''}" readonly>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Items</label>
+                ${detallesHTML}
+            </div>
+        </form>
+    `;
 }

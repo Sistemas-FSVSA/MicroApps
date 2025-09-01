@@ -39,22 +39,64 @@ async function InicializarAprobarPedido() {
                 .forEach(pedido => {
                     totalPedidosAgregados++;
 
+                    let icono = "";
+                    if (pedido.estado === "RECEPCION") {
+                        icono = '<i class="fas fa-clipboard-list"></i>';
+                    } else if (pedido.estado === "CERRADO") {
+                        icono = '<i class="fas fa-clipboard-check"></i>';
+                    }
+
                     const card = document.createElement("div");
-                    card.className = "col-lg-3 col-md-4 col-sm-6";
+                    card.className = "col-lg-3 col-md-4 col-sm-6 mt-3";
+
+                    let botonClass = "btn btn-fsvsaoff";
+                    let botonText = "RECIBIR";
+
+                    if (pedido.estado === "CERRADO") {
+                        botonClass = "btn btn-fsvsaon";
+                        botonText = "APROBAR";
+                    }
+                    // Definir color del badge según estado
+                    let estadoClass = pedido.estado === "RECEPCION"
+                        ? "badge-recepcion"
+                        : "badge-cerrado";
+
+                    // CORRECCIÓN: Usar nombreSubdependencia en lugar de subdependencia
+                    const nombreSubdependencia = pedido.nombreSubdependencia || 'No Aplica';
 
                     card.innerHTML = `
-                        <div class="card text-center shadow-sm h-100 w-100">
-                            <div class="card-body">
-                                <h1><i class="fas fa-file-alt"></i></h1>
-                                <h5 class="card-title mb-2">Pedido #${pedido.idpedido}</h5>
-                                <p class="card-text mb-3">
-                                    Dependencia: <span class="badge bg-secondary">${dependencia.nombreDependencia}</span><br>
-                                    Estado: <span class="badge bg-info text-dark">${pedido.estado}</span>
-                                </p>
-                                <button class="btn btn-fsvsaoff" onclick="verPedido(${pedido.idpedido})">Ver Detalle</button>
-                            </div>
-                        </div>
-                    `;
+    <div class="card shadow-sm h-100 w-100 text-center p-2">
+        <div class="card-body d-flex flex-column align-items-center">
+            
+            <!-- Título -->
+            <h5 class="fw-bold mb-3" style="font-size: 1.4rem; font-weight: bolder;">
+                PEDIDO Nº ${pedido.idpedido}
+            </h5>
+            
+            <!-- Ícono -->
+            <div class="mb-3">
+                <h1 style="font-size: 5rem; color: gray;">${icono}</h1>
+            </div>
+
+            <!-- Información -->
+            <p class="mb-1">
+                <span class="fw-bold" style="font-weight:bold">DEPENDENCIA:</span> ${dependencia.nombreDependencia}
+            </p>
+            <p class="mb-1">
+                <span class="fw-bold" style="font-weight:bold">SUBDEPENDENCIA:</span> ${nombreSubdependencia}
+            </p>
+            <p class="mb-3">
+                <span class="fw-bold" style="font-weight:bold">ESTADO:</span> 
+                <span class="estado-badge ${estadoClass}">${pedido.estado}</span>
+            </p>
+
+            <!-- Botón Estado -->
+            <button class="${botonClass}" style="padding: 8px 24px;" onclick="verPedido(${pedido.idpedido})">
+                ${botonText}
+            </button>
+        </div>
+    </div>
+`;
 
                     container.appendChild(card);
                 });

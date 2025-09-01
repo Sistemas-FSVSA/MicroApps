@@ -15,7 +15,16 @@ async function InicializarRevisarPedido() {
         },
         columns: [
             { title: 'Pedido', data: 'idpedido' },
-            { title: 'Dependencia', data: 'nombreDependencia' },
+            { 
+                title: 'Dependencia', 
+                data: null,
+                render: function (data) {
+                    // Mostrar dependencia y subdependencia separadas por guion, o "Sin SUBDEPENDENCIA" si no hay SUBDEPENDENCIA
+                    const dep = data.nombreDependencia || '';
+                    const subdep = data.nombreSubdependencia ? ` - ${data.nombreSubdependencia}` : '';
+                    return dep + subdep;
+                }
+            },
             {
                 title: 'Fecha Pedido', data: 'fechapedido', render: function (data) {
                     return data ? formatFechaHora(data) : 'Sin fecha';

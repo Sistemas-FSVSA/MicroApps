@@ -109,15 +109,22 @@ function cargarDatosDelPedido(idpedido) {
         });
 }
 
-function renderizadoInfo(data) {
+function renderizadoInfo(data) { /* INFO DE CONTINUACION DEL PEDIDO */
     const dependenciaPedidoSpan = document.getElementById('dependenciaPedido');
     if (dependenciaPedidoSpan) {
-        const { nombreDependencia, idpedido } = data;
-        dependenciaPedidoSpan.textContent = `${nombreDependencia}, Pedido N°: ${idpedido}`;
+        const { nombreDependencia, nombreSubdependencia, idpedido } = data;
+
+        // Si existe nombreSubdependencia, lo concatenamos con un guion
+        if (nombreSubdependencia) {
+            dependenciaPedidoSpan.textContent = `${nombreDependencia} - ${nombreSubdependencia}, Pedido N°: ${idpedido}`;
+        } else {
+            dependenciaPedidoSpan.textContent = `${nombreDependencia}, Pedido N°: ${idpedido}`;
+        }
     } else {
         console.warn('No se encontró el elemento con id "dependenciaPedido" en el HTML.');
     }
 }
+
 
 function renderizarItemsEncargo(paginaDeseada = null) {
     const dataTable = $('#tablaItemsSeleccionados').DataTable();

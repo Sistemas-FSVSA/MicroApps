@@ -32,6 +32,7 @@ const { actualizarEstadoPedido } = require('../controllers/compras/actualizarEst
 const { actualizarEstadoCategoria } = require('../controllers/compras/actualizarEstadoCategoria');
 const { actualizarEstadoProveedor } = require('../controllers/compras/actualizarEstadoProveedor');
 const { actualizarEstadoOrden } = require('../controllers/compras/actualizarEstadoOrden');
+const { variosPedidos } = require('../controllers/compras/variospedidos');
 
 router.post('/guardarCategoria', authenticateToken, rateLimiterFast, guardarCategoria);
 router.post('/guardarItem', authenticateToken, rateLimiterFast, guardarItem);
@@ -61,5 +62,7 @@ router.post('/actualizarEstadoPedido', authenticateToken, rateLimiterFast, actua
 router.post('/actualizarEstadoCategoria', authenticateToken, rateLimiterFast, actualizarEstadoCategoria);
 router.post('/actualizarEstadoProveedor', authenticateToken, rateLimiterFast, actualizarEstadoProveedor);
 router.post('/actualizarEstadoOrden', authenticateToken, rateLimiterFast, actualizarEstadoOrden);
+router.get('/obtenerAprobado', authenticateToken, rateLimiterFast, obtenerAprobado);
+router.get('/variosPedidos', authenticateToken, rateLimiterFast, variosPedidos);
 
 module.exports = router;

@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function inicializarNominaRecaudo() {
   obtenerRecaudadores();
-  cargarFechaModal();
+  //cargarFechaModal();
   obtenerTramites();
   obtenerGestiones();
   cargarRecaudadoresFaltantes(); // 👈 aquí se llama
@@ -110,16 +110,16 @@ async function confirmarAsistencia(idrecaudador) {
 }
 
 
-function cargarFechaModal() {
-  var fechaInput = document.getElementById('fechaHora');
-  if (fechaInput) {
-    var today = new Date();
-    var yyyy = today.getFullYear();
-    var mm = String(today.getMonth() + 1).padStart(2, '0');
-    var dd = String(today.getDate()).padStart(2, '0');
-    fechaInput.value = yyyy + '-' + mm + '-' + dd;
-  }
-}
+// function cargarFechaModal() {
+//   var fechaInput = document.getElementById('fechaHora');
+//   if (fechaInput) {
+//     var today = new Date();
+//     var yyyy = today.getFullYear();
+//     var mm = String(today.getMonth() + 1).padStart(2, '0');
+//     var dd = String(today.getDate()).padStart(2, '0');
+//     fechaInput.value = yyyy + '-' + mm + '-' + dd;
+//   }
+// }
 
 async function obtenerRecaudadores() {
   try {

@@ -101,7 +101,7 @@ async function confirmarAsistencia(idrecaudador) {
       credentials: "include",
       body: JSON.stringify({ idrecaudador })
     });
-    
+
     await cargarRecaudadoresFaltantes(); // Recargar lista de faltantes
   } catch (error) {
     console.error("Error al confirmar asistencia:", error);
@@ -127,14 +127,17 @@ async function obtenerRecaudadores() {
     if (!respuesta.ok) throw new Error("Error al obtener recaudadores");
     const recaudadores = await respuesta.json();
 
+    // Filtrar solo los recaudadores con estado true
+    const recaudadoresActivos = recaudadores.filter((r) => r.estado === true);
+
     // Ordenar los recaudadores alfabéticamente por nombre
-    recaudadores.sort((a, b) => a.nombre.localeCompare(b.nombre));
+    recaudadoresActivos.sort((a, b) => a.nombre.localeCompare(b.nombre));
 
     const selectRecaudadores = document.getElementById("recaudador");
     if (selectRecaudadores) {
       // Opción por defecto "SELECCIONAR" obligatoria
       selectRecaudadores.innerHTML = `<option value="" selected disabled>Seleccionar</option>`;
-      recaudadores.forEach((recaudador) => {
+      recaudadoresActivos.forEach((recaudador) => {
         const option = document.createElement("option");
         option.value = recaudador.idrecaudador;
         option.textContent = recaudador.nombre;
@@ -159,20 +162,24 @@ async function obtenerRecaudadores() {
   }
 }
 
+
 async function obtenerTramites() {
   try {
     const respuesta = await fetch(`${url}/api/recaudo/obtenerTramites`);
     if (!respuesta.ok) throw new Error("Error al obtener los tramites");
     const tramites = await respuesta.json();
 
+    // Filtrar solo los trámites con estado true
+    const tramitesActivos = tramites.filter((t) => t.estado === true);
+
     // Ordenar los recaudadores alfabéticamente por nombre
-    tramites.sort((a, b) => a.nombre.localeCompare(b.nombre));
+    tramitesActivos.sort((a, b) => a.nombre.localeCompare(b.nombre));
 
     const selectTramites = document.getElementById("tipoTramite");
     if (selectTramites) {
       // Opción por defecto "SELECCIONAR" obligatoria
       selectTramites.innerHTML = `<option value="" selected disabled>Seleccionar</option>`;
-      tramites.forEach((tramite) => {
+      tramitesActivos.forEach((tramite) => {
         const option = document.createElement("option");
         option.value = tramite.idtramite;
         option.textContent = tramite.nombre;
@@ -184,6 +191,7 @@ async function obtenerTramites() {
     alert("Error al cargar los tramites. Intente de nuevo.");
   }
 }
+
 
 function registrarGestion() {
   const selectRecaudador = document.getElementById("recaudador");

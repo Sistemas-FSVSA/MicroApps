@@ -518,6 +518,23 @@ function generarExcelResumen(resumen) {
 
 function generarExcelPlanillas(resumen) {
   const fechaActual = new Date();
+
+  // ---- Helpers de período y fecha ----
+  const year = fechaActual.getFullYear();
+  const month = fechaActual.getMonth() + 1; // 1-12
+  const day = fechaActual.getDate();        // 1-31
+
+  const periodo = String(month).padStart(2, '0'); // "01".."12"
+
+  // Último día del mes actual (día 0 del mes siguiente)
+  const ultimoDiaMes = new Date(year, month, 0).getDate();
+
+  // Regla de quincena para la FECHA
+  const diaCorte = day <= 15 ? 15 : ultimoDiaMes;
+
+  // Formato DD/MM/YYYY
+  const fechaCorte = `${String(diaCorte).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+
   const datos = [
     [
       'Cédula Empleado',
@@ -549,23 +566,50 @@ function generarExcelPlanillas(resumen) {
       (item.PagoMesSeguro || 0);
 
     const gestionesPago = Object.entries(item)
-      .filter(([k, _]) => k.startsWith("Pago") && typeof item[k] === "number" && !k.includes("PagoMes") && !k.includes("PagoAnualidad") && !k.includes("PagoMesSeguro"))
+      .filter(([k, v]) =>
+        k.startsWith("Pago") &&
+        typeof v === "number" &&
+        !k.includes("PagoMes") &&
+        !k.includes("PagoAnualidad") &&
+        !k.includes("PagoMesSeguro")
+      )
       .reduce((acc, [_, val]) => acc + val, 0);
 
     const valorFinal = total + gestionesPago;
 
     datos.push([
-      item.Vendedor,
-      '074', '018', '', '', valorFinal, '', '', '', '', '', '', '', '', '', '', ''
+      item.Vendedor,   // Cédula Empleado (ajusta si corresponde a otro campo)
+      '074',           // Código Concepto
+      '018',           // Código Centro de Costos
+      '',              // Código Concepto Referencia
+      '',              // Horas
+      valorFinal,      // Valor
+      periodo,         // Período -> "MM"
+      fechaCorte,      // Fecha -> "DD/MM/YYYY" (15 o último día del mes)
+      '', '', '', '', '', '', '', '', ''
     ]);
   });
 
   const ws = XLSX.utils.aoa_to_sheet(datos);
+
+  // Fuerza a que 'Período' y 'Fecha' se queden como texto en Excel (evita interpretaciones)
+  // Recorremos columna G (Período, índice 6) y H (Fecha, índice 7) para poner formato texto
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let R = 1; R <= range.e.r; R++) { // desde la fila 1 (después de encabezados)
+    const addrPeriodo = XLSX.utils.encode_cell({ r: R, c: 6 });
+    const addrFecha = XLSX.utils.encode_cell({ r: R, c: 7 });
+    if (ws[addrPeriodo]) ws[addrPeriodo].t = 's';
+    if (ws[addrFecha]) ws[addrFecha].t = 's';
+  }
+
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Planilla");
 
-  XLSX.writeFile(wb, `Planilla_Nomina_${fechaActual.toISOString().split('T')[0]}.xlsx`);
+  // Nombre de archivo con fecha ISO (YYYY-MM-DD)
+  const nombre = `Planilla_Nomina_${fechaActual.toISOString().split('T')[0]}.xlsx`;
+  XLSX.writeFile(wb, nombre);
 }
+
 
 
 

@@ -64,6 +64,8 @@ class Server {
     // 👇 Aquí van los middlewares de sesión
     this.app.use(sessionMiddleware);
 
+
+    // SERVER.JS DE EJEMPLO
     // Servir la carpeta "uploads" como estática
     this.app.use(
       '/uploads',

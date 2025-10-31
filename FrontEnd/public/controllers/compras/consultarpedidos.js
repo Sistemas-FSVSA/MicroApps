@@ -106,7 +106,7 @@ function mostrarDetalleOrden(pedido) {
     const detallesHTML = pedido.detalle && pedido.detalle.length > 0
         ? (() => {
             let totalGeneral = 0;
-            const filas = pedido.detalle.map(detalle => {
+            const filas = pedido.detalle.map((detalle, index) => {
                 const total = detalle.cantidad * (detalle.valor || 0);
                 totalGeneral += total;
                 return `
@@ -119,7 +119,7 @@ function mostrarDetalleOrden(pedido) {
                     </div>
                     <div class="col-md-1">
                         ${detalle.notas && detalle.notas.trim() !== '' ? `
-                            <button type="button" class="btn btn-outline-warning" onclick="mostrarNota('${detalle.notas.replace(/'/g, "\\'")}')">
+                            <button type="button" class="btn btn-outline-warning btn-nota" data-nota="${encodeURIComponent(detalle.notas)}" data-index="${index}">
                                 <i class="fas fa-bell"></i>
                             </button>
                         ` : ''}
@@ -171,6 +171,15 @@ function mostrarDetalleOrden(pedido) {
             </div>
         </form>
     `;
+
+    // 🔧 Agregar event listeners a los botones de notas
+    document.querySelectorAll('.btn-nota').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const notaCodificada = this.getAttribute('data-nota');
+            const nota = decodeURIComponent(notaCodificada);
+            mostrarNota(nota);
+        });
+    });
 }
 
 async function enviarRecepcion(idpedido) {
@@ -263,10 +272,16 @@ async function generarOrdenSalida(idpedido) {
 }
 
 function mostrarNota(nota) {
+    // Reemplazar \n por <br> para mostrar saltos de línea en HTML
+    const notaFormateada = nota.replace(/\n/g, '<br>');
+
     Swal.fire({
         title: 'Nota del Ítem',
-        text: nota,
+        html: notaFormateada, // 🔧 Usar 'html' en lugar de 'text'
         icon: 'info',
-        confirmButtonText: 'Cerrar'
+        confirmButtonText: 'Cerrar',
+        customClass: {
+            popup: 'swal-nota-popup'
+        }
     });
 }

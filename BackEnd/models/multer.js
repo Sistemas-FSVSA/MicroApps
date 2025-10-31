@@ -2,6 +2,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+// MULTER.JS DE EJEMPLO
 // Ruta absoluta al NAS montado (unidad de red)
 // 🔧 reconstruimos la ruta UNC con doble barra inicial
 const uploadDir = '\\\\' + process.env.UPLOAD_PATH;
@@ -40,7 +41,7 @@ const uploadFields = multer({
 ]);
 
 const uploadFirma = multer({
-    storage: memoryStorage,
+    storage: memoryStorage, 
     limits: { fileSize: 5 * 1024 * 1024 }
 }).single("firma");
 

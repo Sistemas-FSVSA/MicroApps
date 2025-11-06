@@ -82,14 +82,40 @@
 
                     <div class="mb-3">
                         <label for="usuario" class="form-label">
-                            <i class="fas fa-user"></i> Usuario *
+                            <i class="fas fa-user"></i> Nombre Completo *
                         </label>
-                        <input id="usuario" class="form-control" name="usuario" required
-                            placeholder="Ingrese el nombre del usuario">
+                        <input id="usuario" class="form-control" name="usuario" type="text" required
+                            placeholder="Ingrese su nombre completo">
                         <div class="invalid-feedback">
-                            El campo usuario es obligatorio
+                            Solo se permiten letras y espacios
                         </div>
                     </div>
+
+                    <script>
+                        const usuarioInput = document.getElementById('usuario');
+
+                        // Validar al escribir
+                        usuarioInput.addEventListener('keypress', function (event) {
+                            const char = String.fromCharCode(event.which);
+                            if (!/[A-Za-zÁÉÍÓÚáéíóúÑñ\s]/.test(char)) {
+                                event.preventDefault();
+                            }
+                        });
+
+                        // Validar al pegar (Ctrl+V)
+                        usuarioInput.addEventListener('paste', function (event) {
+                            event.preventDefault();
+                            const pastedText = (event.clipboardData || window.clipboardData).getData('text');
+                            // Solo permite texto que contenga letras y espacios
+                            const cleanedText = pastedText.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, '');
+                            usuarioInput.value += cleanedText;
+                        });
+
+                        // Validar al cambiar (input)
+                        usuarioInput.addEventListener('input', function (event) {
+                            this.value = this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, '');
+                        });
+                    </script>
 
                     <div class="mb-3">
                         <label for="correo" class="form-label">

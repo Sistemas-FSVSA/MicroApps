@@ -12,6 +12,64 @@
     --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+.swal-cancel-button {
+  background-color: #96072d !important; /* Rojo Oscuro*/
+  color: white !important;
+  border-radius: 5px !important;
+  padding: 8px 16px !important;
+  font-size: 16px !important;
+  transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out !important;
+}
+
+.swal-cancel-button:hover {
+  background-color: #c24d4d !important; /* Rojo más claro */
+  transform: scale(1.05) !important;
+}
+
+.btn-fsvsaoff {
+  background-color: #96072d; /* Rojo oscuro */
+  color: white;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.btn-fsvsaoff:hover {
+  background-color: #c24d4d !important; /* Rojo más claro */
+  transform: scale(1.05);
+}
+
+
+.swal-confirm-button {
+  background-color: #163c64 !important; /* Verde */
+  color: white !important;
+  border-radius: 5px !important;
+  padding: 8px 16px !important;
+  font-size: 16px !important;
+  transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out !important;
+}
+
+/* Efecto hover */
+.swal-confirm-button:hover {
+  background-color: #295c92 !important; /* Verde más oscuro */
+  transform: scale(1.05) !important;
+}
+
+.btn-fsvsaon {
+  background-color: #163c64;
+  color: white;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.btn-fsvsaon:hover {
+  background-color: #2e5c8d !important; /* Rojo más claro */
+  transform: scale(1.05);
+}
+
+
+
 /* Reset y configuración base */
 html,
 body {

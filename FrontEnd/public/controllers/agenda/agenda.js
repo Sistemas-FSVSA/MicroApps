@@ -123,7 +123,41 @@ function initAgenda() {
       center: 'title',
       right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
     },
+
     selectable: true,
+    // 🔹 No permitir seleccionar días pasados (hoy permitido)
+    selectAllow: function (selectInfo) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // 🔸 Ajuste: retroceder un día
+      today.setDate(today.getDate() - 1);
+
+      const start = new Date(selectInfo.start);
+      start.setHours(0, 0, 0, 0);
+
+      return start.getTime() >= today.getTime();
+    },
+
+    // 🔹 Estilo visual para días pasados
+    dayCellDidMount: function (info) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // 🔸 Ajuste: retroceder un día
+      today.setDate(today.getDate() - 1);
+
+      const cellDate = new Date(info.date);
+      cellDate.setHours(0, 0, 0, 0);
+
+      if (cellDate.getTime() < today.getTime()) {
+        info.el.style.backgroundColor = "#f5f5f5";  // gris claro
+        info.el.style.opacity = "0.6";              // más opaco
+        info.el.style.pointerEvents = "none";       // deshabilita clicks
+      }
+    },
+
+
     events: async function (fetchInfo, successCallback, failureCallback) {
       try {
         // TODO: cuando el endpoint esté listo, reemplazar el mock por:
@@ -143,8 +177,8 @@ function initAgenda() {
               correo: evento.correo,
               dependencia: evento.dependencia,
               detalles: evento.detallesReservacion,
-              horaInicioOriginal: evento.horaInicio,
-              horaFinOriginal: evento.horaFin
+              horaInicio: evento.horaInicio,  // 👈 mismo nombre
+              horaFin: evento.horaFin         // 👈 mismo nombre
             }
           }));
 
@@ -158,15 +192,31 @@ function initAgenda() {
       }
     },
     dateClick: function (info) {
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0); // medianoche
+
+      // 👇 Ajuste: permitir también hoy (retroceder 1 día en la comparación)
+      const limite = new Date(hoy);
+      limite.setDate(limite.getDate() - 1);
+
+      // 🚫 Bloquear solo días estrictamente anteriores a ayer
+      if (info.date < limite) {
+        return; // no hacer nada
+      }
+
+      // ✅ Si es hoy o futuro, abrir modal
       const fechaSeleccionada = document.querySelector('#fechaSeleccionada');
       if (fechaSeleccionada) {
         fechaSeleccionada.value = info.dateStr;
       } else {
         console.error('No se encontró el campo #fechaSeleccionada');
       }
+
       const modal = new bootstrap.Modal(document.getElementById('reservaModal'));
       modal.show();
     },
+
+
     eventClick: function (info) {
       const ev = info.event;
       const detalles    = ev.extendedProps.detalles || ev.extendedProps.detallesReservacion || '';
@@ -200,25 +250,16 @@ function initAgenda() {
       }
 
       const contenido = `
-      <div class="mb-3">
-          <strong> ${ev.title}</strong>
-      </div>
-      <div class="mb-2">
-          <strong>Horario:</strong> ${startTime} - ${endTime}
-      </div>
-      ${usuario ? `
-      <div class="mb-2">
-          <strong>Usuario:</strong> ${usuario}
-      </div>` : ''}
-      ${correo ? `
-      <div class="mb-2">
-          <strong>Correo:</strong> ${correo}
-      </div>` : ''}
-      ${dependencia ? `
-      <div class="mb-2">
-          <strong>Dependencia:</strong> ${dependencia}
-      </div>` : ''}
-      ${detalles ? `
+    <div class="mb-3">
+        <strong>${ev.title}</strong>
+    </div>
+    <div class="mb-2">
+        <strong>Horario:</strong> ${startTime} - ${endTime}
+    </div>
+    ${usuario ? `<div class="mb-2"><strong>Usuario:</strong> ${usuario}</div>` : ''}
+    ${correo ? `<div class="mb-2"><strong>Correo:</strong> ${correo}</div>` : ''}
+    ${dependencia ? `<div class="mb-2"><strong>Dependencia:</strong> ${dependencia}</div>` : ''}
+    ${detalles ? `
       <div class="mb-2">
           <strong>Detalles:</strong><br>
           <div class="ps-3 border-start border-2 border-secondary ms-2">
@@ -228,11 +269,12 @@ function initAgenda() {
       <div class="mb-2 text-muted">
           <em>Sin detalles adicionales</em>
       </div>`}
-    `;
+  `;
 
       document.getElementById('detalleTitulo').innerHTML = contenido;
       new bootstrap.Modal(document.getElementById('detalleModal')).show();
     },
+
     eventDidMount: function (info) {
       const detalles = info.event.extendedProps.detalles;
 
@@ -247,9 +289,7 @@ function initAgenda() {
       const endTime   = info.event.end   ? info.event.end.toLocaleTimeString('es-CO', formatoHora12)   : '';
 
       let tooltipText = `${startTime} - ${endTime}`;
-      if (detalles) {
-        tooltipText += `\n${detalles}`;
-      }
+      if (detalles) tooltipText += `\n${detalles}`;
 
       info.el.setAttribute('title', tooltipText);
     }
@@ -307,18 +347,15 @@ function initAgenda() {
   const reservaModal = document.getElementById('reservaModal');
   if (reservaModal) {
     reservaModal.addEventListener('hidden.bs.modal', function () {
-      console.log('🧹 Modal cerrado - Limpiando formulario automáticamente');
       limpiarFormularioCompleto();
     });
     reservaModal.addEventListener('hide.bs.modal', function () {
-      console.log('🚪 Cerrando modal de reservación...');
     });
   } else {
     console.error('❌ No se encontró el modal #reservaModal');
   }
 
   setInterval(() => {
-    console.log('Actualizando eventos automáticamente...');
     calendar.refetchEvents();
   }, 5 * 60 * 1000);
 
@@ -331,10 +368,6 @@ function initAgenda() {
     form.addEventListener('submit', async function (e) {
       e.preventDefault();
 
-      if (enviandoFormulario) {
-        console.log('Ya se está procesando una reservación, ignorando...');
-        return;
-      }
 
       try {
         const fd = new FormData(form);
@@ -412,7 +445,6 @@ function initAgenda() {
           detallesReservacion: fd.get('detallesReservacion') || ''
         };
 
-        console.log('Datos enviados:', reservacionData);
 
         const result = await crearReservacion(reservacionData);
 
@@ -421,7 +453,6 @@ function initAgenda() {
           if (modal) modal.hide();
 
           setTimeout(() => {
-            console.log('Refrescando eventos después de crear reservación...');
             calendar.refetchEvents();
           }, 500);
 
@@ -439,15 +470,15 @@ function initAgenda() {
   }
 }
 
-function getLocalISOString(fecha, hora) {
-  const [year, month, day] = fecha.split('-');
-  const [hh, mm] = hora.split(':');
-  const date = new Date(year, month - 1, day, hh, mm);
-  const tzOffset = -date.getTimezoneOffset();
-  const sign = tzOffset >= 0 ? '+' : '-';
-  const pad = n => String(Math.floor(Math.abs(n))).padStart(2, '0');
-  const offset = `${sign}${pad(tzOffset / 60)}:${pad(tzOffset % 60)}`;
-  return `${fecha}T${hora}${offset}`;
+function convertirA12Horas(hora24) {
+  if (!hora24) return '';
+
+  const [horas, minutos] = hora24.split(':');
+  const horasNum = parseInt(horas);
+  const periodo = horasNum >= 12 ? 'PM' : 'AM';
+  const horas12 = horasNum === 0 ? 12 : horasNum > 12 ? horasNum - 12 : horasNum;
+
+  return `${horas12}:${minutos} ${periodo}`;
 }
 
 // TODO: agregar parámetro salaId cuando el endpoint esté listo

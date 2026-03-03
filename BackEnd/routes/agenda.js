@@ -7,12 +7,14 @@ const { obtenerReservaciones } = require('../controllers/agenda/obtenerReservaci
 const { guardarReservacion } = require('../controllers/agenda/guardarReservacion');
 const { obtenerDependencias } = require('../controllers/agenda/obtenerDependencias');
 const { obtenerReservacionPorId } = require('../controllers/agenda/obtenerReservacion');
+const { envioRecordatorios } = require('../controllers/agenda/envioRecordatorios');
 
 router.get('/obtenerReservaciones/:mes', rateLimiterFast, obtenerReservaciones);
 router.post('/guardarReservacion', rateLimiterFast, guardarReservacion);
 router.get('/obtenerDependencias', rateLimiterFast, obtenerDependencias);
 router.get('/obtenerDependencias/:id', rateLimiterFast, obtenerDependencias);
 router.get('/obtenerReservacion/:idreservacion', rateLimiterFast, obtenerReservacionPorId);
+router.get('/envioRecordatorios', rateLimiterFast, envioRecordatorios);
 
 
 module.exports = router;

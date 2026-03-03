@@ -1,38 +1,54 @@
 const { poolPromiseAgenda, sql } = require('../../models/conexion');
+const fs = require('fs');
+const path = require('path');
+const nodemailer = require('nodemailer');
+const handlebars = require('handlebars');
+const { DateTime } = require('luxon');
+
+const templateConfirmacionPath = path.join(__dirname, '../../templates/confirmacionagenda.html');
+
+async function getEmailConfig() {
+    try {
+        const pool = await poolPromiseAgenda;
+        const result = await pool.request()
+            .query("SELECT TOP 1 proveedor, correo, acceso FROM configemail WHERE estado = 1");
+
+        if (result.recordset.length === 0) return null;
+
+        const { proveedor, correo, acceso } = result.recordset[0];
+
+        let config;
+        if (proveedor.toLowerCase() === "gmail" || proveedor.toLowerCase() === "google") {
+            config = {
+                service: 'gmail',
+                auth: { user: correo, pass: acceso }
+            };
+        } else if (proveedor.toLowerCase() === "outlook") {
+            config = {
+                host: "smtp.office365.com",
+                port: 587,
+                secure: false,
+                auth: { user: correo, pass: acceso }
+            };
+        } else {
+            return null;
+        }
+
+        return { transporter: nodemailer.createTransport(config), correo };
+    } catch (error) {
+        console.error("❌ Error obteniendo la configuración de correo:", error);
+        return null;
+    }
+}
 
 const guardarReservacion = async (req, res) => {
     const pool = await poolPromiseAgenda;
     const transaction = new sql.Transaction(pool);
 
     try {
-        const data = req.body; // 🔹 Capturar datos enviados por POSTMAN
+        const data = req.body;
 
         await transaction.begin();
-
-        // 🔹 VALIDACIONES DE DATOS
-        if (!data.usuario || !data.correo || !data.dependencia || !data.fechaReservacion || !data.horaInicio || !data.horaFin) {
-            return res.status(400).json({ error: 'Faltan campos obligatorios' });
-        }
-
-        const dependenciaId = parseInt(data.dependencia);
-        if (isNaN(dependenciaId)) {
-            return res.status(400).json({ error: 'ID de dependencia inválido' });
-        }
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(data.correo)) {
-            return res.status(400).json({ error: 'Formato de correo electrónico inválido' });
-        }
-
-        // 🔹 Verificar dependencia activa
-        const requestVerificar = new sql.Request(transaction);
-        const verificarDep = await requestVerificar
-            .input('iddependencia', sql.Int, dependenciaId)
-            .query('SELECT COUNT(*) as count FROM dependencias WHERE iddependencia = @iddependencia AND estado = 1');
-
-        if (verificarDep.recordset.length === 0 || verificarDep.recordset[0].count === 0) {
-            return res.status(400).json({ error: `La dependencia con ID ${dependenciaId} no existe o está inactiva` });
-        }
 
         // 🔹 Validar fechas
         const fechaHoy = new Date();
@@ -85,7 +101,7 @@ const guardarReservacion = async (req, res) => {
 
         if (conflictos.recordset.length > 0) {
             const reservacionEnConflicto = conflictos.recordset[0];
-            return res.status(400).json({ 
+            return res.status(400).json({
                 error: 'HORARIO_NO_DISPONIBLE',
                 message: `El horario de ${data.horaInicio} a ${data.horaFin} se solapa con una reservación existente.`,
                 conflicto: {
@@ -102,7 +118,7 @@ const guardarReservacion = async (req, res) => {
         await requestInsert
             .input('usuario', sql.NVarChar(100), data.usuario.trim())
             .input('correo', sql.NVarChar(150), data.correo.trim().toLowerCase())
-            .input('iddependencia', sql.Int, dependenciaId)
+            .input('iddependencia', sql.Int, data.dependencia)
             .input('inicioStr', sql.NVarChar(19), inicioStr)
             .input('finStr', sql.NVarChar(19), finStr)
             .input('detallesReservacion', sql.NVarChar(sql.MAX), data.detallesReservacion || null)
@@ -118,12 +134,11 @@ const guardarReservacion = async (req, res) => {
                 );
             `);
 
-        // 🔹 Obtener reservación recién creada
         const requestGetData = new sql.Request(transaction);
         const result = await requestGetData
             .input('usuario', sql.NVarChar(100), data.usuario.trim())
             .input('correo', sql.NVarChar(150), data.correo.trim().toLowerCase())
-            .input('iddependencia', sql.Int, dependenciaId)
+            .input('iddependencia', sql.Int, data.dependencia)
             .input('inicioStr', sql.NVarChar(19), inicioStr)
             .query(`
                 SELECT TOP 1 id, inicioReservacion, finReservacion
@@ -141,11 +156,49 @@ const guardarReservacion = async (req, res) => {
 
         await transaction.commit();
 
-        return res.json({
+        res.json({
             success: true,
             message: 'Reservación creada correctamente',
             reservacion: result.recordset[0]
         });
+
+        (async () => {
+            const emailConfig = await getEmailConfig();
+
+            // 🚫 Si no hay configuración activa, simplemente no enviar correo
+            if (!emailConfig) {
+                console.log("📭 No se envió correo: no hay configuración de email activa.");
+                return;
+            }
+
+            const { transporter, correo } = emailConfig;
+
+            const templateSource = fs.readFileSync(templateConfirmacionPath, 'utf-8');
+            const template = handlebars.compile(templateSource);
+
+            const htmlContent = template({
+                usuario: data.usuario,
+                correo: data.correo,
+                dependencia: data.nombreDependencia || data.dependencia,
+                fechareservacion: DateTime.fromISO(data.fechaReservacion).setZone('America/Bogota').toFormat('dd/MM/yyyy'),
+                horainicio: DateTime.fromFormat(data.horaInicio, "HH:mm:ss").toFormat("h:mma"),
+                horafin: DateTime.fromFormat(data.horaFin, "HH:mm:ss").toFormat("h:mma"),
+                observaciones: data.detallesReservacion || "Sin observaciones"
+            });
+
+            try {
+                await transporter.sendMail({
+                    from: correo,
+                    to: data.correo,
+                    subject: "Confirmación de Reservación",
+                    html: htmlContent
+                });
+
+                console.log("✅ Correo de confirmación enviado.");
+            } catch (err) {
+                console.error("❌ Error al enviar correo de confirmación:", err);
+            }
+        })();
 
     } catch (error) {
         try {

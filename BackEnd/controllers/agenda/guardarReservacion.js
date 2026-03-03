@@ -79,6 +79,7 @@ const guardarReservacion = async (req, res) => {
             .input('fechaReservacion', sql.Date, data.fechaReservacion)
             .input('inicioStr', sql.NVarChar(19), inicioStr)
             .input('finStr', sql.NVarChar(19), finStr)
+            .input('tipo', sql.Int, data.tipo)
             .query(`
                 SELECT 
                     dr.inicioReservacion, 
@@ -97,6 +98,7 @@ const guardarReservacion = async (req, res) => {
                     AND 
                     (CONVERT(datetime2, @finStr, 120) > dr.inicioReservacion)
                   )
+                AND dr.tipo = @tipo
             `);
 
         if (conflictos.recordset.length > 0) {
@@ -122,15 +124,17 @@ const guardarReservacion = async (req, res) => {
             .input('inicioStr', sql.NVarChar(19), inicioStr)
             .input('finStr', sql.NVarChar(19), finStr)
             .input('detallesReservacion', sql.NVarChar(sql.MAX), data.detallesReservacion || null)
+            .input('tipo', sql.Int, data.tipo)
             .query(`
-                INSERT INTO datosreservacion (usuario, correo, iddependencia, inicioReservacion, finReservacion, detallesReservacion)
+                INSERT INTO datosreservacion (usuario, correo, iddependencia, inicioReservacion, finReservacion, detallesReservacion, tipo)
                 VALUES (
                   @usuario, 
                   @correo, 
                   @iddependencia, 
                   CONVERT(datetime2, @inicioStr, 120), 
                   CONVERT(datetime2, @finStr, 120), 
-                  @detallesReservacion
+                  @detallesReservacion,
+                  @tipo
                 );
             `);
 

@@ -6,6 +6,7 @@ const DBGESTIONES = {
   password: process.env.DBGESTIONES_PASSWORD,
   server: process.env.DBGESTIONES_SERVER,
   database: process.env.DBGESTIONES_DATABASE,
+  port: parseInt(process.env.DEGESTIONES_PORT),
   options: {
     encrypt: false,
     enableArithAbort: true
@@ -31,6 +32,7 @@ const DBRECAUDO = {
   password: process.env.DBRECAUDO_PASSWORD,
   server: process.env.DBRECAUDO_SERVER,
   database: process.env.DBRECAUDO_DATABASE,
+  port: parseInt(process.env.DBRECAUDO_PORT),
   options: {
     encrypt: false,
     enableArithAbort: true
@@ -56,6 +58,7 @@ const DBAGENDA = {
   password: process.env.DBAGENDA_PASSWORD,
   server: process.env.DBAGENDA_SERVER,
   database: process.env.DBAGENDA_DATABASE,
+  port: parseInt(process.env.DBAGENDA_PORT),
   options: {
     encrypt: false,
     enableArithAbort: true

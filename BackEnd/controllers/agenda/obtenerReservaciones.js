@@ -2,16 +2,25 @@ const { poolPromiseAgenda, sql } = require('../../models/conexion');
 
 const obtenerReservaciones = async (req, res) => {
   try {
-    const { mes } = req.params;
+    const { mes, tipo } = req.params;
     const mesNum = parseInt(mes, 10);
     if (isNaN(mesNum) || mesNum < 1 || mesNum > 12) {
       return res.status(400).json({ error: 'Mes inválido, debe ser un número entre 1 y 12' });
     }
 
+    let tipoNum = null;
+    if (tipo !== undefined) {
+      tipoNum = parseInt(tipo, 10);
+      if (isNaN(tipoNum)) {
+        return res.status(400).json({ error: 'Tipo inválido, debe ser un número' });
+      }
+    }
+
     const pool = await poolPromiseAgenda;
-    const result = await pool.request()
-      .input('mes', sql.Int, mesNum)
-      .query(`
+    const request = pool.request()
+      .input('mes', sql.Int, mesNum);
+
+    let query = `
         SELECT
           dr.id AS reservacionId,
           dr.usuario,
@@ -23,13 +32,22 @@ const obtenerReservaciones = async (req, res) => {
           FORMAT(dr.finReservacion, 'hh:mm tt', 'es-CO') AS horaFin,       -- <--- formato 12h
           dr.detallesReservacion,
           dr.inicioReservacion,
-          dr.finReservacion
+          dr.finReservacion,
+          dr.tipo
         FROM datosreservacion dr
         INNER JOIN dependencias d ON dr.iddependencia = d.iddependencia
         WHERE d.estado = 1
           AND MONTH(dr.inicioReservacion) = @mes
-        ORDER BY dr.inicioReservacion ASC
-      `);
+    `;
+
+    if (tipoNum !== null) {
+      request.input('tipo', sql.Int, tipoNum);
+      query += ' AND dr.tipo = @tipo';
+    }
+
+    query += ' ORDER BY dr.inicioReservacion ASC';
+
+    const result = await request.query(query);
 
     return res.json(result.recordset);
 

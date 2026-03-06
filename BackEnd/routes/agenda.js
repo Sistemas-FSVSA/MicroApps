@@ -9,6 +9,7 @@ const { obtenerDependencias } = require('../controllers/agenda/obtenerDependenci
 const { obtenerReservacionPorId } = require('../controllers/agenda/obtenerReservacion');
 const { envioRecordatorios } = require('../controllers/agenda/envioRecordatorios');
 
+router.get('/obtenerReservaciones/:mes/:tipo', rateLimiterFast, obtenerReservaciones);
 router.get('/obtenerReservaciones/:mes', rateLimiterFast, obtenerReservaciones);
 router.post('/guardarReservacion', rateLimiterFast, guardarReservacion);
 router.get('/obtenerDependencias', rateLimiterFast, obtenerDependencias);

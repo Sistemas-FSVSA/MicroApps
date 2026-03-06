@@ -100,8 +100,10 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   });
 
-  document.getElementById('btnReservar').addEventListener('click', () => {
-    window.location.href = '/agenda';
+  document.getElementById('btnReservar').addEventListener('click', (e) => {
+    e.preventDefault();   // ← evita que el <form> haga submit
+    e.stopPropagation();
+    window.location.href = '/seleccion-sala';
   });
 
 

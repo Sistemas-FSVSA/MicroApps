@@ -34,6 +34,81 @@ document.getElementById("horaFin").addEventListener("change", function () {
   this.value = String(h).padStart(2, "0") + ":" + String(redondeo).padStart(2, "0");
 });
 
+// ─── Restricciones Sala Unidad de Duelo (salaId = 3) ──────────────────────
+// 1. Todos los viernes de 10:00 AM a 12:00 PM
+// 2. Todos los sábados de 10:00 AM a 12:00 PM
+// 3. Todos los últimos jueves del mes de 1:00 PM a 5:00 PM
+
+function getUltimoJuevesDelMes(anio, mes) {
+  // mes: 0-indexed (JavaScript)
+  const ultimoDia = new Date(anio, mes + 1, 0);
+  const diaSemana = ultimoDia.getDay();
+  const diff = (diaSemana >= 4) ? diaSemana - 4 : diaSemana + 3;
+  return new Date(anio, mes, ultimoDia.getDate() - diff);
+}
+
+function timeToMinutes(horaStr) {
+  // Acepta "HH:MM" o "HH:MM:SS"
+  const [h, m] = horaStr.split(':').map(Number);
+  return h * 60 + m;
+}
+
+/**
+ * Verifica si una reservación en la Sala Unidad de Duelo viola las restricciones.
+ * @param {string} fechaStr  - Fecha en formato "YYYY-MM-DD"
+ * @param {string} horaInicioStr - Hora inicio "HH:MM" o "HH:MM:SS"
+ * @param {string} horaFinStr    - Hora fin   "HH:MM" o "HH:MM:SS"
+ * @returns {{ bloqueada: boolean, mensaje?: string }}
+ */
+function verificarRestriccionReservacion(fechaStr, horaInicioStr, horaFinStr) {
+  // Construir fecha sin offset de zona para evitar desfases
+  const [anio, mes, dia] = fechaStr.split('-').map(Number);
+  const fecha     = new Date(anio, mes - 1, dia);
+  const diaSemana = fecha.getDay(); // 0=Dom, 1=Lun, 4=Jue, 5=Vie, 6=Sáb
+
+  const inicioRes = timeToMinutes(horaInicioStr);
+  const finRes    = timeToMinutes(horaFinStr);
+
+  // Comprueba si los rangos se solapan: (inicioA < finB) && (finA > inicioB)
+  function seSolapa(inicioBloqueo, finBloqueo) {
+    return inicioRes < finBloqueo && finRes > inicioBloqueo;
+  }
+
+  const HORA_10_00 = 10 * 60;
+  const HORA_12_00 = 12 * 60;
+  const HORA_13_00 = 13 * 60;
+  const HORA_17_00 = 17 * 60;
+
+  // Regla 1: Viernes 10:00 - 12:00
+  if (diaSemana === 5 && seSolapa(HORA_10_00, HORA_12_00)) {
+    return {
+      bloqueada: true,
+      mensaje: 'La Sala de Juntas Unidad de Duelo <strong>no permite reservaciones los viernes de 10:00 AM a 12:00 PM</strong>.<br><br>Por favor selecciona un horario diferente.'
+    };
+  }
+
+  // Regla 2: Sábado 10:00 - 12:00
+  if (diaSemana === 6 && seSolapa(HORA_10_00, HORA_12_00)) {
+    return {
+      bloqueada: true,
+      mensaje: 'La Sala de Juntas Unidad de Duelo <strong>no permite reservaciones los sábados de 10:00 AM a 12:00 PM</strong>.<br><br>Por favor selecciona un horario diferente.'
+    };
+  }
+
+  // Regla 3: Último jueves del mes 13:00 - 17:00
+  if (diaSemana === 4 && seSolapa(HORA_13_00, HORA_17_00)) {
+    const ultimoJueves = getUltimoJuevesDelMes(anio, mes - 1);
+    if (fecha.getDate() === ultimoJueves.getDate()) {
+      return {
+        bloqueada: true,
+        mensaje: 'La Sala de Juntas Unidad de Duelo <strong>no permite reservaciones el último jueves del mes de 1:00 PM a 5:00 PM</strong>.<br><br>Por favor selecciona un horario diferente.'
+      };
+    }
+  }
+
+  return { bloqueada: false };
+}
+
 // ─── INIT AGENDA ───────────────────────────────────────────────────────────
 function initAgenda() {
 
@@ -97,11 +172,8 @@ function initAgenda() {
     events: async function (fetchInfo, successCallback, failureCallback) {
       try {
         const fechaActual = new Date(fetchInfo.start);
-        // Sumar 2 y usar módulo 12 para mantener el rango 1-12
         const mes = ((fechaActual.getMonth() + 2) % 12) || 12;
 
-        // Endpoint: /api/agenda/obtenerReservaciones/{mes}/{tipo}
-        // tipo = salaId (1: Principal, 2: Mercadeo, 3: Unidad de Duelo)
         const data = await getReservaciones(mes, salaId);
 
         if (Array.isArray(data)) {
@@ -161,8 +233,6 @@ function initAgenda() {
       let startTime, endTime;
 
       if (ev.extendedProps.horaInicioOriginal && ev.extendedProps.horaFinOriginal) {
-        // El endpoint devuelve la hora ya formateada (ej: "03:00 p. m.")
-        // Se usa directamente sin conversión adicional
         startTime = ev.extendedProps.horaInicioOriginal;
         endTime   = ev.extendedProps.horaFinOriginal;
       } else {
@@ -198,7 +268,6 @@ function initAgenda() {
 
     eventDidMount: function (info) {
       const detalles = info.event.extendedProps.detalles;
-      // Usar horas originales del endpoint directamente
       const startTime = info.event.extendedProps.horaInicioOriginal || '';
       const endTime   = info.event.extendedProps.horaFinOriginal    || '';
       let tooltipText = `${startTime} - ${endTime}`;
@@ -291,6 +360,21 @@ function initAgenda() {
         return;
       }
 
+      // ─── Validar restricciones de Sala Unidad de Duelo ──────────────
+      if (salaId === '3') {
+        const restriccion = verificarRestriccionReservacion(fechaSeleccionada, horaInicio, horaFin);
+        if (restriccion.bloqueada) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Horario no permitido',
+            html: restriccion.mensaje,
+            confirmButtonColor: '#6c757d',
+            confirmButtonText: 'Entendido'
+          });
+          return;
+        }
+      }
+
       const confirmacion = await Swal.fire({
         icon: 'question',
         title: '¿Estás seguro de realizar la reservación?',
@@ -320,7 +404,6 @@ function initAgenda() {
         didOpen: () => { Swal.showLoading(); }
       });
 
-      // Formato HH:MM:SS requerido por el endpoint
       const horaInicioStr = horaInicio.length === 5 ? `${horaInicio}:00` : horaInicio;
       const horaFinStr    = horaFin.length === 5    ? `${horaFin}:00`    : horaFin;
 
@@ -332,7 +415,7 @@ function initAgenda() {
         horaInicio:          horaInicioStr,
         horaFin:             horaFinStr,
         detallesReservacion: fd.get('detallesReservacion') || '',
-        tipo:                salaId   // ← tipo = salaId (1, 2 o 3) requerido por el endpoint
+        tipo:                salaId
       };
 
       const result = await crearReservacion(reservacionData);
@@ -353,7 +436,6 @@ function initAgenda() {
 
 // ─── API calls ─────────────────────────────────────────────────────────────
 
-// Endpoint: GET /api/agenda/obtenerReservaciones/{mes}/{tipo}
 async function getReservaciones(mes, tipo) {
   try {
     const response = await fetch(`${url}/api/agenda/obtenerReservaciones/${mes}/${tipo}`, {
@@ -368,7 +450,6 @@ async function getReservaciones(mes, tipo) {
   }
 }
 
-// Endpoint: POST /api/agenda/guardarReservacion
 async function crearReservacion(reservacionData) {
   try {
     if (!reservacionData.usuario || !reservacionData.correo || !reservacionData.dependencia ||

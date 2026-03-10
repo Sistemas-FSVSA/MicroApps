@@ -38,6 +38,7 @@ document.getElementById("horaFin").addEventListener("change", function () {
 // 1. Todos los viernes de 10:00 AM a 12:00 PM
 // 2. Todos los sábados de 10:00 AM a 12:00 PM
 // 3. Todos los últimos jueves del mes de 1:00 PM a 5:00 PM
+// 4. Todos los martes de 2:00 PM a 5:00 PM
 
 function getUltimoJuevesDelMes(anio, mes) {
   // mes: 0-indexed (JavaScript)
@@ -48,28 +49,57 @@ function getUltimoJuevesDelMes(anio, mes) {
 }
 
 function timeToMinutes(horaStr) {
-  // Acepta "HH:MM" o "HH:MM:SS"
   const [h, m] = horaStr.split(':').map(Number);
   return h * 60 + m;
 }
 
 /**
+ * Verifica si un DÍA completo está totalmente bloqueado para Unidad de Duelo.
+ * Se usa en dateClick para impedir abrir el modal directamente.
+ * @param {string} fechaStr - "YYYY-MM-DD"
+ * @returns {{ bloqueado: boolean, titulo?: string, mensaje?: string }}
+ */
+function verificarDiaBloqueadoUnidadDuelo(fechaStr) {
+  const [anio, mes, dia] = fechaStr.split('-').map(Number);
+  const fecha     = new Date(anio, mes - 1, dia);
+  const diaSemana = fecha.getDay();
+
+  // Viernes → bloqueo 10:00-12:00 (horario parcial, se avisa pero deja entrar)
+  // Sábado  → bloqueo 10:00-12:00 (horario parcial, se avisa pero deja entrar)
+  // Último jueves → bloqueo 13:00-17:00 (se bloquea el día directamente)
+  // Martes  → bloqueo 14:00-17:00 (horario parcial, se avisa pero deja entrar)
+
+  // Último jueves: bloquear acceso completo al modal
+  if (diaSemana === 4) {
+    const ultimoJueves = getUltimoJuevesDelMes(anio, mes - 1);
+    if (dia === ultimoJueves.getDate()) {
+      return {
+        bloqueado: true,
+        titulo: 'Día no disponible',
+        mensaje: 'La Sala de Juntas Unidad de Duelo <strong>no permite reservaciones el último jueves del mes de 1:00 PM a 5:00 PM</strong>.<br><br>Por favor selecciona otro día u horario fuera de ese rango.'
+      };
+    }
+  }
+
+  return { bloqueado: false };
+}
+
+/**
  * Verifica si una reservación en la Sala Unidad de Duelo viola las restricciones.
- * @param {string} fechaStr  - Fecha en formato "YYYY-MM-DD"
- * @param {string} horaInicioStr - Hora inicio "HH:MM" o "HH:MM:SS"
- * @param {string} horaFinStr    - Hora fin   "HH:MM" o "HH:MM:SS"
+ * Se usa en el submit del formulario para validar el horario exacto ingresado.
+ * @param {string} fechaStr       - "YYYY-MM-DD"
+ * @param {string} horaInicioStr  - "HH:MM" o "HH:MM:SS"
+ * @param {string} horaFinStr     - "HH:MM" o "HH:MM:SS"
  * @returns {{ bloqueada: boolean, mensaje?: string }}
  */
 function verificarRestriccionReservacion(fechaStr, horaInicioStr, horaFinStr) {
-  // Construir fecha sin offset de zona para evitar desfases
   const [anio, mes, dia] = fechaStr.split('-').map(Number);
   const fecha     = new Date(anio, mes - 1, dia);
-  const diaSemana = fecha.getDay(); // 0=Dom, 1=Lun, 4=Jue, 5=Vie, 6=Sáb
+  const diaSemana = fecha.getDay();
 
   const inicioRes = timeToMinutes(horaInicioStr);
   const finRes    = timeToMinutes(horaFinStr);
 
-  // Comprueba si los rangos se solapan: (inicioA < finB) && (finA > inicioB)
   function seSolapa(inicioBloqueo, finBloqueo) {
     return inicioRes < finBloqueo && finRes > inicioBloqueo;
   }
@@ -98,13 +128,14 @@ function verificarRestriccionReservacion(fechaStr, horaInicioStr, horaFinStr) {
   // Regla 3: Último jueves del mes 13:00 - 17:00
   if (diaSemana === 4 && seSolapa(HORA_13_00, HORA_17_00)) {
     const ultimoJueves = getUltimoJuevesDelMes(anio, mes - 1);
-    if (fecha.getDate() === ultimoJueves.getDate()) {
+    if (dia === ultimoJueves.getDate()) {
       return {
         bloqueada: true,
         mensaje: 'La Sala de Juntas Unidad de Duelo <strong>no permite reservaciones el último jueves del mes de 1:00 PM a 5:00 PM</strong>.<br><br>Por favor selecciona un horario diferente.'
       };
     }
   }
+
 
   return { bloqueada: false };
 }
@@ -200,6 +231,9 @@ function initAgenda() {
       }
     },
 
+    // 🔹 dateClick: para Unidad de Duelo, verificar si el día está bloqueado
+    //    antes de abrir el modal. Restricciones de horario parcial se validan
+    //    al momento del submit.
     dateClick: function (info) {
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
@@ -207,12 +241,29 @@ function initAgenda() {
       limite.setDate(limite.getDate() - 1);
       if (info.date < limite) return;
 
+      // ── Bloqueo por día completo (solo Unidad de Duelo) ──────────────
+      if (salaId === '3') {
+        const diaBloqueado = verificarDiaBloqueadoUnidadDuelo(info.dateStr);
+        if (diaBloqueado.bloqueado) {
+          Swal.fire({
+            icon: 'warning',
+            title: diaBloqueado.titulo,
+            html: diaBloqueado.mensaje,
+            confirmButtonColor: '#6c757d',
+            confirmButtonText: 'Entendido'
+          });
+          return; // No abrir el modal
+        }
+      }
+
       const fechaSeleccionada = document.querySelector('#fechaSeleccionada');
       if (fechaSeleccionada) {
         fechaSeleccionada.value = info.dateStr;
       } else {
         console.error('No se encontró el campo #fechaSeleccionada');
+        return;
       }
+
       new bootstrap.Modal(document.getElementById('reservaModal')).show();
     },
 
@@ -267,7 +318,7 @@ function initAgenda() {
     },
 
     eventDidMount: function (info) {
-      const detalles = info.event.extendedProps.detalles;
+      const detalles  = info.event.extendedProps.detalles;
       const startTime = info.event.extendedProps.horaInicioOriginal || '';
       const endTime   = info.event.extendedProps.horaFinOriginal    || '';
       let tooltipText = `${startTime} - ${endTime}`;
@@ -339,6 +390,7 @@ function initAgenda() {
       const horaFin       = fd.get('horaFin');
       const dependenciaId = fd.get('dependencia');
 
+      // ─── Validaciones básicas ────────────────────────────────────────
       if (!fechaSeleccionada) {
         Swal.fire({ icon: 'warning', title: 'Fecha requerida', text: 'Debe seleccionar una fecha válida', confirmButtonColor: '#3085d6' });
         return;
@@ -360,7 +412,7 @@ function initAgenda() {
         return;
       }
 
-      // ─── Validar restricciones de Sala Unidad de Duelo ──────────────
+      // ─── Validar restricciones de horario (Sala Unidad de Duelo) ────
       if (salaId === '3') {
         const restriccion = verificarRestriccionReservacion(fechaSeleccionada, horaInicio, horaFin);
         if (restriccion.bloqueada) {
@@ -375,6 +427,7 @@ function initAgenda() {
         }
       }
 
+      // ─── Confirmación ────────────────────────────────────────────────
       const confirmacion = await Swal.fire({
         icon: 'question',
         title: '¿Estás seguro de realizar la reservación?',

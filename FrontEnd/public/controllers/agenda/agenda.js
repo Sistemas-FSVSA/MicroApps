@@ -1,7 +1,7 @@
 const url = window.env.API_URL;
 
 // ─── Leer sala seleccionada desde sessionStorage ───────────────────────────
-const salaId     = sessionStorage.getItem('salaId');
+const salaId = sessionStorage.getItem('salaId');
 const salaNombre = sessionStorage.getItem('salaNombre');
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -61,7 +61,7 @@ function timeToMinutes(horaStr) {
  */
 function verificarDiaBloqueadoUnidadDuelo(fechaStr) {
   const [anio, mes, dia] = fechaStr.split('-').map(Number);
-  const fecha     = new Date(anio, mes - 1, dia);
+  const fecha = new Date(anio, mes - 1, dia);
   const diaSemana = fecha.getDay();
 
   // Viernes → bloqueo 10:00-12:00 (horario parcial, se avisa pero deja entrar)
@@ -94,11 +94,11 @@ function verificarDiaBloqueadoUnidadDuelo(fechaStr) {
  */
 function verificarRestriccionReservacion(fechaStr, horaInicioStr, horaFinStr) {
   const [anio, mes, dia] = fechaStr.split('-').map(Number);
-  const fecha     = new Date(anio, mes - 1, dia);
+  const fecha = new Date(anio, mes - 1, dia);
   const diaSemana = fecha.getDay();
 
   const inicioRes = timeToMinutes(horaInicioStr);
-  const finRes    = timeToMinutes(horaFinStr);
+  const finRes = timeToMinutes(horaFinStr);
 
   function seSolapa(inicioBloqueo, finBloqueo) {
     return inicioRes < finBloqueo && finRes > inicioBloqueo;
@@ -243,16 +243,12 @@ function initAgenda() {
 
       // ── Bloqueo por día completo (solo Unidad de Duelo) ──────────────
       if (salaId === '3') {
-        const diaBloqueado = verificarDiaBloqueadoUnidadDuelo(info.dateStr);
-        if (diaBloqueado.bloqueado) {
-          Swal.fire({
-            icon: 'warning',
-            title: diaBloqueado.titulo,
-            html: diaBloqueado.mensaje,
-            confirmButtonColor: '#6c757d',
-            confirmButtonText: 'Entendido'
-          });
-          return; // No abrir el modal
+        const fechaSeleccionada = document.querySelector('#fechaSeleccionada');
+        if (fechaSeleccionada) {
+          fechaSeleccionada.value = info.dateStr;
+        } else {
+          console.error('No se encontró el campo #fechaSeleccionada');
+          return;
         }
       }
 
@@ -269,9 +265,9 @@ function initAgenda() {
 
     eventClick: function (info) {
       const ev = info.event;
-      const detalles    = ev.extendedProps.detalles || ev.extendedProps.detallesReservacion || '';
-      const usuario     = ev.extendedProps.usuario || '';
-      const correo      = ev.extendedProps.correo || '';
+      const detalles = ev.extendedProps.detalles || ev.extendedProps.detallesReservacion || '';
+      const usuario = ev.extendedProps.usuario || '';
+      const correo = ev.extendedProps.correo || '';
       const dependencia = ev.extendedProps.dependencia || '';
 
       const formatoHora12 = {
@@ -285,10 +281,10 @@ function initAgenda() {
 
       if (ev.extendedProps.horaInicioOriginal && ev.extendedProps.horaFinOriginal) {
         startTime = ev.extendedProps.horaInicioOriginal;
-        endTime   = ev.extendedProps.horaFinOriginal;
+        endTime = ev.extendedProps.horaFinOriginal;
       } else {
         startTime = ev.start ? ev.start.toLocaleTimeString('es-CO', formatoHora12) : '';
-        endTime   = ev.end   ? ev.end.toLocaleTimeString('es-CO', formatoHora12)   : '';
+        endTime = ev.end ? ev.end.toLocaleTimeString('es-CO', formatoHora12) : '';
       }
 
       const contenido = `
@@ -318,9 +314,9 @@ function initAgenda() {
     },
 
     eventDidMount: function (info) {
-      const detalles  = info.event.extendedProps.detalles;
+      const detalles = info.event.extendedProps.detalles;
       const startTime = info.event.extendedProps.horaInicioOriginal || '';
-      const endTime   = info.event.extendedProps.horaFinOriginal    || '';
+      const endTime = info.event.extendedProps.horaFinOriginal || '';
       let tooltipText = `${startTime} - ${endTime}`;
       if (detalles) tooltipText += `\n${detalles}`;
       info.el.setAttribute('title', tooltipText);
@@ -386,8 +382,8 @@ function initAgenda() {
     try {
       const fd = new FormData(form);
       const fechaSeleccionada = document.querySelector('#fechaSeleccionada').value;
-      const horaInicio    = fd.get('horaInicio');
-      const horaFin       = fd.get('horaFin');
+      const horaInicio = fd.get('horaInicio');
+      const horaFin = fd.get('horaFin');
       const dependenciaId = fd.get('dependencia');
 
       // ─── Validaciones básicas ────────────────────────────────────────
@@ -458,17 +454,17 @@ function initAgenda() {
       });
 
       const horaInicioStr = horaInicio.length === 5 ? `${horaInicio}:00` : horaInicio;
-      const horaFinStr    = horaFin.length === 5    ? `${horaFin}:00`    : horaFin;
+      const horaFinStr = horaFin.length === 5 ? `${horaFin}:00` : horaFin;
 
       const reservacionData = {
-        usuario:             fd.get('usuario'),
-        correo:              fd.get('correo'),
-        dependencia:         parseInt(dependenciaId),
-        fechaReservacion:    fechaSeleccionada,
-        horaInicio:          horaInicioStr,
-        horaFin:             horaFinStr,
+        usuario: fd.get('usuario'),
+        correo: fd.get('correo'),
+        dependencia: parseInt(dependenciaId),
+        fechaReservacion: fechaSeleccionada,
+        horaInicio: horaInicioStr,
+        horaFin: horaFinStr,
         detallesReservacion: fd.get('detallesReservacion') || '',
-        tipo:                salaId
+        tipo: salaId
       };
 
       const result = await crearReservacion(reservacionData);
@@ -506,7 +502,7 @@ async function getReservaciones(mes, tipo) {
 async function crearReservacion(reservacionData) {
   try {
     if (!reservacionData.usuario || !reservacionData.correo || !reservacionData.dependencia ||
-        !reservacionData.fechaReservacion || !reservacionData.horaInicio || !reservacionData.horaFin) {
+      !reservacionData.fechaReservacion || !reservacionData.horaInicio || !reservacionData.horaFin) {
       throw new Error('Faltan campos obligatorios');
     }
 
@@ -579,8 +575,8 @@ function convertirA12Horas(hora24) {
   if (!hora24) return '';
   const [horas, minutos] = hora24.split(':');
   const horasNum = parseInt(horas);
-  const periodo  = horasNum >= 12 ? 'PM' : 'AM';
-  const horas12  = horasNum === 0 ? 12 : horasNum > 12 ? horasNum - 12 : horasNum;
+  const periodo = horasNum >= 12 ? 'PM' : 'AM';
+  const horas12 = horasNum === 0 ? 12 : horasNum > 12 ? horasNum - 12 : horasNum;
   return `${horas12}:${minutos} ${periodo}`;
 }
 
@@ -588,7 +584,7 @@ function limpiarFormularioCompleto() {
   const form = document.getElementById('reservaForm');
   if (!form) return;
   form.reset();
-  ['usuario','correo','dependencia','horaInicio','horaFin','detallesReservacion','fechaSeleccionada'].forEach(id => {
+  ['usuario', 'correo', 'dependencia', 'horaInicio', 'horaFin', 'detallesReservacion', 'fechaSeleccionada'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     el.type === 'select-one' ? el.selectedIndex = 0 : (el.value = '');

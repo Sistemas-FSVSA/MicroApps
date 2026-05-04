@@ -140,6 +140,29 @@ function verificarRestriccionReservacion(fechaStr, horaInicioStr, horaFinStr) {
   return { bloqueada: false };
 }
 
+/**
+ * Verifica si una reservación en la Sala Mercadeo viola las restricciones.
+ * Regla: No se permiten reservaciones antes de las 10:00 AM.
+ * @param {string} horaInicioStr  - "HH:MM" o "HH:MM:SS"
+ * @param {string} horaFinStr     - "HH:MM" o "HH:MM:SS"
+ * @returns {{ bloqueada: boolean, mensaje?: string }}
+ */
+function verificarRestriccionMercadeo(horaInicioStr, horaFinStr) {
+  const inicioRes = timeToMinutes(horaInicioStr);
+  const finRes = timeToMinutes(horaFinStr);
+  const HORA_10_00 = 10 * 60;
+
+  // Si el inicio O el fin caen antes de las 10:00 AM → bloqueado
+  if (inicioRes < HORA_10_00 || finRes <= HORA_10_00) {
+    return {
+      bloqueada: true,
+      mensaje: 'La Sala de Juntas Mercadeo <strong>no permite reservaciones antes de las 10:00 AM</strong>.<br><br>Por favor selecciona un horario a partir de las 10:00 AM.'
+    };
+  }
+
+  return { bloqueada: false };
+}
+
 // ─── INIT AGENDA ───────────────────────────────────────────────────────────
 function initAgenda() {
 
@@ -240,6 +263,8 @@ function initAgenda() {
       const limite = new Date(hoy);
       limite.setDate(limite.getDate() - 1);
       if (info.date < limite) return;
+
+
 
       // ── Bloqueo por día completo (solo Unidad de Duelo) ──────────────
       if (salaId === '3') {
@@ -406,6 +431,21 @@ function initAgenda() {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fd.get('correo'))) {
         Swal.fire({ icon: 'error', title: 'Correo inválido', text: 'Por favor ingrese un correo electrónico válido', confirmButtonColor: '#d33' });
         return;
+      }
+
+      // ─── Validar restricciones de horario (Sala Mercadeo) ───────────
+      if (salaId === '2') {
+        const restriccion = verificarRestriccionMercadeo(horaInicio, horaFin);
+        if (restriccion.bloqueada) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Horario no permitido',
+            html: restriccion.mensaje,
+            confirmButtonColor: '#6c757d',
+            confirmButtonText: 'Entendido'
+          });
+          return;
+        }
       }
 
       // ─── Validar restricciones de horario (Sala Unidad de Duelo) ────

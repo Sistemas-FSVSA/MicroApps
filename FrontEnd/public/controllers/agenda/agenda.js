@@ -107,6 +107,7 @@ function verificarRestriccionReservacion(fechaStr, horaInicioStr, horaFinStr) {
   const HORA_10_00 = 10 * 60;
   const HORA_12_00 = 12 * 60;
   const HORA_13_00 = 13 * 60;
+  const HORA_14_00 = 14 * 60;
   const HORA_17_00 = 17 * 60;
 
   // Regla 1: Viernes 10:00 - 12:00
@@ -134,6 +135,14 @@ function verificarRestriccionReservacion(fechaStr, horaInicioStr, horaFinStr) {
         mensaje: 'La Sala de Juntas Unidad de Duelo <strong>no permite reservaciones el último jueves del mes de 1:00 PM a 5:00 PM</strong>.<br><br>Por favor selecciona un horario diferente.'
       };
     }
+  }
+
+  // Regla 4: Viernes de 14:00 - 17:00
+  if (diaSemana === 5 && seSolapa(HORA_14_00, HORA_17_00)) {
+    return {
+      bloqueada: true,
+      mensaje: 'La Sala de Juntas Unidad de Duelo <strong>no permite reservaciones los viernes de 2:00 PM a 5:00 PM</strong>.<br><br>Por favor selecciona un horario diferente.'
+    };
   }
 
 

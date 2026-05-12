@@ -107,6 +107,7 @@ function verificarRestriccionReservacion(fechaStr, horaInicioStr, horaFinStr) {
   const HORA_10_00 = 10 * 60;
   const HORA_12_00 = 12 * 60;
   const HORA_13_00 = 13 * 60;
+  const HORA_14_00 = 14 * 60;
   const HORA_17_00 = 17 * 60;
 
   // Regla 1: Viernes 10:00 - 12:00
@@ -136,6 +137,36 @@ function verificarRestriccionReservacion(fechaStr, horaInicioStr, horaFinStr) {
     }
   }
 
+  if (diaSemana === 5 && seSolapa(HORA_14_00, HORA_17_00)) {
+    return {
+      bloqueada: true,
+      mensaje: 'La Sala de Juntas Unidad de Duelo <strong>no permite reservaciones los viernes de 2:00 PM a 5:00 PM</strong>.<br><br>Por favor selecciona un horario diferente.'
+    };
+  }
+
+
+  return { bloqueada: false };
+}
+
+/**
+ * Verifica si una reservación en la Sala Mercadeo viola las restricciones.
+ * Regla: No se permiten reservaciones antes de las 10:00 AM.
+ * @param {string} horaInicioStr  - "HH:MM" o "HH:MM:SS"
+ * @param {string} horaFinStr     - "HH:MM" o "HH:MM:SS"
+ * @returns {{ bloqueada: boolean, mensaje?: string }}
+ */
+function verificarRestriccionMercadeo(horaInicioStr, horaFinStr) {
+  const inicioRes = timeToMinutes(horaInicioStr);
+  const finRes = timeToMinutes(horaFinStr);
+  const HORA_10_00 = 10 * 60;
+
+  // Si el inicio O el fin caen antes de las 10:00 AM → bloqueado
+  if (inicioRes < HORA_10_00 || finRes <= HORA_10_00) {
+    return {
+      bloqueada: true,
+      mensaje: 'La Sala de Juntas Mercadeo <strong>no permite reservaciones antes de las 10:00 AM</strong>.<br><br>Por favor selecciona un horario a partir de las 10:00 AM.'
+    };
+  }
 
   return { bloqueada: false };
 }
@@ -240,6 +271,8 @@ function initAgenda() {
       const limite = new Date(hoy);
       limite.setDate(limite.getDate() - 1);
       if (info.date < limite) return;
+
+
 
       // ── Bloqueo por día completo (solo Unidad de Duelo) ──────────────
       if (salaId === '3') {
@@ -406,6 +439,21 @@ function initAgenda() {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fd.get('correo'))) {
         Swal.fire({ icon: 'error', title: 'Correo inválido', text: 'Por favor ingrese un correo electrónico válido', confirmButtonColor: '#d33' });
         return;
+      }
+
+      // ─── Validar restricciones de horario (Sala Mercadeo) ───────────
+      if (salaId === '2') {
+        const restriccion = verificarRestriccionMercadeo(horaInicio, horaFin);
+        if (restriccion.bloqueada) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Horario no permitido',
+            html: restriccion.mensaje,
+            confirmButtonColor: '#6c757d',
+            confirmButtonText: 'Entendido'
+          });
+          return;
+        }
       }
 
       // ─── Validar restricciones de horario (Sala Unidad de Duelo) ────
